@@ -39,8 +39,10 @@ class InvoiceController extends Controller
             'date' => 'required|date',
             'customer_name' => 'required|string',
             'items' => 'required|array',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'required',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.unit' => 'required|string',
         ]);
 
         $invoice_number = 'INV-' . Carbon::parse($request->date)->format('Ymd') . '-' . str_pad(Invoice::max('id') + 1, 3, '0', STR_PAD_LEFT);
@@ -54,8 +56,25 @@ class InvoiceController extends Controller
         $totalAmount = 0;
 
         foreach ($request->items as $item) {
-            $product = Product::find($item['product_id']);
-            $total = $product->price * $item['quantity'];
+            $productId = $item['product_id'];
+            $product = null;
+
+            if (is_numeric($productId)) {
+                $product = Product::find($productId);
+            }
+
+            if (!$product) {
+                // Create new product
+                $category = \App\Models\Category::firstOrCreate(['name' => 'Lain-lain']);
+                $product = Product::create([
+                    'category_id' => $category->id,
+                    'name' => $productId, // The name was passed as product_id (from Select2 tags)
+                    'price' => $item['price'],
+                    'unit' => $item['unit'],
+                ]);
+            }
+
+            $total = $item['price'] * $item['quantity'];
             $totalAmount += $total;
 
             InvoiceItem::create([
@@ -63,8 +82,8 @@ class InvoiceController extends Controller
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'quantity' => $item['quantity'],
-                'unit' => $product->unit,
-                'price' => $product->price,
+                'unit' => $item['unit'],
+                'price' => $item['price'],
                 'total' => $total,
             ]);
         }
@@ -100,8 +119,10 @@ class InvoiceController extends Controller
             'date' => 'required|date',
             'customer_name' => 'required|string',
             'items' => 'required|array',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => 'required',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.price' => 'required|numeric|min:0',
+            'items.*.unit' => 'required|string',
         ]);
 
         $invoice->update([
@@ -115,8 +136,25 @@ class InvoiceController extends Controller
         $totalAmount = 0;
 
         foreach ($request->items as $item) {
-            $product = Product::find($item['product_id']);
-            $total = $product->price * $item['quantity'];
+            $productId = $item['product_id'];
+            $product = null;
+
+            if (is_numeric($productId)) {
+                $product = Product::find($productId);
+            }
+
+            if (!$product) {
+                // Create new product
+                $category = \App\Models\Category::firstOrCreate(['name' => 'Lain-lain']);
+                $product = Product::create([
+                    'category_id' => $category->id,
+                    'name' => $productId,
+                    'price' => $item['price'],
+                    'unit' => $item['unit'],
+                ]);
+            }
+
+            $total = $item['price'] * $item['quantity'];
             $totalAmount += $total;
 
             InvoiceItem::create([
@@ -124,8 +162,8 @@ class InvoiceController extends Controller
                 'product_id' => $product->id,
                 'product_name' => $product->name,
                 'quantity' => $item['quantity'],
-                'unit' => $product->unit,
-                'price' => $product->price,
+                'unit' => $item['unit'],
+                'price' => $item['price'],
                 'total' => $total,
             ]);
         }

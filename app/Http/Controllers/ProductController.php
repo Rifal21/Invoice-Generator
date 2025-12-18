@@ -113,4 +113,9 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')->with('success', 'Products imported successfully.');
     }
+
+    public function export()
+    {
+        return Excel::download(new \App\Exports\ProductExport, 'products.xlsx');
+    }
 }

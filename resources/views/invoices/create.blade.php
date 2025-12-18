@@ -126,14 +126,14 @@
                         <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                             <span class="text-gray-500 sm:text-sm">Rp</span>
                         </div>
-                        <input type="number" class="price-input block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 bg-gray-50" readonly>
+                        <input type="number" name="items[${itemIndex}][price]" class="price-input block w-full rounded-md border-0 py-1.5 pl-10 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 bg-gray-50" readonly step="0.01" onchange="updateTotal(this)">
                     </div>
                 </td>
                 <td class="px-3 py-4">
                     <input type="number" name="items[${itemIndex}][quantity]" class="quantity-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 text-center" min="1" value="1" onchange="updateTotal(this)" required>
                 </td>
                 <td class="px-3 py-4">
-                    <input type="text" class="unit-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 text-center bg-gray-50" readonly>
+                    <input type="text" name="items[${itemIndex}][unit]" class="unit-input block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6 text-center bg-gray-50" readonly>
                 </td>
                 <td class="px-3 py-4">
                     <div class="relative rounded-md shadow-sm">
@@ -152,42 +152,78 @@
                 </td>
             `;
 
-            // Initialize Select2
+            // Initialize Select2 with tags: true
             $(`#${selectId}`).select2({
-                placeholder: "Select a product",
-                allowClear: true
+                placeholder: "Select or type a product",
+                allowClear: true,
+                tags: true,
+                createTag: function(params) {
+                    var term = $.trim(params.term);
+                    if (term === '') {
+                        return null;
+                    }
+                    return {
+                        id: term,
+                        text: term,
+                        newTag: true // add additional parameters
+                    }
+                }
             });
 
             // Handle Select2 change event
             $(`#${selectId}`).on('select2:select', function(e) {
                 const selectElement = this;
-                updatePrice(selectElement);
+                const data = e.params.data;
+                const row = selectElement.closest('tr');
+                const priceInput = row.querySelector('.price-input');
+                const unitInput = row.querySelector('.unit-input');
+
+                if (data.newTag) {
+                    // It's a new product
+                    priceInput.value = '';
+                    priceInput.readOnly = false;
+                    priceInput.classList.remove('bg-gray-50');
+
+                    unitInput.value = '';
+                    unitInput.readOnly = false;
+                    unitInput.classList.remove('bg-gray-50');
+                    unitInput.placeholder = 'e.g. kg, pcs';
+                } else {
+                    // It's an existing product
+                    const selectedOption = selectElement.options[selectElement.selectedIndex];
+                    const price = selectedOption.getAttribute('data-price');
+                    const unit = selectedOption.getAttribute('data-unit');
+
+                    priceInput.value = price;
+                    priceInput.readOnly = true;
+                    priceInput.classList.add('bg-gray-50');
+
+                    unitInput.value = unit;
+                    unitInput.readOnly = true;
+                    unitInput.classList.add('bg-gray-50');
+                }
+                updateTotal(selectElement);
             });
 
             // Handle Select2 clear event
             $(`#${selectId}`).on('select2:clear', function(e) {
                 const row = this.closest('tr');
-                row.querySelector('.price-input').value = '';
-                row.querySelector('.unit-input').value = '';
+                const priceInput = row.querySelector('.price-input');
+                const unitInput = row.querySelector('.unit-input');
+
+                priceInput.value = '';
+                priceInput.readOnly = true;
+                priceInput.classList.add('bg-gray-50');
+
+                unitInput.value = '';
+                unitInput.readOnly = true;
+                unitInput.classList.add('bg-gray-50');
+
                 row.querySelector('.total-input').value = '';
                 calculateGrandTotal();
             });
 
             itemIndex++;
-        }
-
-        function updatePrice(select) {
-            const row = select.closest('tr');
-            // For Select2, we need to get the selected option from the select element
-            const selectedOption = select.options[select.selectedIndex];
-
-            if (selectedOption && selectedOption.value) {
-                const price = selectedOption.getAttribute('data-price');
-                const unit = selectedOption.getAttribute('data-unit');
-                row.querySelector('.price-input').value = price;
-                row.querySelector('.unit-input').value = unit;
-                updateTotal(select);
-            }
         }
 
         function updateTotal(element) {
