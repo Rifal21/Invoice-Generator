@@ -1,70 +1,230 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="sm:flex sm:items-center">
-        <div class="sm:flex-auto">
-            <h1 class="text-base font-semibold leading-6 text-gray-900">Invoices</h1>
-            <p class="mt-2 text-sm text-gray-700">A list of all the invoices generated.</p>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div class="sm:flex sm:items-center sm:justify-between mb-10">
+            <div class="sm:flex-auto">
+                <h1 class="text-4xl font-black text-gray-900 tracking-tight">Daftar Invoice</h1>
+                <p class="mt-2 text-lg text-gray-500">Kelola dan pantau semua invoice yang telah dibuat dalam satu tempat.
+                </p>
+            </div>
+            <div class="mt-6 sm:ml-16 sm:mt-0">
+                <a href="{{ route('invoices.create') }}"
+                    class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-bold rounded-2xl text-white bg-indigo-600 shadow-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:-translate-y-1">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    Buat Invoice Baru
+                </a>
+            </div>
         </div>
-        <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
-            <a href="{{ route('invoices.create') }}"
-                class="block rounded-md bg-indigo-600 px-3 py-2 text-center text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Create
-                Invoice</a>
-        </div>
-    </div>
 
-    <div class="mt-8 flow-root">
-        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-                <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
-                    <table class="min-w-full divide-y divide-gray-300">
-                        <thead class="bg-gray-50">
-                            <tr>
+        <form id="bulk-export-form" action="{{ route('invoices.bulk-export-pdf') }}" method="POST" target="_blank">
+            @csrf
+            <!-- Filter Section -->
+            <div class="bg-white shadow-xl rounded-3xl p-6 mb-8 border border-gray-100">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                    <div>
+                        <label for="date"
+                            class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Filter
+                            Tanggal</label>
+                        <input type="date" name="date" id="date" value="{{ request('date') }}"
+                            class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                    </div>
+                    <div class="flex gap-2">
+                        <button type="submit" form="filter-form"
+                            class="flex-1 bg-indigo-600 text-white font-bold py-3 px-6 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg">
+                            Filter
+                        </button>
+                        <a href="{{ route('invoices.index') }}"
+                            class="bg-gray-100 text-gray-600 font-bold py-3 px-6 rounded-2xl hover:bg-gray-200 transition-all">
+                            Reset
+                        </a>
+                    </div>
+                    <div class="text-right">
+                        <button type="submit" id="bulk-export-btn" disabled
+                            class="w-full bg-red-50 text-red-700 font-bold py-3 px-6 rounded-2xl hover:bg-red-100 transition-all border border-red-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3" />
+                            </svg>
+                            Ekspor Terpilih (PDF)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-100">
+                        <thead>
+                            <tr class="bg-gray-50/50">
+                                <th scope="col" class="py-5 pl-6 pr-3 text-left w-10">
+                                    <input type="checkbox" id="select-all"
+                                        class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                </th>
                                 <th scope="col"
-                                    class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Invoice
-                                    Number</th>
-                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Date
-                                </th>
-                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                    Customer Name</th>
-                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
-                                    Total Amount</th>
-                                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                                    <span class="sr-only">Actions</span>
-                                </th>
+                                    class="px-3 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
+                                    Nomor Invoice</th>
+                                <th scope="col"
+                                    class="px-3 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
+                                    Tanggal</th>
+                                <th scope="col"
+                                    class="px-3 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
+                                    Pelanggan</th>
+                                <th scope="col"
+                                    class="px-3 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
+                                    Total</th>
+                                <th scope="col"
+                                    class="relative py-5 pl-3 pr-6 text-right text-xs font-black text-gray-400 uppercase tracking-widest">
+                                    Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white">
-                            @foreach ($invoices as $invoice)
-                                <tr>
-                                    <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                                        {{ $invoice->invoice_number }}
+                        <tbody class="divide-y divide-gray-50 bg-white">
+                            @forelse ($invoices as $invoice)
+                                <tr class="hover:bg-indigo-50/30 transition-colors duration-150 group">
+                                    <td class="py-5 pl-6 pr-3">
+                                        <input type="checkbox" name="invoice_ids[]" value="{{ $invoice->id }}"
+                                            class="invoice-checkbox h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ $invoice->date }}</td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                        {{ $invoice->customer_name }}</td>
-                                    <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                                        Rp{{ number_format($invoice->total_amount, 2) }}</td>
+                                    <td class="whitespace-nowrap px-3 py-5">
+                                        <div class="flex items-center">
+                                            <div
+                                                class="h-10 w-10 flex-shrink-0 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                                <svg class="h-6 w-6" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                            </div>
+                                            <div class="ml-4">
+                                                <div class="text-sm font-bold text-gray-900">{{ $invoice->invoice_number }}
+                                                </div>
+                                                <div class="text-xs text-gray-400">ID: #{{ $invoice->id }}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-600 font-medium">
+                                        {{ \Carbon\Carbon::parse($invoice->date)->format('d M Y') }}
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-5">
+                                        <div class="text-sm font-bold text-gray-900">{{ $invoice->customer_name }}</div>
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-5">
+                                        <div class="text-sm font-black text-indigo-600">Rp
+                                            {{ number_format($invoice->total_amount, 2, ',', '.') }}</div>
+                                    </td>
                                     <td
-                                        class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                                        <a href="{{ route('invoices.edit', $invoice->id) }}"
-                                            class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
+                                        class="relative whitespace-nowrap py-5 pl-3 pr-6 text-right text-sm font-bold space-x-3">
                                         <a href="{{ route('invoices.show', $invoice->id) }}"
-                                            class="text-indigo-600 hover:text-indigo-900 mr-4">View</a>
-                                        <form action="{{ route('invoices.destroy', $invoice->id) }}" method="POST"
-                                            class="inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900"
-                                                onclick="return confirm('Are you sure?')">Delete</button>
-                                        </form>
+                                            class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">Lihat</a>
+                                        <a href="{{ route('invoices.edit', $invoice->id) }}"
+                                            class="text-amber-600 hover:text-amber-900 bg-amber-50 px-3 py-1.5 rounded-lg transition-colors">Edit</a>
+                                        <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
+                                            class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Hapus</button>
                                     </td>
                                 </tr>
-                            @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="py-20 text-center">
+                                        <div class="flex flex-col items-center">
+                                            <svg class="h-16 w-16 text-gray-200 mb-4" fill="none"
+                                                stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            <p class="text-gray-500 text-lg font-medium">Belum ada invoice</p>
+                                            <a href="{{ route('invoices.create') }}"
+                                                class="mt-4 text-indigo-600 font-bold hover:underline">Buat invoice pertama
+                                                Anda</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>
+        </form>
+
+        <form id="filter-form" action="{{ route('invoices.index') }}" method="GET" class="hidden">
+            <input type="hidden" name="date" id="hidden-date">
+        </form>
+        <form id="delete-form" action="" method="POST" class="hidden">
+            @csrf
+            @method('DELETE')
+        </form>
     </div>
+
+    <script>
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.invoice-checkbox');
+        const exportBtn = document.getElementById('bulk-export-btn');
+        const bulkForm = document.getElementById('bulk-export-form');
+
+        function updateExportButton() {
+            const checkedCount = document.querySelectorAll('.invoice-checkbox:checked').length;
+            exportBtn.disabled = checkedCount === 0;
+            if (checkedCount > 0) {
+                exportBtn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3"/></svg>
+                    Ekspor ${checkedCount} Invoice (PDF)
+                `;
+            } else {
+                exportBtn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3"/></svg>
+                    Ekspor Terpilih (PDF)
+                `;
+            }
+        }
+
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateExportButton();
+        });
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                updateExportButton();
+                if (!this.checked) selectAll.checked = false;
+                if (document.querySelectorAll('.invoice-checkbox:checked').length === checkboxes.length)
+                    selectAll.checked = true;
+            });
+        });
+
+        function submitBulkExport() {
+            bulkForm.submit();
+        }
+
+        function deleteInvoice(id) {
+            if (confirm('Apakah Anda yakin ingin menghapus invoice ini?')) {
+                const form = document.getElementById('delete-form');
+                form.action = `/invoices/${id}`;
+                form.submit();
+            }
+        }
+
+        // Sync date input with hidden filter form
+        const dateInput = document.getElementById('date');
+        const hiddenDateInput = document.getElementById('hidden-date');
+        const filterForm = document.getElementById('filter-form');
+
+        dateInput.addEventListener('change', function() {
+            hiddenDateInput.value = this.value;
+        });
+
+        // Initialize hidden input if there's a value
+        if (dateInput.value) {
+            hiddenDateInput.value = dateInput.value;
+        }
+
+        document.querySelector('button[form="filter-form"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            hiddenDateInput.value = dateInput.value;
+            filterForm.submit();
+        });
+    </script>
 @endsection

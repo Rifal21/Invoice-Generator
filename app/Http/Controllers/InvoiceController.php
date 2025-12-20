@@ -15,9 +15,15 @@ class InvoiceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $invoices = Invoice::all();
+        $query = Invoice::query();
+
+        if ($request->filled('date')) {
+            $query->whereDate('date', $request->date);
+        }
+
+        $invoices = $query->latest()->get();
         return view('invoices.index', compact('invoices'));
     }
 
@@ -38,14 +44,15 @@ class InvoiceController extends Controller
         $request->validate([
             'date' => 'required|date',
             'customer_name' => 'required|string',
+            'tipe' => 'required|string',
             'items' => 'required|array',
             'items.*.product_id' => 'required',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
             'items.*.unit' => 'required|string',
+            'items.*.description' => 'nullable|string',
         ]);
-
-        $invoice_number = 'INV-' . Carbon::parse($request->date)->format('Ymd') . '-' . str_pad(Invoice::max('id') + 1, 3, '0', STR_PAD_LEFT);
+        $invoice_number = 'INV-' . Carbon::parse($request->date)->format('Ymd') . '-' . str_pad(Invoice::max('id') + 1, 3, '0', STR_PAD_LEFT) . '-' . $request->tipe;
         $invoice = Invoice::create([
             'invoice_number' => $invoice_number,
             'date' => $request->date,
@@ -85,6 +92,7 @@ class InvoiceController extends Controller
                 'unit' => $item['unit'],
                 'price' => $item['price'],
                 'total' => $total,
+                'description' => $item['description'] ?? null,
             ]);
         }
 
@@ -123,6 +131,7 @@ class InvoiceController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.price' => 'required|numeric|min:0',
             'items.*.unit' => 'required|string',
+            'items.*.description' => 'nullable|string',
         ]);
 
         $invoice->update([
@@ -165,6 +174,7 @@ class InvoiceController extends Controller
                 'unit' => $item['unit'],
                 'price' => $item['price'],
                 'total' => $total,
+                'description' => $item['description'] ?? null,
             ]);
         }
 
@@ -184,7 +194,75 @@ class InvoiceController extends Controller
     public function exportPdf(Invoice $invoice)
     {
         $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
-        return $pdf->download($invoice->invoice_number . '.pdf');
+        return $pdf->stream($invoice->invoice_number . '.pdf');
+    }
+
+    public function bulkExportPdf(Request $request)
+    {
+        if (!$request->has('invoice_ids')) {
+            return redirect()->route('invoices.index')->with('error', 'Silakan pilih minimal satu invoice.');
+        }
+
+        $request->validate([
+            'invoice_ids' => 'required|array',
+            'invoice_ids.*' => 'exists:invoices,id'
+        ]);
+
+        $invoices = Invoice::with('items')->whereIn('id', $request->invoice_ids)->get();
+
+        // Group and sum items by type and product name
+        $groupedItems = [];
+        foreach ($invoices as $invoice) {
+            $type = 'LAINNYA';
+            if (str_contains($invoice->invoice_number, 'BSH')) $type = 'BASAHAN SISWA';
+            elseif (str_contains($invoice->invoice_number, 'KRBSBM')) $type = 'KERINGAN BUMIL BUSUI';
+            elseif (str_contains($invoice->invoice_number, 'KR')) $type = 'KERINGAN SISWA';
+            elseif (str_contains($invoice->invoice_number, 'OPR')) $type = 'OPERASIONAL';
+
+            foreach ($invoice->items as $item) {
+                if (!isset($groupedItems[$type])) {
+                    $groupedItems[$type] = [];
+                }
+
+                $productKey = $item->product_name . '|' . $item->unit . '|' . $item->description;
+                if (!isset($groupedItems[$type][$productKey])) {
+                    $groupedItems[$type][$productKey] = [
+                        'product_name' => $item->product_name,
+                        'quantity' => 0,
+                        'unit' => $item->unit,
+                        'description' => $item->description,
+                        'product' => $item->product
+                    ];
+                }
+
+                $groupedItems[$type][$productKey]['quantity'] += $item->quantity;
+            }
+        }
+
+        // Convert to objects for easier access in blade
+        foreach ($groupedItems as $type => $products) {
+            $groupedItems[$type] = array_map(function ($p) {
+                return (object) $p;
+            }, array_values($products));
+        }
+
+        // Sort grouped items by preferred order
+        $order = [
+            'BASAHAN SISWA' => 1,
+            'KERINGAN SISWA' => 2,
+            'KERINGAN BUMIL BUSUI' => 3,
+            'OPERASIONAL' => 4,
+            'LAINNYA' => 5
+        ];
+
+        uksort($groupedItems, function ($a, $b) use ($order) {
+            $posA = $order[$a] ?? 99;
+            $posB = $order[$b] ?? 99;
+            return $posA <=> $posB;
+        });
+
+        $pdf = Pdf::loadView('invoices.bulk-pdf', compact('groupedItems', 'invoices'));
+        return $pdf->stream('Laporan_Pemeriksaan_Bahan_Makanan.pdf');
     }
 
     public function exportExcel(Invoice $invoice)

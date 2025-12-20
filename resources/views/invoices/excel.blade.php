@@ -10,7 +10,7 @@
             <!-- Logo Placeholder -->
             <th colspan="4"
                 style="background-color: #203764; color: #ffffff; font-weight: bold; border: 1px solid #000000; vertical-align: top;">
-                KOPERASI JEMBAR RAHAYU SEJAHTERA</th>
+                KOPERASI KONSUMEN JEMBAR RAHAYU SEJAHTERA</th>
             <th colspan="3"
                 style="background-color: #203764; color: #ffffff; text-align: right; border: 1px solid #000000; vertical-align: top;">
                 No : {{ $invoice->invoice_number }}</th>
@@ -94,7 +94,8 @@
                 {{ (float) $invoice->total_amount }}</td>
         </tr>
         <tr>
-            <td colspan="5" style="text-align: center; font-weight: bold;">8155688615 BNI a/n KOPERASI JEMBAR RAHAYU
+            <td colspan="5" style="text-align: center; font-weight: bold;">8155688615 BNI a/n KOPERASI KONSUMEN
+                JEMBAR RAHAYU
                 SEJAHTERA</td>
             <td colspan="2" style="border: 1px solid #000000; font-weight: bold; text-align: right;">Diskon</td>
             <td style="border: 1px solid #000000; font-weight: bold; text-align: right;">-</td>

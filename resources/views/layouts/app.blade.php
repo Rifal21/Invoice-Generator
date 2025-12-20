@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-gray-100">
+<html lang="id" class="h-full bg-gray-100">
 
 <head>
     <meta charset="UTF-8">
@@ -57,7 +57,7 @@
                     class="relative mr-16 flex w-full max-w-xs flex-1">
                     <div class="absolute top-0 left-full flex w-16 justify-center pt-5">
                         <button type="button" @click="sidebarOpen = false" class="-m-2.5 p-2.5 text-white">
-                            <span class="sr-only">Close sidebar</span>
+                            <span class="sr-only">Tutup sidebar</span>
                             <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" aria-hidden="true">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -76,19 +76,19 @@
                                         <li>
                                             <a href="{{ route('categories.index') }}"
                                                 class="{{ request()->routeIs('categories.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                                Categories
+                                                Kategori
                                             </a>
                                         </li>
                                         <li>
                                             <a href="{{ route('products.index') }}"
                                                 class="{{ request()->routeIs('products.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                                Products
+                                                Produk
                                             </a>
                                         </li>
                                         <li>
                                             <a href="{{ route('invoices.index') }}"
                                                 class="{{ request()->routeIs('invoices.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                                Invoices
+                                                Invoice
                                             </a>
                                         </li>
                                     </ul>
@@ -113,19 +113,19 @@
                                 <li>
                                     <a href="{{ route('categories.index') }}"
                                         class="{{ request()->routeIs('categories.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                        Categories
+                                        Kategori
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{{ route('products.index') }}"
                                         class="{{ request()->routeIs('products.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                        Products
+                                        Produk
                                     </a>
                                 </li>
                                 <li>
                                     <a href="{{ route('invoices.index') }}"
                                         class="{{ request()->routeIs('invoices.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold">
-                                        Invoices
+                                        Invoice
                                     </a>
                                 </li>
                             </ul>
@@ -139,7 +139,7 @@
             <div
                 class="sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
                 <button type="button" @click="sidebarOpen = true" class="-m-2.5 p-2.5 text-gray-700 lg:hidden">
-                    <span class="sr-only">Open sidebar</span>
+                    <span class="sr-only">Buka sidebar</span>
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
                         aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -184,7 +184,7 @@
                                     </svg>
                                 </div>
                                 <div class="ml-3">
-                                    <h3 class="text-sm font-medium text-red-800">There were errors with your submission
+                                    <h3 class="text-sm font-medium text-red-800">Terdapat kesalahan pada input Anda
                                     </h3>
                                     <div class="mt-2 text-sm text-red-700">
                                         <ul role="list" class="list-disc space-y-1 pl-5">

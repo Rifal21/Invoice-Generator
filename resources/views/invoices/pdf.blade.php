@@ -266,7 +266,7 @@
                     </td>
                     <td>
                         <div class="company-info">
-                            <div class="company-name">KOPERASI JEMBAR RAHAYU SEJAHTERA</div>
+                            <div class="company-name">KOPERASI KONSUMEN JEMBAR RAHAYU SEJAHTERA</div>
                             <div>JL. Moch. Bagowi Kp. Bojong RT003 / RW002</div>
                             <div>Telepon : +6281546527513</div>
                             <div>Email : koperasikonsumenjembarrahayu@gmail.com</div>

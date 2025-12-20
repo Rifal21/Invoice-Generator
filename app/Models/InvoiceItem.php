@@ -8,7 +8,7 @@ use App\Models\Product; // Added for relationship
 
 class InvoiceItem extends Model
 {
-    protected $fillable = ['invoice_id', 'product_id', 'product_name', 'quantity', 'unit', 'price', 'total'];
+    protected $fillable = ['invoice_id', 'product_id', 'product_name', 'quantity', 'unit', 'price', 'total', 'description'];
 
     public function invoice()
     {
