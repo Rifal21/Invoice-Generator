@@ -411,6 +411,8 @@
                 btn.innerHTML = originalText;
                 input.value = ''; // Reset input
             }
+
+            calculateGrandTotal();
         }
 
 

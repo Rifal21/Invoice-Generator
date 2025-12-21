@@ -20,42 +20,64 @@
             </div>
         </div>
 
-        <form id="bulk-export-form" action="{{ route('invoices.bulk-export-pdf') }}" method="POST" target="_blank">
-            @csrf
-            <!-- Filter Section -->
-            <div class="bg-white shadow-xl rounded-3xl p-6 mb-8 border border-gray-100">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
-                    <div>
-                        <label for="date"
-                            class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Filter
-                            Tanggal</label>
-                        <input type="date" name="date" id="date" value="{{ request('date') }}"
-                            class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
-                    </div>
-                    <div class="flex gap-2">
-                        <button type="submit" form="filter-form"
-                            class="flex-1 bg-indigo-600 text-white font-bold py-3 px-6 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg">
-                            Filter
-                        </button>
-                        <a href="{{ route('invoices.index') }}"
-                            class="bg-gray-100 text-gray-600 font-bold py-3 px-6 rounded-2xl hover:bg-gray-200 transition-all">
-                            Reset
-                        </a>
-                    </div>
-                    <div class="text-right">
-                        <button type="submit" id="bulk-export-btn" disabled
-                            class="w-full bg-red-50 text-red-700 font-bold py-3 px-6 rounded-2xl hover:bg-red-100 transition-all border border-red-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3" />
-                            </svg>
-                            Ekspor Terpilih (PDF)
-                        </button>
-                    </div>
+        <!-- Filter Section -->
+        <form action="{{ route('invoices.index') }}" method="GET"
+            class="bg-white shadow-xl rounded-3xl p-6 mb-8 border border-gray-100">
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
+                <div class="md:col-span-3">
+                    <label for="search" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Cari
+                        Invoice / Pelanggan</label>
+                    <input type="text" name="search" id="search" value="{{ request('search') }}"
+                        placeholder="Nomor atau nama..."
+                        class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div class="md:col-span-3">
+                    <label for="customer"
+                        class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Filter
+                        Pelanggan</label>
+                    <select name="customer" id="customer"
+                        class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        <option value="">Semua Pelanggan</option>
+                        @foreach ($customers as $customer)
+                            <option value="{{ $customer }}" {{ request('customer') == $customer ? 'selected' : '' }}>
+                                {{ $customer }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <label for="date"
+                        class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Filter
+                        Tanggal</label>
+                    <input type="date" name="date" id="date" value="{{ request('date') }}"
+                        class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                </div>
+                <div class="md:col-span-2 flex gap-2">
+                    <button type="submit"
+                        class="flex-1 bg-indigo-600 text-white font-bold py-3 px-6 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg">
+                        Filter
+                    </button>
+                    <a href="{{ route('invoices.index') }}"
+                        class="bg-gray-100 text-gray-600 font-bold py-3 px-6 rounded-2xl hover:bg-gray-200 transition-all text-center">
+                        Reset
+                    </a>
+                </div>
+                <div class="md:col-span-2 text-right">
+                    <button type="button" onclick="submitBulkExport()" id="bulk-export-btn" disabled
+                        class="w-full bg-red-50 text-red-700 font-bold py-3 px-6 rounded-2xl hover:bg-red-100 transition-all border border-red-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3" />
+                        </svg>
+                        Buat Laporan dari Invoice Terpilih (PDF)
+                    </button>
                 </div>
             </div>
+        </form>
+
+        <form id="bulk-export-form" action="{{ route('invoices.bulk-export-pdf') }}" method="POST" target="_blank">
+            @csrf
 
             <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
                 <div class="overflow-x-auto">
@@ -101,7 +123,8 @@
                                                 </svg>
                                             </div>
                                             <div class="ml-4">
-                                                <div class="text-sm font-bold text-gray-900">{{ $invoice->invoice_number }}
+                                                <div class="text-sm font-bold text-gray-900">
+                                                    {{ $invoice->invoice_number }}
                                                 </div>
                                                 <div class="text-xs text-gray-400">ID: #{{ $invoice->id }}</div>
                                             </div>
@@ -150,9 +173,6 @@
             </div>
         </form>
 
-        <form id="filter-form" action="{{ route('invoices.index') }}" method="GET" class="hidden">
-            <input type="hidden" name="date" id="hidden-date">
-        </form>
         <form id="delete-form" action="" method="POST" class="hidden">
             @csrf
             @method('DELETE')
@@ -171,12 +191,12 @@
             if (checkedCount > 0) {
                 exportBtn.innerHTML = `
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3"/></svg>
-                    Ekspor ${checkedCount} Invoice (PDF)
+                    Buat Laporan dari ${checkedCount} Invoice (PDF)
                 `;
             } else {
                 exportBtn.innerHTML = `
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3"/></svg>
-                    Ekspor Terpilih (PDF)
+                    Buat Laporan dari Invoice Terpilih (PDF)
                 `;
             }
         }
@@ -206,25 +226,5 @@
                 form.submit();
             }
         }
-
-        // Sync date input with hidden filter form
-        const dateInput = document.getElementById('date');
-        const hiddenDateInput = document.getElementById('hidden-date');
-        const filterForm = document.getElementById('filter-form');
-
-        dateInput.addEventListener('change', function() {
-            hiddenDateInput.value = this.value;
-        });
-
-        // Initialize hidden input if there's a value
-        if (dateInput.value) {
-            hiddenDateInput.value = dateInput.value;
-        }
-
-        document.querySelector('button[form="filter-form"]').addEventListener('click', function(e) {
-            e.preventDefault();
-            hiddenDateInput.value = dateInput.value;
-            filterForm.submit();
-        });
     </script>
 @endsection

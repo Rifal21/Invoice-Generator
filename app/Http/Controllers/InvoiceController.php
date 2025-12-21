@@ -23,8 +23,22 @@ class InvoiceController extends Controller
             $query->whereDate('date', $request->date);
         }
 
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('customer')) {
+            $query->where('customer_name', $request->customer);
+        }
+
         $invoices = $query->latest()->get();
-        return view('invoices.index', compact('invoices'));
+        $customers = Invoice::select('customer_name')->distinct()->orderBy('customer_name')->pluck('customer_name');
+
+        return view('invoices.index', compact('invoices', 'customers'));
     }
 
     /**
