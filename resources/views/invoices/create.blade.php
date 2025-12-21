@@ -392,8 +392,7 @@
                                 product_id: product ? product.id : item.product_name,
                                 quantity: item.quantity,
                                 price: item.price,
-                                unit: item.unit,
-                                description: item.description
+                                unit: item.unit
                             });
                         });
                     } else {

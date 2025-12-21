@@ -57,8 +57,7 @@ class ScanController extends Controller
                     \"product_name\": \"string\",
                     \"quantity\": number,
                     \"price\": number,
-                    \"unit\": \"string\",
-                    \"description\": \"string\"
+                    \"unit\": \"string\"
                 }
             ]
         }
