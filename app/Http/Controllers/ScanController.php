@@ -24,17 +24,27 @@ class ScanController extends Controller
             $text = $pdf->getText();
             Log::info('Extracted text length: ' . strlen($text));
 
-            // If Gemini API Key is available, use it for better parsing
+            // Try Gemini first
             $geminiKey = env('GEMINI_API_KEY');
-
             if ($geminiKey) {
-                return $this->parseWithGemini($text, $geminiKey);
+                $response = $this->parseWithGemini($text, $geminiKey);
+                $result = json_decode($response->getContent());
+                if ($result && isset($result->success) && $result->success) {
+                    return $response;
+                }
+                $errorMsg = $result->message ?? 'Unknown error';
+                Log::warning('Gemini parsing failed, trying Groq fallback: ' . $errorMsg);
             }
 
-            // Fallback to basic regex parsing (very limited)
+            // Fallback to Groq
+            $groqKey = env('GROQ_API_KEY');
+            if ($groqKey) {
+                return $this->parseWithGroq($text, $groqKey);
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => 'Gemini API Key tidak ditemukan. Silakan tambahkan GEMINI_API_KEY di file .env untuk hasil scan yang akurat.',
+                'message' => 'API Key (Gemini/Groq) tidak ditemukan atau kuota habis. Silakan periksa file .env.',
                 'raw_text' => $text
             ]);
         } catch (\Exception $e) {
@@ -114,6 +124,67 @@ class ScanController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat parsing dengan AI: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function parseWithGroq($text, $apiKey)
+    {
+        $prompt = "Ekstrak data dari teks invoice berikut ke dalam format JSON. 
+        Format JSON harus memiliki struktur:
+        {
+            \"date\": \"YYYY-MM-DD\",
+            \"customer_name\": \"string\",
+            \"items\": [
+                {
+                    \"product_name\": \"string\",
+                    \"quantity\": number,
+                    \"price\": number,
+                    \"unit\": \"string\"
+                }
+            ]
+        }
+        
+        Teks Invoice:
+        " . $text;
+
+        try {
+            $response = Http::withToken($apiKey)->post("https://api.groq.com/openai/v1/chat/completions", [
+                'model' => 'llama-3.3-70b-versatile',
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are a helpful assistant that extracts invoice data into structured JSON.'],
+                    ['role' => 'user', 'content' => $prompt]
+                ],
+                'response_format' => ['type' => 'json_object']
+            ]);
+
+            if ($response->successful()) {
+                $result = $response->json();
+                $jsonText = $result['choices'][0]['message']['content'] ?? null;
+
+                if (!$jsonText) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Format respon Groq tidak sesuai atau kosong.',
+                    ], 500);
+                }
+
+                $data = json_decode($jsonText, true);
+
+                return response()->json([
+                    'success' => true,
+                    'data' => $data
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghubungi Groq API: ' . ($response->body() ?: 'Unknown error'),
+            ], 500);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat parsing dengan Groq: ' . $e->getMessage(),
             ], 500);
         }
     }
