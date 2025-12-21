@@ -14,12 +14,35 @@
             <form action="{{ route('invoices.store') }}" method="POST" class="p-6 sm:p-10 space-y-10">
                 @csrf
 
+                @if ($errors->any())
+                    <div class="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-r-2xl">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-bold text-red-800">Terdapat kesalahan pada input Anda:</h3>
+                                <ul class="mt-2 text-sm text-red-700 list-disc list-inside">
+                                    @foreach ($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <!-- Invoice Details Section -->
                 <div class="grid grid-cols-1 gap-y-8 gap-x-6 sm:grid-cols-6 border-b border-gray-100 pb-10">
                     <div class="sm:col-span-2">
                         <label for="date" class="block text-sm font-bold text-gray-700 mb-2">Tanggal Invoice</label>
                         <div class="relative">
-                            <input type="date" name="date" id="date" value="{{ date('Y-m-d') }}" required
+                            <input type="date" name="date" id="date" value="{{ old('date', date('Y-m-d')) }}"
+                                required
                                 class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
                         </div>
                     </div>
@@ -29,17 +52,18 @@
                         <select name="tipe" id="tipe" required
                             class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
                             <option value="">Pilih Tipe</option>
-                            <option value="BSH">Basahan Siswa</option>
-                            <option value="KR">Keringan Siswa</option>
-                            <option value="OPR">Operasional</option>
-                            <option value="KRBSBM">Keringan Bumil Busui</option>
+                            <option value="BSH" {{ old('tipe') == 'BSH' ? 'selected' : '' }}>Basahan Siswa</option>
+                            <option value="KR" {{ old('tipe') == 'KR' ? 'selected' : '' }}>Keringan Siswa</option>
+                            <option value="OPR" {{ old('tipe') == 'OPR' ? 'selected' : '' }}>Operasional</option>
+                            <option value="KRBSBM" {{ old('tipe') == 'KRBSBM' ? 'selected' : '' }}>Keringan Bumil Busui
+                            </option>
                         </select>
                     </div>
 
                     <div class="sm:col-span-2">
                         <label for="customer_name" class="block text-sm font-bold text-gray-700 mb-2">Nama Pelanggan</label>
-                        <input type="text" name="customer_name" id="customer_name" required
-                            placeholder="Contoh: Budi Santoso"
+                        <input type="text" name="customer_name" id="customer_name" value="{{ old('customer_name') }}"
+                            required placeholder="Contoh: Budi Santoso"
                             class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
                     </div>
                 </div>
@@ -133,20 +157,37 @@
     <script>
         let itemIndex = 0;
         const products = @json($products);
+        const oldItems = @json(old('items', []));
 
-        function addItem() {
+        function addItem(existingItem = null) {
             const container = document.getElementById('items-container');
             const itemDiv = document.createElement('div');
             itemDiv.className =
                 "item-card bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 relative group";
 
             let productOptions = '<option value="">Pilih Produk</option>';
+            let isCustomProduct = existingItem && existingItem.product_id && !products.find(p => p.id == existingItem
+                .product_id);
+
             products.forEach(product => {
+                const selected = existingItem && existingItem.product_id == product.id ? 'selected' : '';
                 productOptions +=
-                    `<option value="${product.id}" data-price="${product.price}" data-unit="${product.unit}">${product.name}</option>`;
+                    `<option value="${product.id}" data-price="${product.price}" data-unit="${product.unit}" ${selected}>${product.name}</option>`;
             });
 
+            if (isCustomProduct) {
+                productOptions += `<option value="${existingItem.product_id}" selected>${existingItem.product_id}</option>`;
+            }
+
             const selectId = `product-select-${itemIndex}`;
+            const quantity = existingItem ? existingItem.quantity : 1;
+            const price = existingItem ? existingItem.price : '';
+            const unit = existingItem ? existingItem.unit : '';
+            const total = (parseFloat(price) * parseFloat(quantity)).toFixed(2);
+            const displayTotal = isNaN(total) ? '0.00' : total;
+            const description = existingItem ? (existingItem.description || '') : '';
+            const unitReadOnly = isCustomProduct ? '' : 'readonly';
+            const unitClass = isCustomProduct ? '' : 'bg-gray-50';
 
             itemDiv.innerHTML = `
                 <button type="button" onclick="removeItem(this)" 
@@ -172,7 +213,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <span class="text-gray-400 text-sm font-bold">Rp</span>
                             </div>
-                            <input type="number" name="items[${itemIndex}][price]" 
+                            <input type="number" name="items[${itemIndex}][price]" value="${price}"
                                 class="price-input block w-full rounded-2xl border-gray-200 py-3 pl-12 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
                                 step="0.01" onchange="updateTotal(this)">
                         </div>
@@ -182,12 +223,12 @@
                     <div class="md:col-span-2">
                         <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Jumlah</label>
                         <div class="flex items-center space-x-2">
-                            <input type="number" name="items[${itemIndex}][quantity]" 
+                            <input type="number" name="items[${itemIndex}][quantity]" value="${quantity}"
                                 class="quantity-input block w-full rounded-2xl border-gray-200 py-3 text-center text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
-                                min="0.01" step="any" value="1" onchange="updateTotal(this)" required>
-                            <input type="text" name="items[${itemIndex}][unit]" 
-                                class="unit-input block w-20 rounded-2xl border-gray-200 py-3 text-center text-xs font-bold text-gray-500 bg-gray-50" 
-                                readonly placeholder="Satuan">
+                                min="0.01" step="any" onchange="updateTotal(this)" required>
+                            <input type="text" name="items[${itemIndex}][unit]" value="${unit}"
+                                class="unit-input block w-20 rounded-2xl border-gray-200 py-3 text-center text-xs font-bold text-gray-500 ${unitClass}" 
+                                ${unitReadOnly} placeholder="Satuan">
                         </div>
                     </div>
 
@@ -198,7 +239,7 @@
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <span class="text-gray-400 text-sm font-bold">Rp</span>
                             </div>
-                            <input type="number" 
+                            <input type="number" value="${displayTotal}"
                                 class="total-input block w-full rounded-2xl border-transparent py-3 pl-12 text-gray-900 font-black bg-indigo-50 transition-all duration-200" 
                                 readonly>
                         </div>
@@ -209,7 +250,7 @@
                         <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Keterangan (Hanya untuk Laporan Pemeriksaan)</label>
                         <textarea name="items[${itemIndex}][description]" rows="2" 
                             class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 border-indigo-50 border-2"
-                            placeholder="Contoh: Rasa Plain, Cokelat, dll"></textarea>
+                            placeholder="Contoh: Rasa Plain, Cokelat, dll">${description}</textarea>
                     </div>
                 </div>
             `;
@@ -303,7 +344,14 @@
         }
 
         $(document).ready(function() {
-            addItem();
+            if (oldItems.length > 0) {
+                oldItems.forEach(item => {
+                    addItem(item);
+                });
+                calculateGrandTotal();
+            } else {
+                addItem();
+            }
         });
     </script>
 @endsection
