@@ -173,8 +173,8 @@
                                 <span class="text-gray-400 text-sm font-bold">Rp</span>
                             </div>
                             <input type="number" name="items[${itemIndex}][price]" 
-                                class="price-input block w-full rounded-2xl border-gray-200 py-3 pl-12 text-gray-900 bg-gray-50 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
-                                readonly step="0.01" onchange="updateTotal(this)">
+                                class="price-input block w-full rounded-2xl border-gray-200 py-3 pl-12 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
+                                step="0.01" onchange="updateTotal(this)">
                         </div>
                     </div>
 
@@ -251,8 +251,6 @@
                 } else {
                     const selectedOption = this.options[this.selectedIndex];
                     priceInput.value = selectedOption.getAttribute('data-price');
-                    priceInput.readOnly = true;
-                    priceInput.classList.add('bg-gray-50');
                     unitInput.value = selectedOption.getAttribute('data-unit');
                     unitInput.readOnly = true;
                     unitInput.classList.add('bg-gray-50');
