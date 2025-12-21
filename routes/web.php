@@ -5,10 +5,13 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\ScanController;
 
 Route::get('/', function () {
     return redirect()->route('invoices.index');
 });
+
+Route::post('invoices/scan', [ScanController::class, 'scan'])->name('invoices.scan');
 
 Route::resource('categories', CategoryController::class);
 Route::post('products/import', [ProductController::class, 'import'])->name('products.import');

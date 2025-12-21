@@ -8,6 +8,17 @@
                 </h2>
                 <p class="mt-2 text-sm text-gray-500">Buat invoice profesional dengan mudah dan cepat.</p>
             </div>
+            <div class="mt-4 flex md:ml-4 md:mt-0">
+                <button type="button" onclick="document.getElementById('scan-input').click()"
+                    class="inline-flex items-center px-4 py-2 border border-transparent rounded-2xl shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Scan Invoice (PDF)
+                </button>
+                <input type="file" id="scan-input" class="hidden" accept="application/pdf" onchange="scanInvoice(this)">
+            </div>
         </div>
 
         <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
@@ -309,6 +320,101 @@
 
             itemIndex++;
         }
+
+        async function scanInvoice(input) {
+            console.log('scanInvoice triggered');
+            if (!input.files || !input.files[0]) {
+                console.log('No file selected');
+                return;
+            }
+
+            const file = input.files[0];
+            console.log('Processing file:', file.name, file.type, file.size);
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('_token', '{{ csrf_token() }}');
+
+            // Show loading state
+            const btn = document.querySelector('button[onclick*="scan-input"]');
+            if (!btn) {
+                console.error('Scan button not found');
+            }
+            const originalText = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Scanning...
+                `;
+            }
+
+            try {
+                console.log('Sending request to:', '{{ route('invoices.scan') }}');
+                const response = await fetch('{{ route('invoices.scan') }}', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const responseText = await response.text();
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Server response was not JSON:', responseText);
+                    alert('Gagal memproses respon server. Silakan cek konsol browser.');
+                    return;
+                }
+
+                console.log('Scan result:', result);
+
+                if (result.success) {
+                    const data = result.data;
+
+                    // Populate main fields
+                    if (data.date) document.getElementById('date').value = data.date;
+                    if (data.customer_name) document.getElementById('customer_name').value = data.customer_name;
+
+                    // Clear existing items
+                    document.getElementById('items-container').innerHTML = '';
+                    itemIndex = 0;
+
+                    // Add new items
+                    if (data.items && data.items.length > 0) {
+                        data.items.forEach(item => {
+                            // Find product by name if possible
+                            const product = products.find(p => p.name.toLowerCase() === item.product_name
+                                .toLowerCase());
+
+                            addItem({
+                                product_id: product ? product.id : item.product_name,
+                                quantity: item.quantity,
+                                price: item.price,
+                                unit: item.unit,
+                                description: item.description
+                            });
+                        });
+                    } else {
+                        addItem();
+                    }
+
+                    alert('Invoice berhasil di-scan!');
+                } else {
+                    alert(result.message || 'Gagal men-scan invoice.');
+                }
+            } catch (error) {
+                console.error('Scan error:', error);
+                alert('Terjadi kesalahan saat men-scan invoice.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                input.value = ''; // Reset input
+            }
+        }
+
+
 
         function updateTotal(element) {
             const card = element.closest('.item-card');
