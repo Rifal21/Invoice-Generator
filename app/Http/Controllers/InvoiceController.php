@@ -211,6 +211,26 @@ class InvoiceController extends Controller
         return $pdf->stream($invoice->invoice_number . '.pdf');
     }
 
+    public function printMultiPdf(Request $request)
+    {
+        if (!$request->has('invoice_ids')) {
+            return redirect()->route('invoices.index')->with('error', 'Silakan pilih minimal satu invoice.');
+        }
+
+        $request->validate([
+            'invoice_ids' => 'required|array',
+            'invoice_ids.*' => 'exists:invoices,id'
+        ]);
+
+        $invoices = Invoice::with('items')->whereIn('id', $request->invoice_ids)
+            ->orderBy('date', 'asc')
+            ->orderBy('invoice_number', 'asc')
+            ->get();
+
+        $pdf = Pdf::loadView('invoices.multi-pdf', compact('invoices'));
+        return $pdf->stream('Invoices_Print.pdf');
+    }
+
     public function bulkExportPdf(Request $request)
     {
         if (!$request->has('invoice_ids')) {

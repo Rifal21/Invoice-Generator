@@ -10,7 +10,7 @@
             </div>
         </div>
 
-        <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
+        <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border-2 border-gray-100">
             <form action="{{ route('invoices.update', $invoice) }}" method="POST" class="p-6 sm:p-10 space-y-10">
                 @csrf
                 @method('PUT')
@@ -44,14 +44,14 @@
                         <div class="relative">
                             <input type="date" name="date" id="date" value="{{ old('date', $invoice->date) }}"
                                 required
-                                class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                                class="block w-full rounded-2xl border-2 border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
                         </div>
                     </div>
 
                     <div class="sm:col-span-2">
                         <label for="tipe" class="block text-sm font-bold text-gray-700 mb-2">Tipe Invoice</label>
                         <select name="tipe" id="tipe" required
-                            class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                            class="block w-full rounded-2xl border-2 border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
                             <option value="">Pilih Tipe</option>
                             <option value="BSH"
                                 {{ old('tipe', str_contains($invoice->invoice_number, 'BSH') ? 'BSH' : '') == 'BSH' ? 'selected' : '' }}>
@@ -70,13 +70,13 @@
                         <input type="text" name="customer_name" id="customer_name"
                             value="{{ old('customer_name', $invoice->customer_name) }}" required
                             placeholder="Contoh: Budi Santoso"
-                            class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                            class="block w-full rounded-2xl border-2 border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
                     </div>
                 </div>
 
                 <!-- Items Section -->
                 <div>
-                    <div class="flex justify-between items-center mb-6">
+                    <div class="flex justify-between items-center mb-6 pb-2 border-b-2 border-gray-50">
                         <h3 class="text-xl font-bold text-gray-900">Item Invoice</h3>
                         <span class="text-xs font-medium text-gray-400 uppercase tracking-widest">Ubah produk atau
                             layanan</span>
@@ -127,11 +127,17 @@
     <style>
         .select2-container--default .select2-selection--single {
             border-radius: 1rem;
-            border-color: #e5e7eb;
-            height: 50px;
+            border: 2px solid #e5e7eb;
+            height: 52px;
             display: flex;
             align-items: center;
             padding-left: 8px;
+            transition: all 0.2s;
+        }
+
+        .select2-container--default.select2-container--focus .select2-selection--single {
+            border-color: #6366f1;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
         }
 
         .select2-container--default .select2-selection--single .select2-selection__rendered {
@@ -169,7 +175,7 @@
             const container = document.getElementById('items-container');
             const itemDiv = document.createElement('div');
             itemDiv.className =
-                "item-card bg-white p-6 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-200 relative group";
+                "item-card bg-white p-6 rounded-3xl border-2 border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-200 relative group mb-6";
 
             let productOptions = '<option value="">Pilih Produk</option>';
             let isCustomProduct = existingItem && existingItem.product_id && !products.find(p => p.id == existingItem
@@ -192,8 +198,8 @@
             const total = (parseFloat(price) * parseFloat(quantity)).toFixed(2);
             const displayTotal = isNaN(total) ? '0.00' : total;
             const description = existingItem ? (existingItem.description || '') : '';
-            const unitReadOnly = isCustomProduct ? '' : 'readonly';
-            const unitClass = isCustomProduct ? '' : 'bg-gray-50';
+            const unitReadOnly = '';
+            const unitClass = '';
 
             itemDiv.innerHTML = `
                 <button type="button" onclick="removeItem(this)" 
@@ -220,7 +226,7 @@
                                 <span class="text-gray-400 text-sm font-bold">Rp</span>
                             </div>
                             <input type="number" name="items[${itemIndex}][price]" value="${price}"
-                                class="price-input block w-full rounded-2xl border-gray-200 py-3 pl-12 text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
+                                class="price-input block w-full rounded-2xl border-2 border-gray-200 py-3 pl-12 text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200" 
                                 step="0.01" onchange="updateTotal(this)">
                         </div>
                     </div>
@@ -230,10 +236,10 @@
                         <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Jumlah</label>
                         <div class="flex items-center space-x-2">
                             <input type="number" name="items[${itemIndex}][quantity]" value="${quantity}"
-                                class="quantity-input block w-full rounded-2xl border-gray-200 py-3 text-center text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
+                                class="quantity-input block w-full rounded-2xl border-2 border-gray-200 py-3 text-center text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200" 
                                 min="0.01" step="any" onchange="updateTotal(this)" required>
                             <input type="text" name="items[${itemIndex}][unit]" value="${unit}"
-                                class="unit-input block w-20 rounded-2xl border-gray-200 py-3 text-center text-xs font-bold text-gray-500 ${unitClass}" 
+                                class="unit-input block w-20 rounded-2xl border-2 border-gray-200 py-3 text-center text-xs font-extrabold text-indigo-600 ${unitClass}" 
                                 ${unitReadOnly} placeholder="Satuan">
                         </div>
                     </div>
@@ -255,7 +261,7 @@
                     <div class="md:col-span-12">
                         <label class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Keterangan (Hanya untuk Laporan Pemeriksaan)</label>
                         <textarea name="items[${itemIndex}][description]" rows="2" 
-                            class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200"
+                            class="block w-full rounded-2xl border-2 border-indigo-100 py-3 px-4 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 bg-indigo-50/30"
                             placeholder="Contoh: Rasa Plain, Cokelat, dll">${description}</textarea>
                     </div>
                 </div>
@@ -299,8 +305,8 @@
                     const selectedOption = this.options[this.selectedIndex];
                     priceInput.value = selectedOption.getAttribute('data-price');
                     unitInput.value = selectedOption.getAttribute('data-unit');
-                    unitInput.readOnly = true;
-                    unitInput.classList.add('bg-gray-50');
+                    unitInput.readOnly = false;
+                    unitInput.classList.remove('bg-gray-50');
                 }
                 updateTotal(this);
             });

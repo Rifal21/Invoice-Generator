@@ -23,5 +23,6 @@ Route::get('invoices/{invoice}/export-pdf', [InvoiceController::class, 'exportPd
 Route::get('invoices/{invoice}/export-excel', [InvoiceController::class, 'exportExcel'])->name('invoices.export-excel');
 Route::post('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf'])->name('invoices.bulk-export-pdf');
 Route::get('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf']);
+Route::post('invoices/print-multi-pdf', [InvoiceController::class, 'printMultiPdf'])->name('invoices.print-multi-pdf');
 
 Route::resource('invoices', InvoiceController::class);

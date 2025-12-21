@@ -24,19 +24,19 @@
         <form action="{{ route('invoices.index') }}" method="GET"
             class="bg-white shadow-xl rounded-3xl p-6 mb-8 border border-gray-100">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
-                <div class="md:col-span-3">
+                <div class="md:col-span-2">
                     <label for="search" class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Cari
                         Invoice / Pelanggan</label>
                     <input type="text" name="search" id="search" value="{{ request('search') }}"
                         placeholder="Nomor atau nama..."
-                        class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        class="block w-full rounded-2xl border-gray-200 py-3 px-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                 </div>
-                <div class="md:col-span-3">
+                <div class="md:col-span-2">
                     <label for="customer"
                         class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Filter
                         Pelanggan</label>
                     <select name="customer" id="customer"
-                        class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        class="block w-full rounded-2xl border-gray-200 py-3 px-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                         <option value="">Semua Pelanggan</option>
                         @foreach ($customers as $customer)
                             <option value="{{ $customer }}" {{ request('customer') == $customer ? 'selected' : '' }}>
@@ -49,7 +49,7 @@
                         class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Filter
                         Tanggal</label>
                     <input type="date" name="date" id="date" value="{{ request('date') }}"
-                        class="block w-full rounded-2xl border-gray-200 py-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        class="block w-full rounded-2xl border-gray-200 py-3 px-3 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                 </div>
                 <div class="md:col-span-2 flex gap-2">
                     <button type="submit"
@@ -61,16 +61,14 @@
                         Reset
                     </a>
                 </div>
-                <div class="md:col-span-2 text-right">
+                <div class="md:col-span-4 flex gap-2">
                     <button type="button" onclick="submitBulkExport()" id="bulk-export-btn" disabled
-                        class="w-full bg-red-50 text-red-700 font-bold py-3 px-6 rounded-2xl hover:bg-red-100 transition-all border border-red-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3" />
-                        </svg>
-                        Buat Laporan dari Invoice Terpilih (PDF)
+                        class="flex-1 bg-red-50 text-red-700 font-bold py-3 px-4 rounded-2xl hover:bg-red-100 transition-all border border-red-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center">
+                        Buat Laporan (PDF)
+                    </button>
+                    <button type="button" onclick="submitMultiPrint()" id="multi-print-btn" disabled
+                        class="flex-1 bg-indigo-50 text-indigo-700 font-bold py-3 px-4 rounded-2xl hover:bg-indigo-100 transition-all border border-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center">
+                        Cetak Invoice (PDF)
                     </button>
                 </div>
             </div>
@@ -182,22 +180,21 @@
     <script>
         const selectAll = document.getElementById('select-all');
         const checkboxes = document.querySelectorAll('.invoice-checkbox');
-        const exportBtn = document.getElementById('bulk-export-btn');
+        const bulkExportBtn = document.getElementById('bulk-export-btn');
+        const multiPrintBtn = document.getElementById('multi-print-btn');
         const bulkForm = document.getElementById('bulk-export-form');
 
         function updateExportButton() {
             const checkedCount = document.querySelectorAll('.invoice-checkbox:checked').length;
-            exportBtn.disabled = checkedCount === 0;
+            bulkExportBtn.disabled = checkedCount === 0;
+            multiPrintBtn.disabled = checkedCount === 0;
+
             if (checkedCount > 0) {
-                exportBtn.innerHTML = `
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3"/></svg>
-                    Buat Laporan dari ${checkedCount} Invoice (PDF)
-                `;
+                bulkExportBtn.innerText = `Buat (${checkedCount}) Laporan`;
+                multiPrintBtn.innerText = `Cetak (${checkedCount}) Invoice`;
             } else {
-                exportBtn.innerHTML = `
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9h1.5m1.5 0H15m-6 4h6m-6 4h3"/></svg>
-                    Buat Laporan dari Invoice Terpilih (PDF)
-                `;
+                bulkExportBtn.innerText = `Buat Laporan`;
+                multiPrintBtn.innerText = `Cetak Invoice`;
             }
         }
 
@@ -216,6 +213,12 @@
         });
 
         function submitBulkExport() {
+            bulkForm.action = "{{ route('invoices.bulk-export-pdf') }}";
+            bulkForm.submit();
+        }
+
+        function submitMultiPrint() {
+            bulkForm.action = "{{ route('invoices.print-multi-pdf') }}";
             bulkForm.submit();
         }
 
