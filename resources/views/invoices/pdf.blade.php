@@ -325,7 +325,9 @@
                         <tr>
                             <td class="text-center">{{ $index + 1 }}</td>
                             <td>{{ $item->product_name }}</td>
-                            <td class="text-center">{{ $item->quantity }}</td>
+                            <td class="text-center">
+                                {{ number_format($item->quantity, floor($item->quantity) == $item->quantity ? 0 : 2, ',', '.') }}
+                            </td>
                             <td class="text-center">{{ $item->unit }}</td>
                             <td class="text-left" style="border-right: none;">Rp</td>
                             <td class="text-right" style="border-left: none;">

@@ -184,7 +184,7 @@
                         <div class="flex items-center space-x-2">
                             <input type="number" name="items[${itemIndex}][quantity]" 
                                 class="quantity-input block w-full rounded-2xl border-gray-200 py-3 text-center text-gray-900 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200" 
-                                min="1" value="1" onchange="updateTotal(this)" required>
+                                min="0.01" step="any" value="1" onchange="updateTotal(this)" required>
                             <input type="text" name="items[${itemIndex}][unit]" 
                                 class="unit-input block w-20 rounded-2xl border-gray-200 py-3 text-center text-xs font-bold text-gray-500 bg-gray-50" 
                                 readonly placeholder="Satuan">
