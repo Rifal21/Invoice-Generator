@@ -210,6 +210,32 @@
                                 </tr>
                             @endforelse
                         </tbody>
+                        <tfoot class="bg-gray-50/50">
+                            <tr>
+                                <td colspan="4"
+                                    class="px-3 py-5 text-right text-xs font-black text-gray-400 uppercase tracking-widest">
+                                    Subtotal Halaman Ini
+                                </td>
+                                <td class="px-3 py-5 text-left">
+                                    <div class="text-sm font-black text-indigo-600">
+                                        Rp {{ number_format($totalAmountPage, 2, ',', '.') }}
+                                    </div>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr class="bg-indigo-50/30">
+                                <td colspan="4"
+                                    class="px-3 py-5 text-right text-xs font-black text-indigo-600 uppercase tracking-widest">
+                                    Total Keseluruhan (Filter)
+                                </td>
+                                <td class="px-3 py-5 text-left">
+                                    <div class="text-base font-black text-indigo-700">
+                                        Rp {{ number_format($totalAmountFiltered, 2, ',', '.') }}
+                                    </div>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
             </div>

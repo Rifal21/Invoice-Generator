@@ -60,7 +60,12 @@ class InvoiceController extends Controller
 
         $customers = Invoice::select('customer_name')->distinct()->orderBy('customer_name')->pluck('customer_name');
 
-        return view('invoices.index', compact('invoices', 'customers'));
+        // Calculate total amount of filtered results
+        $totalAmountFiltered = $query->sum('total_amount');
+        // Total on current page
+        $totalAmountPage = $invoices->sum('total_amount');
+
+        return view('invoices.index', compact('invoices', 'customers', 'totalAmountFiltered', 'totalAmountPage'));
     }
 
     /**
