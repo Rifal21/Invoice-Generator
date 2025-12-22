@@ -41,13 +41,8 @@
                                         class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                         <a href="{{ route('categories.edit', $category->id) }}"
                                             class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
-                                        <form action="{{ route('categories.destroy', $category->id) }}" method="POST"
-                                            class="inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900"
-                                                onclick="return confirm('Apakah Anda yakin?')">Hapus</button>
-                                        </form>
+                                        <button type="button" class="text-red-600 hover:text-red-900"
+                                            onclick="deleteCategory({{ $category->id }})">Hapus</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -57,4 +52,29 @@
             </div>
         </div>
     </div>
+    <form id="delete-form" action="" method="POST" class="hidden">
+        @csrf
+        @method('DELETE')
+    </form>
+
+    <script>
+        function deleteCategory(id) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Kategori yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('delete-form');
+                    form.action = `/categories/${id}`;
+                    form.submit();
+                }
+            })
+        }
+    </script>
 @endsection

@@ -35,7 +35,29 @@ class InvoiceController extends Controller
             $query->where('customer_name', $request->customer);
         }
 
-        $invoices = $query->latest()->get();
+        // Sorting
+        $sortField = $request->get('sort_by', 'created_at');
+        $sortOrder = $request->get('sort_order', 'desc');
+        $allowedSortFields = ['invoice_number', 'date', 'customer_name', 'total_amount', 'created_at'];
+
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'created_at';
+        }
+
+        if (!in_array($sortOrder, ['asc', 'desc'])) {
+            $sortOrder = 'desc';
+        }
+
+        $query->orderBy($sortField, $sortOrder);
+
+        // Pagination
+        $perPage = $request->get('per_page', 5);
+        if ($perPage === 'all') {
+            $invoices = $query->get();
+        } else {
+            $invoices = $query->paginate(is_numeric($perPage) ? $perPage : 10)->withQueryString();
+        }
+
         $customers = Invoice::select('customer_name')->distinct()->orderBy('customer_name')->pluck('customer_name');
 
         return view('invoices.index', compact('invoices', 'customers'));

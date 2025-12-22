@@ -94,13 +94,8 @@
                                         class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                                         <a href="{{ route('products.edit', $product->id) }}"
                                             class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
-                                        <form action="{{ route('products.destroy', $product->id) }}" method="POST"
-                                            class="inline-block">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900"
-                                                onclick="return confirm('Apakah Anda yakin?')">Hapus</button>
-                                        </form>
+                                        <button type="button" class="text-red-600 hover:text-red-900"
+                                            onclick="deleteProduct({{ $product->id }})">Hapus</button>
                                     </td>
                                 </tr>
                             @endforeach
@@ -113,4 +108,29 @@
             {{ $products->links() }}
         </div>
     </div>
+    <form id="delete-form" action="" method="POST" class="hidden">
+        @csrf
+        @method('DELETE')
+    </form>
+
+    <script>
+        function deleteProduct(id) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Produk yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('delete-form');
+                    form.action = `/products/${id}`;
+                    form.submit();
+                }
+            })
+        }
+    </script>
 @endsection

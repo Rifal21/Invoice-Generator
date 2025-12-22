@@ -21,7 +21,7 @@
         </div>
 
         <!-- Filter Section -->
-        <form action="{{ route('invoices.index') }}" method="GET"
+        <form id="filter-form" action="{{ route('invoices.index') }}" method="GET"
             class="bg-white shadow-xl rounded-3xl p-6 mb-8 border border-gray-100">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
                 <div class="md:col-span-2">
@@ -73,6 +73,50 @@
                 </div>
             </div>
         </form>
+
+        <div
+            class="flex flex-col md:flex-row justify-between items-center mb-6 gap-6 bg-white p-4 rounded-3xl shadow-sm border border-gray-50">
+            <div class="flex items-center gap-3">
+                <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Tampilkan:</span>
+                <select name="per_page" onchange="document.getElementById('filter-form').submit()" form="filter-form"
+                    class="rounded-xl border-gray-200 text-sm font-bold focus:ring-indigo-500 focus:border-indigo-500 py-2 pl-3 pr-10">
+                    <option value="5" {{ request('per_page') == 5 ? 'selected' : '' }}>5 Data</option>
+                    <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10 Data</option>
+                    <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25 Data</option>
+                    <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50 Data</option>
+                    <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100 Data</option>
+                    <option value="all" {{ request('per_page') == 'all' ? 'selected' : '' }}>Semua</option>
+                </select>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Urutkan:</span>
+                    <select name="sort_by" onchange="document.getElementById('filter-form').submit()" form="filter-form"
+                        class="rounded-xl border-gray-200 text-sm font-bold focus:ring-indigo-500 focus:border-indigo-500 py-2 pl-3 pr-10">
+                        <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Input Terbaru
+                        </option>
+                        <option value="date" {{ request('sort_by') == 'date' ? 'selected' : '' }}>Tanggal Invoice
+                        </option>
+                        <option value="invoice_number" {{ request('sort_by') == 'invoice_number' ? 'selected' : '' }}>Nomor
+                            Invoice</option>
+                        <option value="customer_name" {{ request('sort_by') == 'customer_name' ? 'selected' : '' }}>Nama
+                            Pelanggan</option>
+                        <option value="total_amount" {{ request('sort_by') == 'total_amount' ? 'selected' : '' }}>Total
+                            Nominal</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-3">
+                    <select name="sort_order" onchange="document.getElementById('filter-form').submit()" form="filter-form"
+                        class="rounded-xl border-gray-200 text-sm font-bold focus:ring-indigo-500 focus:border-indigo-500 py-2 pl-3 pr-10">
+                        <option value="desc" {{ request('sort_order', 'desc') == 'desc' ? 'selected' : '' }}>Menurun (Z-A
+                            / Terbaru)</option>
+                        <option value="asc" {{ request('sort_order') == 'asc' ? 'selected' : '' }}>Menaik (A-Z /
+                            Terlama)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
 
         <form id="bulk-export-form" action="{{ route('invoices.bulk-export-pdf') }}" method="POST" target="_blank">
             @csrf
@@ -169,6 +213,12 @@
                     </table>
                 </div>
             </div>
+
+            @if ($invoices instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                <div class="mt-8">
+                    {{ $invoices->links() }}
+                </div>
+            @endif
         </form>
 
         <form id="delete-form" action="" method="POST" class="hidden">
@@ -223,11 +273,26 @@
         }
 
         function deleteInvoice(id) {
-            if (confirm('Apakah Anda yakin ingin menghapus invoice ini?')) {
-                const form = document.getElementById('delete-form');
-                form.action = `/invoices/${id}`;
-                form.submit();
-            }
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Invoice yang dihapus tidak dapat dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    container: 'rounded-3xl',
+                    popup: 'rounded-3xl',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('delete-form');
+                    form.action = `/invoices/${id}`;
+                    form.submit();
+                }
+            })
         }
     </script>
 @endsection
