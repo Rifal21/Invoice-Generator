@@ -51,7 +51,7 @@ class InvoiceController extends Controller
         $query->orderBy($sortField, $sortOrder);
 
         // Pagination
-        $perPage = $request->get('per_page', 5);
+        $perPage = $request->get('per_page', 10);
         if ($perPage === 'all') {
             $invoices = $query->get();
         } else {
