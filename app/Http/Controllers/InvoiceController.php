@@ -235,7 +235,7 @@ class InvoiceController extends Controller
     public function exportPdf(Invoice $invoice)
     {
         $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
-        return $pdf->stream($invoice->invoice_number . '.pdf');
+        return $pdf->stream($invoice->invoice_number . ' - ' . $invoice->customer_name . '.pdf');
     }
 
     public function printMultiPdf(Request $request)
@@ -255,7 +255,7 @@ class InvoiceController extends Controller
             ->get();
 
         $pdf = Pdf::loadView('invoices.multi-pdf', compact('invoices'));
-        return $pdf->stream('Invoices_Print.pdf');
+        return $pdf->stream(' Gabungan invoice ' . $invoices->first()->customer_name . '.pdf');
     }
 
     public function bulkExportPdf(Request $request)
