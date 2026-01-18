@@ -88,7 +88,6 @@
 
         /* Optimization for page breaks */
         .table-group {
-            page-break-inside: avoid;
             margin-bottom: 20px;
         }
 

@@ -80,10 +80,12 @@
 
                     <!-- Desktop Header (Visible only on medium screens and up) -->
                     <div class="hidden md:grid grid-cols-12 gap-6 mb-2 px-6">
-                        <div class="col-span-12 md:col-span-5 text-xs font-black text-gray-400 uppercase tracking-widest">
+                        <div class="col-span-12 md:col-span-4 text-xs font-black text-gray-400 uppercase tracking-widest">
                             Produk / Layanan</div>
-                        <div class="col-span-6 md:col-span-3 text-xs font-black text-gray-400 uppercase tracking-widest">
-                            Harga</div>
+                        <div class="col-span-6 md:col-span-2 text-xs font-black text-gray-400 uppercase tracking-widest">
+                            HPP</div>
+                        <div class="col-span-6 md:col-span-2 text-xs font-black text-gray-400 uppercase tracking-widest">
+                            Harga Jual</div>
                         <div class="col-span-6 md:col-span-2 text-xs font-black text-gray-400 uppercase tracking-widest">
                             Jumlah</div>
                         <div class="col-span-12 md:col-span-2 text-xs font-black text-gray-400 uppercase tracking-widest">
@@ -201,7 +203,7 @@
             products.forEach(product => {
                 const selected = existingItem && existingItem.product_id == product.id ? 'selected' : '';
                 productOptions +=
-                    `<option value="${product.id}" data-price="${product.price}" data-unit="${product.unit}" ${selected}>${product.name}</option>`;
+                    `<option value="${product.id}" data-price="${product.price}" data-purchase-price="${product.purchase_price}" data-unit="${product.unit}" ${selected}>${product.name}</option>`;
             });
 
             if (isCustomProduct) {
@@ -211,6 +213,7 @@
             const selectId = `product-select-${itemIndex}`;
             const quantity = existingItem ? parseFloat(existingItem.quantity) : 1;
             const price = existingItem ? parseFloat(existingItem.price) : 0;
+            const purchase_price = existingItem ? parseFloat(existingItem.purchase_price) : 0;
             const unit = existingItem ? existingItem.unit : '';
 
             // Calculate Total
@@ -231,28 +234,41 @@
                 </button>
 
                 <div class="grid grid-cols-12 gap-4 md:gap-6">
-                    <!-- Product Selection (Full width on mobile, 5 cols on desktop) -->
-                    <div class="col-span-12 md:col-span-5">
+                    <!-- Product Selection -->
+                    <div class="col-span-12 md:col-span-4">
                         <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Produk / Layanan</label>
                         <select id="${selectId}" name="items[${itemIndex}][product_id]" class="product-select block w-full" required>
                             ${productOptions}
                         </select>
                     </div>
 
-                    <!-- Price (Half width on mobile, 3 cols on desktop) -->
-                    <div class="col-span-6 md:col-span-3">
-                        <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Harga</label>
+                    <!-- Purchase Price (HPP) -->
+                    <div class="col-span-6 md:col-span-2">
+                        <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">HPP</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-400 text-sm font-bold">Rp</span>
+                                <span class="text-gray-400 text-xs font-bold">Rp</span>
+                            </div>
+                            <input type="number" name="items[${itemIndex}][purchase_price]" value="${purchase_price || ''}"
+                                class="purchase-price-input block w-full rounded-xl border-2 border-gray-100 py-2.5 pl-8 text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 text-sm font-bold bg-gray-50/50" 
+                                step="0.01">
+                        </div>
+                    </div>
+
+                    <!-- Selling Price -->
+                    <div class="col-span-6 md:col-span-2">
+                        <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Harga Jual</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-400 text-xs font-bold">Rp</span>
                             </div>
                             <input type="number" name="items[${itemIndex}][price]" value="${price || ''}"
-                                class="price-input block w-full rounded-xl border-2 border-gray-200 py-2.5 pl-10 text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 text-sm font-bold" 
+                                class="price-input block w-full rounded-xl border-2 border-gray-200 py-2.5 pl-8 text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 text-sm font-bold" 
                                 step="0.01" onchange="updateTotal(this)">
                         </div>
                     </div>
 
-                    <!-- Quantity & Unit (Half width on mobile, 2 cols on desktop) -->
+                    <!-- Quantity & Unit -->
                     <div class="col-span-6 md:col-span-2">
                         <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Jumlah</label>
                         <div class="flex items-center gap-2">
@@ -261,19 +277,19 @@
                                 min="0.01" step="any" onchange="updateTotal(this)" required>
                             <input type="text" name="items[${itemIndex}][unit]" value="${unit}"
                                 class="unit-input block w-16 rounded-xl border-2 border-gray-200 py-2.5 text-center text-xs font-extrabold text-indigo-600 ${unitClass}" 
-                                ${unitReadOnly} placeholder="Stn">
+                                placeholder="Stn">
                         </div>
                     </div>
 
-                    <!-- Subtotal (Full width on mobile, 2 cols on desktop) -->
-                    <div class="col-span-12 md:col-span-2">
+                    <!-- Subtotal -->
+                    <div class="col-span-6 md:col-span-2">
                         <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Subtotal</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-400 text-sm font-bold">Rp</span>
+                                <span class="text-gray-400 text-xs font-bold">Rp</span>
                             </div>
                             <input type="text" value="${displayTotal}"
-                                class="total-input block w-full rounded-xl border-transparent py-2.5 pl-10 text-gray-900 font-black bg-indigo-50 transition-all duration-200 text-sm cursor-default" 
+                                class="total-input block w-full rounded-xl border-transparent py-2.5 pl-8 text-gray-900 font-black bg-indigo-50 transition-all duration-200 text-sm cursor-default" 
                                 readonly>
                         </div>
                     </div>
@@ -318,6 +334,7 @@
                     priceInput.value = '';
                     priceInput.readOnly = false;
                     priceInput.classList.remove('bg-gray-50');
+                    card.querySelector('.purchase-price-input').value = '';
                     unitInput.value = '';
                     unitInput.readOnly = false;
                     unitInput.classList.remove('bg-gray-50');
@@ -325,6 +342,8 @@
                 } else {
                     const selectedOption = this.options[this.selectedIndex];
                     priceInput.value = selectedOption.getAttribute('data-price');
+                    card.querySelector('.purchase-price-input').value = selectedOption.getAttribute(
+                        'data-purchase-price');
                     unitInput.value = selectedOption.getAttribute('data-unit');
                     unitInput.readOnly = false;
                     unitInput.classList.remove('bg-gray-50');
@@ -388,6 +407,7 @@
                                 product_id: product ? product.id : item.product_name,
                                 quantity: item.quantity,
                                 price: item.price,
+                                purchase_price: product ? product.purchase_price : 0,
                                 unit: item.unit
                             });
                         });
