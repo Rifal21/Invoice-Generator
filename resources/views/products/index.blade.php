@@ -88,10 +88,17 @@
                                 Kategori</th>
                             <th scope="col"
                                 class="px-3 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">Harga
+                                Beli
                             </th>
                             <th scope="col"
                                 class="px-3 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
+                                Harga Jual</th>
+                            <th scope="col"
+                                class="px-3 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
                                 Satuan</th>
+                            <th scope="col"
+                                class="px-3 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
+                                Stok</th>
                             <th scope="col"
                                 class="px-3 py-4 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
                                 Deskripsi</th>
@@ -114,9 +121,15 @@
                                         {{ $product->category->name }}
                                     </span>
                                 </td>
+                                <td class="whitespace-nowrap px-3 py-5 text-sm font-bold text-gray-500">
+                                    Rp {{ number_format($product->purchase_price, 0, ',', '.') }}</td>
                                 <td class="whitespace-nowrap px-3 py-5 text-sm font-bold text-indigo-600">
                                     Rp {{ number_format($product->price, 0, ',', '.') }}</td>
                                 <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">{{ $product->unit }}</td>
+                                <td
+                                    class="whitespace-nowrap px-3 py-5 text-sm font-bold {{ $product->stock <= 5 ? 'text-red-500' : 'text-gray-900' }}">
+                                    {{ (float) $product->stock }}
+                                </td>
                                 <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500 max-w-xs truncate">
                                     {{ Str::limit($product->description, 30) }}</td>
                                 <td class="relative whitespace-nowrap py-5 pl-3 pr-6 text-right text-sm font-medium">
@@ -155,6 +168,14 @@
                         <span class="text-xl font-black text-indigo-600">Rp
                             {{ number_format($product->price, 0, ',', '.') }}</span>
                         <span class="text-sm text-gray-400">/ {{ $product->unit }}</span>
+                    </div>
+
+                    <div class="mb-4 flex items-center gap-2">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Stok Tersedia:</span>
+                        <span
+                            class="px-3 py-1 rounded-xl text-xs font-black {{ $product->stock <= 5 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600' }}">
+                            {{ (float) $product->stock }} {{ $product->unit }}
+                        </span>
                     </div>
 
                     @if ($product->description)

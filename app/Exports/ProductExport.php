@@ -2,41 +2,23 @@
 
 namespace App\Exports;
 
-use App\Models\Product;
-use Maatwebsite\Excel\Concerns\FromCollection;
-use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use App\Models\Category;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class ProductExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
+class ProductExport implements WithMultipleSheets
 {
-    /**
-     * @return \Illuminate\Support\Collection
-     */
-    public function collection()
+    public function sheets(): array
     {
-        return Product::with('category')->get();
-    }
+        $sheets = [];
 
-    public function headings(): array
-    {
-        return [
-            'Nama Barang',
-            'Kategori',
-            'Harga',
-            'Satuan',
-            'Deskripsi',
-        ];
-    }
+        $categories = Category::with('products')->get();
 
-    public function map($product): array
-    {
-        return [
-            $product->name,
-            $product->category ? $product->category->name : '',
-            $product->price,
-            $product->unit,
-            $product->description,
-        ];
+        foreach ($categories as $category) {
+            if ($category->products->count() > 0) {
+                $sheets[] = new CategoryProductSheet($category);
+            }
+        }
+
+        return $sheets;
     }
 }

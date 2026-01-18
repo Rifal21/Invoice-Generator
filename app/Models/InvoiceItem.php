@@ -8,11 +8,12 @@ use App\Models\Product; // Added for relationship
 
 class InvoiceItem extends Model
 {
-    protected $fillable = ['invoice_id', 'product_id', 'product_name', 'quantity', 'unit', 'price', 'total', 'description'];
+    protected $fillable = ['invoice_id', 'product_id', 'product_name', 'quantity', 'unit', 'price', 'purchase_price', 'total', 'description'];
 
     protected $casts = [
         'quantity' => 'float',
         'price' => 'float',
+        'purchase_price' => 'float',
         'total' => 'float',
     ];
 

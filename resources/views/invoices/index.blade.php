@@ -1,9 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
             <div class="min-w-0 flex-1">
                 <h1 class="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">Daftar Invoice</h1>
                 <p class="mt-2 text-sm md:text-lg text-gray-500">Kelola dan pantau semua invoice Anda.</p>
@@ -22,7 +22,7 @@
 
         <!-- Filter Section -->
         <form id="filter-form" action="{{ route('invoices.index') }}" method="GET"
-            class="bg-white shadow-lg rounded-3xl p-5 mb-8 border border-gray-100">
+            class="bg-white shadow-lg rounded-3xl p-5 mb-6 border border-gray-100">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-y-4 gap-x-6 items-end">
                 <!-- Search -->
                 <div class="md:col-span-3">

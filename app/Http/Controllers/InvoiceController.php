@@ -90,6 +90,7 @@ class InvoiceController extends Controller
             'items.*.product_id' => 'required',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.purchase_price' => 'nullable|numeric|min:0',
             'items.*.unit' => 'required|string',
             'items.*.description' => 'nullable|string',
         ]);
@@ -118,6 +119,7 @@ class InvoiceController extends Controller
                     'category_id' => $category->id,
                     'name' => $productId, // The name was passed as product_id (from Select2 tags)
                     'price' => $item['price'],
+                    'purchase_price' => $item['purchase_price'] ?? 0,
                     'unit' => $item['unit'],
                 ]);
             }
@@ -132,6 +134,7 @@ class InvoiceController extends Controller
                 'quantity' => $item['quantity'],
                 'unit' => $item['unit'],
                 'price' => $item['price'],
+                'purchase_price' => $item['purchase_price'] ?? 0,
                 'total' => $total,
                 'description' => $item['description'] ?? null,
             ]);
@@ -171,6 +174,7 @@ class InvoiceController extends Controller
             'items.*.product_id' => 'required',
             'items.*.quantity' => 'required|numeric|min:0.01',
             'items.*.price' => 'required|numeric|min:0',
+            'items.*.purchase_price' => 'nullable|numeric|min:0',
             'items.*.unit' => 'required|string',
             'items.*.description' => 'nullable|string',
         ]);
@@ -200,6 +204,7 @@ class InvoiceController extends Controller
                     'category_id' => $category->id,
                     'name' => $productId,
                     'price' => $item['price'],
+                    'purchase_price' => $item['purchase_price'] ?? 0,
                     'unit' => $item['unit'],
                 ]);
             }
@@ -214,6 +219,7 @@ class InvoiceController extends Controller
                 'quantity' => $item['quantity'],
                 'unit' => $item['unit'],
                 'price' => $item['price'],
+                'purchase_price' => $item['purchase_price'] ?? 0,
                 'total' => $total,
                 'description' => $item['description'] ?? null,
             ]);
@@ -323,7 +329,7 @@ class InvoiceController extends Controller
         });
 
         $pdf = Pdf::loadView('invoices.bulk-pdf', compact('groupedItems', 'invoices'));
-        return $pdf->stream('Laporan_Pemeriksaan_Bahan_Makanan.pdf');
+        return $pdf->stream('Laporan_Pemeriksaan_Bahan_Makanan_' . $invoices->first()->customer_name . '_' . $invoices->first()->created_at->format('d F Y') . '.pdf');
     }
 
     public function exportExcel(Invoice $invoice)

@@ -12,7 +12,10 @@ use Maatwebsite\Excel\Concerns\WithColumnWidths;
 use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class InvoiceExport implements FromView, ShouldAutoSize, WithStyles, WithDrawings, WithColumnWidths
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+
+class InvoiceExport implements FromView, ShouldAutoSize, WithStyles, WithDrawings, WithColumnWidths, WithColumnFormatting
 {
     protected $invoice;
 
@@ -74,13 +77,6 @@ class InvoiceExport implements FromView, ShouldAutoSize, WithStyles, WithDrawing
             $drawing2->setHeight(60);
 
             // Calculate row for signature
-            // Header rows: 10 (Header 5 + Spacer 1 + Customer 2 + Spacer 1 + Table Header 1)
-            // Items: count
-            // Totals: 4
-            // Spacer: 1
-            // Hormat Kami: 1
-            // Signature Image Row: 17 + count
-
             $rowCount = 17 + $this->invoice->items->count();
 
             $drawing2->setCoordinates('G' . $rowCount);
@@ -89,5 +85,13 @@ class InvoiceExport implements FromView, ShouldAutoSize, WithStyles, WithDrawing
         }
 
         return $drawings;
+    }
+
+    public function columnFormats(): array
+    {
+        return [
+            'G' => '"Rp"#,##0',
+            'H' => '"Rp"#,##0',
+        ];
     }
 }

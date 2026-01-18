@@ -81,9 +81,30 @@
                                 </div>
 
                                 <div>
+                                    <label for="purchase_price" class="block text-sm font-bold text-gray-900 mb-2">Harga
+                                        Beli (HPP)</label>
+                                    <div class="relative">
+                                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                            <span class="text-gray-500 font-bold">Rp</span>
+                                        </div>
+                                        <input type="number" name="purchase_price" id="purchase_price" step="0.01"
+                                            placeholder="0"
+                                            class="block w-full rounded-2xl border-gray-200 py-3 pl-12 pr-4 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all font-bold">
+                                    </div>
+                                </div>
+
+                                <div>
                                     <label for="unit" class="block text-sm font-bold text-gray-900 mb-2">Satuan</label>
                                     <input type="text" name="unit" id="unit" required
                                         placeholder="Contoh: Pcs, Kg, Box"
+                                        class="block w-full rounded-2xl border-gray-200 py-3 px-4 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all">
+                                </div>
+
+                                <div>
+                                    <label for="stock" class="block text-sm font-bold text-gray-900 mb-2">Stok
+                                        Awal</label>
+                                    <input type="number" name="stock" id="stock" step="0.01" value="0"
+                                        required
                                         class="block w-full rounded-2xl border-gray-200 py-3 px-4 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all">
                                 </div>
                             </div>

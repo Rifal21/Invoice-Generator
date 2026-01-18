@@ -48,7 +48,9 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric',
+            'purchase_price' => 'nullable|numeric|min:0',
             'unit' => 'required|string',
+            'stock' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
         ]);
 
@@ -83,7 +85,9 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric',
+            'purchase_price' => 'nullable|numeric|min:0',
             'unit' => 'required|string',
+            'stock' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
         ]);
 
@@ -116,6 +120,6 @@ class ProductController extends Controller
 
     public function export()
     {
-        return Excel::download(new \App\Exports\ProductExport, 'products.xlsx');
+        return Excel::download(new \App\Exports\ProductExport, 'products_' . now()->format('d F Y') . '.xlsx');
     }
 }

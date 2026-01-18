@@ -1,28 +1,75 @@
 <?php
 
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\ScanController;
+use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\PosController;
+use App\Http\Controllers\ProfitController;
+use App\Http\Controllers\SalaryController;
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AttendanceController;
 
-Route::get('/', function () {
-    return redirect()->route('invoices.index');
+// Auth Routes
+Route::get('login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('login', [AuthController::class, 'login'])->name('login.post');
+Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+
+// Public Attendance Routes
+Route::get('attendance', [AttendanceController::class, 'publicScan'])->name('attendance.public');
+Route::post('attendance/scan', [AttendanceController::class, 'scan'])->name('attendance.scan');
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/', function () {
+        return redirect()->route('invoices.index');
+    });
+
+    Route::post('invoices/scan', [ScanController::class, 'scan'])->name('invoices.scan');
+
+    // Inventory Routes
+    Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
+    Route::post('inventory/{product}/adjust', [InventoryController::class, 'adjustStock'])->name('inventory.adjust');
+    Route::get('inventory/{product}/history', [InventoryController::class, 'history'])->name('inventory.history');
+
+    // POS Routes
+    Route::get('pos', [PosController::class, 'index'])->name('pos.index');
+    Route::post('pos/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+
+    // Profit Report Routes
+    Route::get('profit', [ProfitController::class, 'index'])->name('profit.index');
+
+    Route::resource('categories', CategoryController::class);
+    Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
+    Route::get('products/export', [ProductController::class, 'export'])->name('products.export');
+    Route::resource('products', ProductController::class);
+
+    // Custom Invoice Routes
+    Route::get('invoices/{invoice}/export-pdf', [InvoiceController::class, 'exportPdf'])->name('invoices.export-pdf');
+    Route::get('invoices/{invoice}/export-excel', [InvoiceController::class, 'exportExcel'])->name('invoices.export-excel');
+    Route::post('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf'])->name('invoices.bulk-export-pdf');
+    Route::get('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf']);
+    Route::post('invoices/print-multi-pdf', [InvoiceController::class, 'printMultiPdf'])->name('invoices.print-multi-pdf');
+
+    Route::resource('invoices', InvoiceController::class);
+
+    // Admin & Ketua Only
+    Route::middleware(['role:super_admin,ketua'])->group(function () {
+        Route::resource('salaries', SalaryController::class);
+        Route::post('salaries/{salary}/pay', [SalaryController::class, 'markAsPaid'])->name('salaries.mark-as-paid');
+
+        // Attendance Admin Routes
+        Route::get('attendance/settings', [AttendanceController::class, 'settings'])->name('attendance.settings');
+        Route::post('attendance/settings', [AttendanceController::class, 'updateSettings'])->name('attendance.update-settings');
+        Route::get('attendance/report', [AttendanceController::class, 'report'])->name('attendance.report');
+    });
+
+    // Admin Only
+    Route::middleware(['role:super_admin'])->group(function () {
+        Route::get('qr-code/user/{code}', [UserController::class, 'generateQR'])->name('users.qr');
+        Route::resource('users', UserController::class);
+    });
 });
-
-Route::post('invoices/scan', [ScanController::class, 'scan'])->name('invoices.scan');
-
-Route::resource('categories', CategoryController::class);
-Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
-Route::get('products/export', [ProductController::class, 'export'])->name('products.export');
-Route::resource('products', ProductController::class);
-
-// Custom Invoice Routes (Must be above resource to avoid conflict with {invoice} parameter)
-Route::get('invoices/{invoice}/export-pdf', [InvoiceController::class, 'exportPdf'])->name('invoices.export-pdf');
-Route::get('invoices/{invoice}/export-excel', [InvoiceController::class, 'exportExcel'])->name('invoices.export-excel');
-Route::post('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf'])->name('invoices.bulk-export-pdf');
-Route::get('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf']);
-Route::post('invoices/print-multi-pdf', [InvoiceController::class, 'printMultiPdf'])->name('invoices.print-multi-pdf');
-
-Route::resource('invoices', InvoiceController::class);

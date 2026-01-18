@@ -2,77 +2,28 @@
 
 namespace App\Imports;
 
-use App\Models\Product;
-use App\Models\Category;
-use Maatwebsite\Excel\Concerns\ToModel;
-use Maatwebsite\Excel\Concerns\WithStartRow;
-use Maatwebsite\Excel\Concerns\WithBatchInserts;
-use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
+use Maatwebsite\Excel\Concerns\SkipsUnknownSheets;
 
-class ProductImport implements ToModel, WithStartRow, WithBatchInserts, WithChunkReading
+class ProductImport implements WithMultipleSheets, SkipsUnknownSheets
 {
-    private $categories;
-
-    public function __construct()
+    public function sheets(): array
     {
-        // Load all categories into memory to avoid N+1 queries
-        // Key is name, Value is ID
-        $this->categories = Category::pluck('id', 'name')->toArray();
-    }
-
-    /**
-     * @return int
-     */
-    public function startRow(): int
-    {
-        return 2;
-    }
-
-    /**
-     * @param array $row
-     *
-     * @return \Illuminate\Database\Eloquent\Model|null
-     */
-    public function model(array $row)
-    {
-        // Skip if name is empty
-        if (empty($row[0])) {
-            return null;
+        /**
+         * We handle up to 50 sheets dynamically by their index.
+         * The CategorySheetImport will use the sheet name (BeforeSheet event)
+         * to determine the correct category for each sheet.
+         */
+        $sheets = [];
+        for ($i = 0; $i < 50; $i++) {
+            $sheets[$i] = new CategorySheetImport();
         }
-
-        // Handle Category
-        $categoryName = $row[1] ?? 'Uncategorized';
-
-        // Check if category exists in cache to avoid query
-        if (isset($this->categories[$categoryName])) {
-            $categoryId = $this->categories[$categoryName];
-        } else {
-            // Create new category and update cache
-            $category = Category::firstOrCreate(['name' => $categoryName]);
-            $categoryId = $category->id;
-            $this->categories[$categoryName] = $categoryId;
-        }
-
-        // Handle Price
-        $priceString = $row[2] ?? '0';
-        $price = preg_replace('/[^0-9]/', '', $priceString);
-
-        return new Product([
-            'name'        => $row[0],
-            'category_id' => $categoryId,
-            'price'       => (int) $price,
-            'unit'        => $row[3] ?? null,
-            'description' => $row[4] ?? null,
-        ]);
+        return $sheets;
     }
 
-    public function batchSize(): int
+    public function onUnknownSheet($sheetName)
     {
-        return 1000;
-    }
-
-    public function chunkSize(): int
-    {
-        return 1000;
+        // This is a fallback but with the index-based approach above it might not be needed
+        return new CategorySheetImport();
     }
 }
