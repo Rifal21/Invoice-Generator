@@ -133,4 +133,22 @@ class AttendanceController extends Controller
         $attendances = $query->paginate(20);
         return view('attendance.report', compact('attendances'));
     }
+
+    public function getAttendanceCount(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $count = Attendance::where('user_id', $request->user_id)
+            ->whereBetween('date', [$request->start_date, $request->end_date])
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'count' => $count,
+        ]);
+    }
 }

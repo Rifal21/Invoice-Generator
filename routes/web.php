@@ -13,6 +13,8 @@ use App\Http\Controllers\ProfitController;
 use App\Http\Controllers\SalaryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\FinancialReportController;
 
 // Auth Routes
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
@@ -43,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('profit', [ProfitController::class, 'index'])->name('profit.index');
 
     Route::resource('categories', CategoryController::class);
+    Route::post('products/bulk-delete', [ProductController::class, 'bulkDestroy'])->name('products.bulk-delete');
     Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
     Route::get('products/export', [ProductController::class, 'export'])->name('products.export');
     Route::resource('products', ProductController::class);
@@ -61,10 +64,15 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('salaries', SalaryController::class);
         Route::post('salaries/{salary}/pay', [SalaryController::class, 'markAsPaid'])->name('salaries.mark-as-paid');
 
+        // Financial Report Routes
+        Route::get('finance/summary', [FinancialReportController::class, 'index'])->name('finance.summary');
+        Route::resource('expenses', ExpenseController::class);
+
         // Attendance Admin Routes
         Route::get('attendance/settings', [AttendanceController::class, 'settings'])->name('attendance.settings');
         Route::post('attendance/settings', [AttendanceController::class, 'updateSettings'])->name('attendance.update-settings');
         Route::get('attendance/report', [AttendanceController::class, 'report'])->name('attendance.report');
+        Route::get('attendance/count', [AttendanceController::class, 'getAttendanceCount'])->name('attendance.count');
     });
 
     // Admin Only
