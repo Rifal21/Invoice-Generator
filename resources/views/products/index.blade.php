@@ -147,7 +147,7 @@
                                         {{ Str::limit($product->description, 30) }}</td>
                                     <td class="relative whitespace-nowrap py-5 pl-3 pr-6 text-right text-sm font-medium">
                                         <div class="flex justify-end gap-2">
-                                            <a href="{{ route('products.edit', $product->id) }}"
+                                            <a href="{{ route('products.edit', array_merge(['product' => $product->id], request()->query())) }}"
                                                 class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">Edit</a>
                                             <button type="button"
                                                 class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1.5 rounded-lg transition-colors"
@@ -207,7 +207,7 @@
                         @endif
 
                         <div class="grid grid-cols-2 gap-3 ml-10">
-                            <a href="{{ route('products.edit', $product->id) }}"
+                            <a href="{{ route('products.edit', array_merge(['product' => $product->id], request()->query())) }}"
                                 class="flex items-center justify-center py-2.5 px-4 rounded-xl bg-amber-50 text-amber-700 font-bold text-sm">
                                 Edit
                             </a>

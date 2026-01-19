@@ -22,7 +22,8 @@
             </div>
 
             <div class="bg-white shadow-xl rounded-3xl border border-gray-100 overflow-hidden">
-                <form action="{{ route('products.update', $product->id) }}" method="POST" class="p-6 md:p-10">
+                <form action="{{ route('products.update', array_merge(['product' => $product->id], request()->query())) }}"
+                    method="POST" class="p-6 md:p-10">
                     @csrf
                     @method('PUT')
 
@@ -125,7 +126,7 @@
                     </div>
 
                     <div class="mt-10 pt-6 border-t border-gray-100 flex items-center justify-end gap-4">
-                        <a href="{{ route('products.index') }}"
+                        <a href="{{ route('products.index', request()->query()) }}"
                             class="px-6 py-3 rounded-2xl text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-all">
                             Batal
                         </a>
