@@ -84,17 +84,49 @@
                     </div>
 
                     <div class="col-span-full">
+                        <div class="space-y-4">
+                            <label class="block text-sm font-black text-gray-900 uppercase tracking-widest pl-1">Pilih Hari
+                                Kerja (Manual / Dari Absensi)</label>
+                            <div class="bg-gray-50 rounded-3xl p-6 border-2 border-gray-100">
+                                <div class="flex items-center justify-between mb-4">
+                                    <div class="flex gap-2">
+                                        <button type="button" onclick="selectAllDates(true)"
+                                            class="text-[10px] font-black bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg hover:bg-indigo-200 transition-all uppercase tracking-widest">Pilih
+                                            Semua</button>
+                                        <button type="button" onclick="selectAllDates(false)"
+                                            class="text-[10px] font-black bg-gray-200 text-gray-600 px-3 py-1.5 rounded-lg hover:bg-gray-300 transition-all uppercase tracking-widest">Hapus
+                                            Semua</button>
+                                    </div>
+                                    <div class="text-[10px] font-black text-gray-400 uppercase tracking-widest"
+                                        id="attendance_status">
+                                        Data tersimpan: {{ $salary->working_days }} Hari
+                                    </div>
+                                </div>
+
+                                <div id="date_checkboxes"
+                                    class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                                    <!-- Dynamic checkboxes here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="working_days" id="working_days" value="{{ $salary->working_days }}">
+
+                    <div class="col-span-full">
                         <div
                             class="bg-gray-50 rounded-3xl p-6 border-2 border-dashed border-gray-200 flex flex-wrap gap-8 justify-center">
                             <div class="text-center">
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Hari
                                     Kerja</p>
-                                <p id="working_days_display" class="text-2xl font-black text-gray-900">0 Hari</p>
+                                <p id="working_days_display" class="text-2xl font-black text-gray-900">
+                                    {{ $salary->working_days }} Hari</p>
                             </div>
                             <div class="text-center">
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Gaji
                                     Pokok</p>
-                                <p id="base_salary_display" class="text-2xl font-black text-gray-900">Rp0</p>
+                                <p id="base_salary_display" class="text-2xl font-black text-gray-900">
+                                    Rp{{ number_format($salary->base_salary, 0, ',', '.') }}</p>
                             </div>
                         </div>
                     </div>
@@ -114,7 +146,8 @@
                             <div class="absolute inset-y-0 right-6 flex items-center pointer-events-none text-gray-400">
                                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                     stroke-width="3">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                                 </svg>
                             </div>
                         </div>
@@ -126,12 +159,13 @@
                             <div>
                                 <p class="text-indigo-200 text-xs font-black uppercase tracking-widest mb-1">Total Gaji
                                     Bersih</p>
-                                <h2 id="net_salary_display" class="text-4xl font-black text-white tracking-tighter">Rp0</h2>
+                                <h2 id="net_salary_display" class="text-4xl font-black text-white tracking-tighter">Rp0
+                                </h2>
                             </div>
                             <div
                                 class="md:text-right text-indigo-200 text-[10px] font-bold uppercase leading-relaxed max-w-xs">
                                 <p>Gaji Bersih = (Gaji Harian × Hari Kerja) + Bonus - Potongan</p>
-                                <p class="mt-1 text-white/50">* Hari Jumat & Sabtu tidak dihitung</p>
+                                <p class="mt-1 text-white/50">* Otomatis dihitung dari data absensi</p>
                             </div>
                         </div>
                     </div>
@@ -155,22 +189,31 @@
     </div>
 
     <script>
-        function calculateSalary() {
-            const startDate = new Date(document.getElementById('start_date').value);
-            const endDate = new Date(document.getElementById('end_date').value);
+        async function calculateSalary() {
+            const userId = document.getElementById('user_id').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
             const daily = parseFloat(document.getElementById('daily_salary').value) || 0;
             const bonus = parseFloat(document.getElementById('bonus').value) || 0;
             const deductions = parseFloat(document.getElementById('deductions').value) || 0;
 
             let workingDays = 0;
-            if (startDate <= endDate) {
-                let current = new Date(startDate);
-                while (current <= endDate) {
-                    const day = current.getDay();
-                    if (day !== 5 && day !== 6) {
-                        workingDays++;
+
+            if (userId && startDate && endDate) {
+                if (new Date(startDate) <= new Date(endDate)) {
+                    try {
+                        // Fetch real attendance count from server
+                        const response = await fetch(
+                            `{{ route('attendance.count') }}?user_id=${userId}&start_date=${startDate}&end_date=${endDate}`
+                        );
+                        const data = await response.json();
+                        if (data.success) {
+                            workingDays = data.count;
+                        }
+                    } catch (error) {
+                        console.error('Error fetching attendance:', error);
+                        workingDays = 0;
                     }
-                    current.setDate(current.getDate() + 1);
                 }
             }
 
@@ -190,9 +233,10 @@
         });
 
         document.querySelectorAll('.calc-salary, .date-calc').forEach(input => {
-            input.addEventListener('input', calculateSalary);
+            input.addEventListener('change', calculateSalary);
         });
 
+        // Initialize
         calculateSalary();
     </script>
 @endsection

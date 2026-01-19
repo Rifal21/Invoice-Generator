@@ -32,25 +32,14 @@ class SalaryController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'daily_salary' => 'required|numeric|min:0',
+            'working_days' => 'required|numeric|min:0',
             'bonus' => 'required|numeric|min:0',
             'deductions' => 'required|numeric|min:0',
             'status' => 'required|in:pending,paid',
             'notes' => 'nullable|string',
         ]);
 
-        $working_days = 0;
-        $start = Carbon::parse($request->start_date);
-        $end = Carbon::parse($request->end_date);
-
-        $current = $start->copy();
-        while ($current <= $end) {
-            // Monday=1, Tuesday=2, Wednesday=3, Thursday=4, Friday=5, Saturday=6, Sunday=7
-            // Exclude Friday (5) and Saturday (6)
-            if ($current->dayOfWeek !== Carbon::FRIDAY && $current->dayOfWeek !== Carbon::SATURDAY) {
-                $working_days++;
-            }
-            $current->addDay();
-        }
+        $working_days = $request->working_days;
 
         $base_salary = $request->daily_salary * $working_days;
         $net_salary = $base_salary + $request->bonus - $request->deductions;
@@ -87,23 +76,14 @@ class SalaryController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'daily_salary' => 'required|numeric|min:0',
+            'working_days' => 'required|numeric|min:0',
             'bonus' => 'required|numeric|min:0',
             'deductions' => 'required|numeric|min:0',
             'status' => 'required|in:pending,paid',
             'notes' => 'nullable|string',
         ]);
 
-        $working_days = 0;
-        $start = Carbon::parse($request->start_date);
-        $end = Carbon::parse($request->end_date);
-
-        $current = $start->copy();
-        while ($current <= $end) {
-            if ($current->dayOfWeek !== Carbon::FRIDAY && $current->dayOfWeek !== Carbon::SATURDAY) {
-                $working_days++;
-            }
-            $current->addDay();
-        }
+        $working_days = $request->working_days;
 
         $base_salary = $request->daily_salary * $working_days;
         $net_salary = $base_salary + $request->bonus - $request->deductions;

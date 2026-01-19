@@ -102,9 +102,21 @@
     </button>
     <ul x-show="openMenu === 'fin'" x-collapse class="mt-1 px-2 space-y-1">
         <li>
+            <a href="{{ route('finance.summary') }}"
+                class="{{ request()->routeIs('finance.summary') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} block rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                Ringkasan Keuangan
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('expenses.index') }}"
+                class="{{ request()->routeIs('expenses.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} block rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                Pengeluaran
+            </a>
+        </li>
+        <li>
             <a href="{{ route('profit.index') }}"
                 class="{{ request()->routeIs('profit.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} block rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
-                Laporan Laba Rugi
+                Detail Laba Rugi
             </a>
         </li>
     </ul>
