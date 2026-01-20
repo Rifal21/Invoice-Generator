@@ -21,15 +21,16 @@
                 <p class="mt-2 text-sm text-gray-500">Buat invoice profesional dengan mudah dan cepat.</p>
             </div>
             <div class="flex flex-col sm:flex-row gap-3">
-                <button type="button" onclick="document.getElementById('scan-input').click()"
+                <button type="button" onclick="showScanOptions()"
                     class="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-2xl shadow-sm text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
                     <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    Scan Invoice (PDF)
+                    Scan / Import AI
                 </button>
-                <input type="file" id="scan-input" class="hidden" accept="application/pdf" onchange="scanInvoice(this)">
+                <input type="file" id="scan-input" class="hidden" accept="application/pdf,image/png,image/jpeg,image/jpg"
+                    onchange="scanInvoice(this)">
             </div>
         </div>
 
@@ -362,6 +363,75 @@
             itemIndex++;
         }
 
+        function showScanOptions() {
+            Swal.fire({
+                title: 'Metode Import Data',
+                text: 'Pilih cara input data pesanan/invoice',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: '📂 Upload File (PDF/Gambar)',
+                cancelButtonText: '📝 Input Teks Manual',
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#0ea5e9',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('scan-input').click();
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    showTextInput();
+                }
+            });
+        }
+
+        function showTextInput() {
+            Swal.fire({
+                title: 'Input Teks Pesanan',
+                input: 'textarea',
+                inputLabel: 'Tempelkan teks pesanan di sini',
+                inputPlaceholder: 'Contoh:\n1. Beras 150kg\n2. Telur 2500 btr\n...',
+                inputAttributes: {
+                    'aria-label': 'Paste text here',
+                    'style': 'height: 200px;'
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Proses AI',
+                cancelButtonText: 'Batal',
+                showLoaderOnConfirm: true,
+                preConfirm: async (text) => {
+                    if (!text) {
+                        Swal.showValidationMessage('Teks tidak boleh kosong');
+                        return false;
+                    }
+                    try {
+                        const formData = new FormData();
+                        formData.append('text_input', text);
+                        formData.append('_token', '{{ csrf_token() }}');
+
+                        const response = await fetch('{{ route('invoices.scan') }}', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) throw new Error(response.statusText);
+                        return await response.json();
+                    } catch (error) {
+                        Swal.showValidationMessage(`Request failed: ${error}`);
+                    }
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed && result.value) {
+                    const response = result.value;
+                    if (response.success) {
+                        processScanResult(response.data);
+                        Swal.fire('Berhasil', 'Data berhasil diproses', 'success');
+                    } else {
+                        Swal.fire('Error', response.message || 'Gagal memproses', 'error');
+                    }
+                }
+            });
+        }
+
         async function scanInvoice(input) {
             if (!input.files || !input.files[0]) return;
 
@@ -370,12 +440,15 @@
             formData.append('file', file);
             formData.append('_token', '{{ csrf_token() }}');
 
-            const btn = document.querySelector('button[onclick*="scan-input"]');
-            const originalText = btn ? btn.innerHTML : '';
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = `Scanning...`;
-            }
+            // Show loading
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Mohon tunggu sebentar, AI sedang menganalisa file...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
             try {
                 const response = await fetch('{{ route('invoices.scan') }}', {
@@ -383,49 +456,56 @@
                     body: formData
                 });
 
-                const responseText = await response.text();
-                let result;
-                try {
-                    result = JSON.parse(responseText);
-                } catch (e) {
-                    Swal.fire('Error', 'Server Error', 'error');
-                    return;
-                }
+                const result = await response.json();
 
                 if (result.success) {
-                    const data = result.data;
-                    if (data.date) document.getElementById('date').value = data.date;
-                    if (data.customer_name) document.getElementById('customer_name').value = data.customer_name;
-                    document.getElementById('items-container').innerHTML = '';
-                    itemIndex = 0;
-
-                    if (data.items && data.items.length > 0) {
-                        data.items.forEach(item => {
-                            const product = products.find(p => p.name.toLowerCase() === item.product_name
-                                .toLowerCase());
-                            addItem({
-                                product_id: product ? product.id : item.product_name,
-                                quantity: item.quantity,
-                                price: item.price,
-                                purchase_price: product ? product.purchase_price : 0,
-                                unit: item.unit
-                            });
-                        });
-                    } else {
-                        addItem();
-                    }
-                    Swal.fire('Berhasil', 'Scan Invoice Berhasil', 'success');
+                    processScanResult(result.data);
+                    Swal.fire('Berhasil', 'Scan Berhasil', 'success');
                 } else {
                     Swal.fire('Error', result.message, 'error');
                 }
             } catch (error) {
+                console.error(error);
                 Swal.fire('Error', 'Gagal scan invoice', 'error');
             } finally {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }
                 input.value = '';
+            }
+        }
+
+        function processScanResult(data) {
+            if (!data) return;
+
+            // Set Date (Default to Today if missing)
+            if (data.date) {
+                document.getElementById('date').value = data.date;
+            } else {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('date').value = today;
+            }
+
+            if (data.customer_name) document.getElementById('customer_name').value = data.customer_name;
+
+            // Clear existing items
+            document.getElementById('items-container').innerHTML = '';
+            itemIndex = 0;
+
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    // Try to find product by exact name match first, then partial match bidirectional
+                    const product = products.find(p => p.name.toLowerCase() === item.product_name.toLowerCase()) ||
+                        products.find(p => item.product_name.toLowerCase().includes(p.name.toLowerCase()) || p.name
+                            .toLowerCase().includes(item.product_name.toLowerCase()));
+
+                    addItem({
+                        product_id: product ? product.id : item.product_name,
+                        quantity: item.quantity,
+                        price: item.price > 0 ? item.price : (product ? product.price : 0),
+                        purchase_price: product ? product.purchase_price : 0,
+                        unit: product ? product.unit : item.unit
+                    });
+                });
+            } else {
+                addItem();
             }
             calculateGrandTotal();
         }
