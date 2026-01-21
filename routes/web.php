@@ -71,6 +71,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:super_admin,ketua'])->group(function () {
         Route::resource('salaries', SalaryController::class);
         Route::post('salaries/{salary}/pay', [SalaryController::class, 'markAsPaid'])->name('salaries.mark-as-paid');
+        Route::get('salaries/{salary}/print', [SalaryController::class, 'printSlip'])->name('salaries.print');
 
         // Financial Report Routes
         Route::get('finance/summary', [FinancialReportController::class, 'index'])->name('finance.summary');

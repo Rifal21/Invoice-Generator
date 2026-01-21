@@ -17,6 +17,8 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
         /* Select2 Tailwind Integration Fixes */
         .select2-container .select2-selection--single {
@@ -52,13 +54,13 @@
 </head>
 
 <body class="h-full">
-    <div x-data="{ sidebarOpen: false, mobileMenuOpen: false }" class="min-h-full">
+    <div x-data="{ sidebarOpen: false, mobileMenuOpen: false, sidebarCollapsed: false }" class="min-h-full">
         @include('layouts.partials.bottom-nav')
         @include('layouts.partials.mobile-menu')
 
         @include('layouts.partials.sidebar')
 
-        <div class="lg:pl-72">
+        <div :class="sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'" class="transition-all duration-300 ease-in-out">
             <div
                 class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white/80 backdrop-blur-md px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
                 <button type="button" @click="sidebarOpen = true" class="-m-2.5 p-2.5 text-gray-700 lg:hidden">
