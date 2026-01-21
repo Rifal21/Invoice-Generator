@@ -111,16 +111,26 @@
                     </thead>
                     <tbody class="divide-y divide-gray-200 bg-white">
                         @forelse ($invoices as $invoice)
-                            <tr class="hover:bg-gray-50 transition-colors">
+                            <tr class="hover:bg-gray-50 transition-colors cursor-pointer"
+                                onclick="toggleDetails('details-{{ $invoice->id }}')">
                                 <td class="whitespace-nowrap py-5 pl-6 pr-3 text-sm font-bold text-gray-400">
                                     {{ $loop->iteration }}</td>
                                 <td class="whitespace-nowrap px-3 py-5 text-sm font-bold text-gray-900">
-                                    <a href="{{ route('invoices.show', $invoice->id) }}"
-                                        class="text-indigo-600 hover:underline">
-                                        {{ $invoice->invoice_number }}
-                                    </a>
-                                    <div class="text-xs text-gray-400">
-                                        {{ Carbon\Carbon::parse($invoice->date)->format('d M Y') }}</div>
+                                    <div class="flex items-center gap-2">
+                                        <svg id="icon-details-{{ $invoice->id }}"
+                                            class="w-5 h-5 text-gray-400 transform transition-transform duration-200"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5l7 7-7 7" />
+                                        </svg>
+                                        <div>
+                                            <span class="text-indigo-600 hover:underline">
+                                                {{ $invoice->invoice_number }}
+                                            </span>
+                                            <div class="text-xs text-gray-400">
+                                                {{ Carbon\Carbon::parse($invoice->date)->format('d M Y') }}</div>
+                                        </div>
+                                    </div>
                                 </td>
                                 <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500 font-medium">
                                     {{ $invoice->customer_name }}</td>
@@ -142,6 +152,73 @@
                                     </span>
                                 </td>
                             </tr>
+                            <!-- Detail Row -->
+                            <tr id="details-{{ $invoice->id }}"
+                                class="hidden bg-gray-50 border-t border-gray-100 transition-opacity duration-300 ease-in-out">
+                                <td colspan="7" class="px-6 py-4">
+                                    <div class="rounded-xl border border-gray-200 overflow-hidden bg-white">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                                <tr>
+                                                    <th
+                                                        class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase">
+                                                        Produk</th>
+                                                    <th
+                                                        class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                                                        Qty</th>
+                                                    <th
+                                                        class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                                                        Harga Beli (HPP)</th>
+                                                    <th
+                                                        class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                                                        Harga Jual</th>
+                                                    <th
+                                                        class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                                                        Total HPP</th>
+                                                    <th
+                                                        class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                                                        Total Jual</th>
+                                                    <th
+                                                        class="px-4 py-3 text-right text-xs font-bold text-gray-500 uppercase">
+                                                        Profit Item</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-gray-100">
+                                                @foreach ($invoice->items as $item)
+                                                    @php
+                                                        $hppSatuan =
+                                                            $item->purchase_price > 0
+                                                                ? $item->purchase_price
+                                                                : ($item->product
+                                                                    ? $item->product->purchase_price
+                                                                    : 0);
+                                                        $totalHppItem = $hppSatuan * $item->quantity;
+                                                        $profitItem = $item->total - $totalHppItem;
+                                                    @endphp
+                                                    <tr>
+                                                        <td class="px-4 py-3 text-sm text-gray-900 font-medium">
+                                                            {{ $item->product_name }}</td>
+                                                        <td class="px-4 py-3 text-sm text-gray-500 text-right">
+                                                            {{ $item->quantity }} {{ $item->unit }}</td>
+                                                        <td class="px-4 py-3 text-sm text-gray-500 text-right">Rp
+                                                            {{ number_format($hppSatuan, 0, ',', '.') }}</td>
+                                                        <td class="px-4 py-3 text-sm text-gray-500 text-right">Rp
+                                                            {{ number_format($item->price, 0, ',', '.') }}</td>
+                                                        <td class="px-4 py-3 text-sm text-gray-500 text-right">Rp
+                                                            {{ number_format($totalHppItem, 0, ',', '.') }}</td>
+                                                        <td class="px-4 py-3 text-sm text-gray-900 font-bold text-right">Rp
+                                                            {{ number_format($item->total, 0, ',', '.') }}</td>
+                                                        <td
+                                                            class="px-4 py-3 text-sm font-bold text-right {{ $profitItem >= 0 ? 'text-emerald-600' : 'text-red-600' }}">
+                                                            Rp {{ number_format($profitItem, 0, ',', '.') }}
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
                             <tr>
                                 <td colspan="7" class="px-6 py-10 text-center text-gray-500 italic">
@@ -154,4 +231,25 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function toggleDetails(id) {
+            const row = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+
+            if (row.classList.contains('hidden')) {
+                row.classList.remove('hidden');
+                icon.style.transform = 'rotate(90deg)';
+                // Fade in effect
+                row.style.opacity = '0';
+                setTimeout(() => {
+                    row.style.opacity = '1';
+                }, 10);
+            } else {
+                row.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+                row.style.opacity = '0';
+            }
+        }
+    </script>
 @endsection

@@ -88,6 +88,14 @@
                     </svg>
                     Cetak Invoice (PDF)
                 </button>
+                <button type="button" onclick="submitBulkDelete()" id="bulk-delete-btn" disabled
+                    class="flex-1 md:flex-none bg-red-600 text-white font-bold py-2.5 px-4 rounded-2xl hover:bg-red-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center gap-2">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Hapus Selected
+                </button>
             </div>
         </form>
 
@@ -122,7 +130,8 @@
                     </select>
                 </div>
                 <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <select name="sort_order" onchange="document.getElementById('filter-form').submit()" form="filter-form"
+                    <select name="sort_order" onchange="document.getElementById('filter-form').submit()"
+                        form="filter-form"
                         class="w-full sm:w-auto rounded-xl border-gray-200 text-sm font-bold focus:ring-indigo-500 focus:border-indigo-500 py-2 pl-3 pr-8">
                         <option value="desc" {{ request('sort_order', 'desc') == 'desc' ? 'selected' : '' }}>Menurun
                         </option>
@@ -200,7 +209,7 @@
                                         class="relative whitespace-nowrap py-5 pl-3 pr-6 text-right text-sm font-bold space-x-2">
                                         <a href="{{ route('invoices.show', $invoice->id) }}"
                                             class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors inline-block">Lihat</a>
-                                        <a href="{{ route('invoices.edit', $invoice->id) }}"
+                                        <a href="{{ route('invoices.edit', ['invoice' => $invoice->id] + request()->query()) }}"
                                             class="text-amber-600 hover:text-amber-900 bg-amber-50 px-3 py-1.5 rounded-lg transition-colors inline-block">Edit</a>
                                         <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
                                             class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1.5 rounded-lg transition-colors inline-block">Hapus</button>
@@ -295,7 +304,7 @@
                                 class="flex items-center justify-center py-2 px-3 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-sm">
                                 Detail
                             </a>
-                            <a href="{{ route('invoices.edit', $invoice->id) }}"
+                            <a href="{{ route('invoices.edit', ['invoice' => $invoice->id] + request()->query()) }}"
                                 class="flex items-center justify-center py-2 px-3 rounded-xl bg-amber-50 text-amber-700 font-bold text-sm">
                                 Edit
                             </a>
@@ -357,6 +366,7 @@
 
         const bulkExportBtn = document.getElementById('bulk-export-btn');
         const multiPrintBtn = document.getElementById('multi-print-btn');
+        const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
         const bulkForm = document.getElementById('bulk-export-form');
 
         function updateExportButton() {
@@ -366,6 +376,7 @@
 
             bulkExportBtn.disabled = checkedCount === 0;
             multiPrintBtn.disabled = checkedCount === 0;
+            bulkDeleteBtn.disabled = checkedCount === 0;
 
             if (checkedCount > 0) {
                 bulkExportBtn.innerHTML = `
@@ -376,14 +387,22 @@
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Cetak (${checkedCount}) Invoice
                 `;
+                bulkDeleteBtn.innerHTML = `
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Hapus (${checkedCount})
+                `;
             } else {
                 bulkExportBtn.innerHTML = `
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Buat Laporan (PDF)
                 `;
                 multiPrintBtn.innerHTML = `
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2-2v4h10z"/></svg>
                     Cetak Invoice (PDF)
+                `;
+                bulkDeleteBtn.innerHTML = `
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    Hapus Selected
                 `;
             }
         }
@@ -411,13 +430,38 @@
         });
 
         function submitBulkExport() {
+            bulkForm.target = "_blank";
             bulkForm.action = "{{ route('invoices.bulk-export-pdf') }}";
             bulkForm.submit();
         }
 
         function submitMultiPrint() {
+            bulkForm.target = "_blank";
             bulkForm.action = "{{ route('invoices.print-multi-pdf') }}";
             bulkForm.submit();
+        }
+
+        function submitBulkDelete() {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: "Invoice yang dipilih akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    container: 'rounded-3xl',
+                    popup: 'rounded-3xl',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    bulkForm.target = "_self";
+                    bulkForm.action = "{{ route('invoices.bulk-delete') }}";
+                    bulkForm.submit();
+                }
+            })
         }
 
         function deleteInvoice(id) {

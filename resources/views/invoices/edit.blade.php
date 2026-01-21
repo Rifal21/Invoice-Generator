@@ -6,7 +6,7 @@
             <div class="min-w-0 flex-1">
                 <nav class="flex mb-4" aria-label="Breadcrumb">
                     <ol class="flex items-center space-x-2">
-                        <li><a href="{{ route('invoices.index') }}"
+                        <li><a href="{{ route('invoices.index', request()->query()) }}"
                                 class="text-xs md:text-sm font-bold text-gray-400 hover:text-indigo-600">Invoice</a></li>
                         <li><svg class="h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
@@ -33,6 +33,18 @@
                 class="p-5 sm:p-10 space-y-8 md:space-y-10">
                 @csrf
                 @method('PUT')
+
+                {{-- Preserve Filters --}}
+                @foreach (request()->query() as $key => $value)
+                    @if (is_array($value))
+                        @foreach ($value as $k => $v)
+                            <input type="hidden" name="filters[{{ $key }}][{{ $k }}]"
+                                value="{{ $v }}">
+                        @endforeach
+                    @else
+                        <input type="hidden" name="filters[{{ $key }}]" value="{{ $value }}">
+                    @endif
+                @endforeach
 
                 <!-- Invoice Details Section -->
                 <div class="grid grid-cols-1 gap-y-6 gap-x-6 md:grid-cols-3 border-b border-gray-100 pb-8 md:pb-10">
@@ -123,7 +135,7 @@
 
                 <!-- Form Actions -->
                 <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-6">
-                    <a href="{{ route('invoices.index') }}"
+                    <a href="{{ route('invoices.index', request()->query()) }}"
                         class="w-full sm:w-auto text-center px-6 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors duration-200">
                         Batal
                     </a>
