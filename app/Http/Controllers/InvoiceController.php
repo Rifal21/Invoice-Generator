@@ -73,8 +73,9 @@ class InvoiceController extends Controller
      */
     public function create()
     {
-        $products = Product::all();
-        return view('invoices.create', compact('products'));
+        $products = Product::with('supplier')->get();
+        $customers = \App\Models\Customer::all();
+        return view('invoices.create', compact('products', 'customers'));
     }
 
     /**
@@ -158,8 +159,9 @@ class InvoiceController extends Controller
      */
     public function edit(Invoice $invoice)
     {
-        $products = Product::all();
-        return view('invoices.edit', compact('invoice', 'products'));
+        $products = Product::with('supplier')->get();
+        $customers = \App\Models\Customer::all();
+        return view('invoices.edit', compact('invoice', 'products', 'customers'));
     }
 
     /**

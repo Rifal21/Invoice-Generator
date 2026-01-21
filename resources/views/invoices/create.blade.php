@@ -64,9 +64,16 @@
 
                     <div>
                         <label for="customer_name" class="block text-sm font-bold text-gray-700 mb-2">Nama Pelanggan</label>
-                        <input type="text" name="customer_name" id="customer_name" value="{{ old('customer_name') }}"
-                            required placeholder="Contoh: Budi Santoso"
+                        <select name="customer_name" id="customer_name" required
                             class="block w-full rounded-2xl border-2 border-gray-200 py-3 px-3 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
+                            <option value="">Pilih Pelanggan</option>
+                            @foreach ($customers as $customer)
+                                <option value="{{ $customer->name }}"
+                                    {{ old('customer_name') == $customer->name ? 'selected' : '' }}>
+                                    {{ $customer->name }} {{ $customer->phone ? ' - ' . $customer->phone : '' }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
 
@@ -203,8 +210,12 @@
 
             products.forEach(product => {
                 const selected = existingItem && existingItem.product_id == product.id ? 'selected' : '';
+                const supplierName = product.supplier ? product.supplier.name : '-';
+                const formattedPrice = formatCurrency(product.price);
+                const label = `${product.name} | Rp ${formattedPrice} | ${product.unit} | ${supplierName}`;
+
                 productOptions +=
-                    `<option value="${product.id}" data-price="${product.price}" data-purchase-price="${product.purchase_price}" data-unit="${product.unit}" ${selected}>${product.name}</option>`;
+                    `<option value="${product.id}" data-price="${product.price}" data-purchase-price="${product.purchase_price}" data-unit="${product.unit}" ${selected}>${label}</option>`;
             });
 
             if (isCustomProduct) {
@@ -556,6 +567,14 @@
             } else {
                 addItem();
             }
+
+            // Initialize Customer Select2
+            $('#customer_name').select2({
+                placeholder: "Pilih atau ketik nama pelanggan...",
+                tags: true,
+                allowClear: true,
+                width: '100%'
+            });
         });
     </script>
 @endsection
