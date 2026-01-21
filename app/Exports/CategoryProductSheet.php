@@ -14,10 +14,12 @@ use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 class CategoryProductSheet implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize, WithTitle, WithColumnFormatting
 {
     private $category;
+    private $type;
 
-    public function __construct($category)
+    public function __construct($category, $type = 'client')
     {
         $this->category = $category;
+        $this->type = $type;
     }
 
     /**
@@ -30,22 +32,40 @@ class CategoryProductSheet implements FromCollection, WithHeadings, WithMapping,
 
     public function headings(): array
     {
-        return [
+        $headings = [
             'Nama Barang',
-            'Harga',
+            'Harga Jual', // clarified
             'Satuan',
-            'Deskripsi',
         ];
+
+        if ($this->type === 'internal') {
+            $headings[] = 'Harga Beli';
+            $headings[] = 'Stok';
+            $headings[] = 'Supplier';
+        }
+
+        $headings[] = 'Deskripsi';
+
+        return $headings;
     }
 
     public function map($product): array
     {
-        return [
+        $row = [
             $product->name,
             $product->price,
             $product->unit,
-            $product->description,
         ];
+
+        if ($this->type === 'internal') {
+            $row[] = $product->purchase_price;
+            $row[] = $product->stock;
+            $row[] = $product->supplier ? $product->supplier->name : '-';
+        }
+
+        $row[] = $product->description;
+
+        return $row;
     }
 
     public function title(): string
@@ -58,8 +78,14 @@ class CategoryProductSheet implements FromCollection, WithHeadings, WithMapping,
 
     public function columnFormats(): array
     {
-        return [
-            'B' => '"Rp"#,##0',
+        $formats = [
+            'B' => '"Rp"#,##0', // Price is always B
         ];
+
+        if ($this->type === 'internal') {
+            $formats['D'] = '"Rp"#,##0'; // Purchase Price becomes D (Name, Price, Unit, PurchasePrice)
+        }
+
+        return $formats;
     }
 }

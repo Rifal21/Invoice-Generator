@@ -64,6 +64,30 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <div>
+                                    <label for="supplier_id" class="block text-sm font-bold text-gray-900 mb-2">Supplier
+                                        (Opsional)</label>
+                                    <div class="relative">
+                                        <select id="supplier_id" name="supplier_id"
+                                            class="block w-full rounded-2xl border-gray-200 py-3 px-4 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all appearance-none">
+                                            <option value="">Pilih Supplier</option>
+                                            @foreach ($suppliers as $supplier)
+                                                <option value="{{ $supplier->id }}"
+                                                    {{ $product->supplier_id == $supplier->id ? 'selected' : '' }}>
+                                                    {{ $supplier->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        <div
+                                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -120,7 +144,8 @@
                                 Tambahan</h3>
                             <label for="description" class="block text-sm font-bold text-gray-900 mb-2">Deskripsi
                                 (Opsional)</label>
-                            <textarea id="description" name="description" rows="4" placeholder="Tulis deskripsi singkat tentang produk ini..."
+                            <textarea id="description" name="description" rows="4"
+                                placeholder="Tulis deskripsi singkat tentang produk ini..."
                                 class="block w-full rounded-2xl border-gray-200 py-3 px-4 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all">{{ $product->description }}</textarea>
                         </div>
                     </div>
