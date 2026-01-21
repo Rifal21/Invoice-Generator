@@ -45,6 +45,8 @@ Route::middleware(['auth'])->group(function () {
 
     // Profit Report Routes
     Route::get('profit', [ProfitController::class, 'index'])->name('profit.index');
+    Route::get('profit/export-all-pdf', [ProfitController::class, 'exportAllPdf'])->name('profit.export-all-pdf');
+    Route::get('profit/{id}/export-pdf', [ProfitController::class, 'exportInvoicePdf'])->name('profit.export-invoice-pdf');
 
     Route::resource('customers', CustomerController::class);
     Route::resource('suppliers', SupplierController::class);
@@ -72,6 +74,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Financial Report Routes
         Route::get('finance/summary', [FinancialReportController::class, 'index'])->name('finance.summary');
+        Route::get('finance/export-pdf', [FinancialReportController::class, 'exportPdf'])->name('finance.export-pdf');
         Route::resource('expenses', ExpenseController::class);
 
         // Attendance Admin Routes

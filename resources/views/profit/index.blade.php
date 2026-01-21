@@ -38,6 +38,17 @@
                     </button>
                 </div>
             </form>
+
+            <div class="flex items-center gap-2 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100">
+                <a href="{{ route('profit.export-all-pdf', request()->query()) }}" target="_blank"
+                    class="inline-flex items-center justify-center px-4 py-2.5 border border-transparent rounded-2xl shadow-sm text-xs font-bold text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all">
+                    <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export Semua
+                </a>
+            </div>
         </div>
 
         <!-- Summary Cards -->
@@ -152,10 +163,22 @@
                                     </span>
                                 </td>
                             </tr>
-                            <!-- Detail Row -->
                             <tr id="details-{{ $invoice->id }}"
                                 class="hidden bg-gray-50 border-t border-gray-100 transition-opacity duration-300 ease-in-out">
                                 <td colspan="7" class="px-6 py-4">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <h4 class="text-sm font-bold text-gray-900">Detail Item Invoice
+                                            {{ $invoice->invoice_number }}</h4>
+                                        <a href="{{ route('profit.export-invoice-pdf', $invoice->id) }}" target="_blank"
+                                            class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-lg shadow-sm text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-all">
+                                            <svg class="w-3.5 h-3.5 mr-1.5" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                            </svg>
+                                            Export PDF
+                                        </a>
+                                    </div>
                                     <div class="rounded-xl border border-gray-200 overflow-hidden bg-white">
                                         <table class="min-w-full divide-y divide-gray-200">
                                             <thead class="bg-gray-50">

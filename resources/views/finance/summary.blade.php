@@ -24,6 +24,15 @@
             </button>
         </form>
         <div>
+            <a href="{{ route('finance.export-pdf', ['start_date' => $startDate, 'end_date' => $endDate]) }}"
+                target="_blank"
+                class="inline-flex items-center px-4 py-2 rounded-xl bg-red-50 text-red-600 text-xs font-black uppercase tracking-widest border border-red-100 hover:bg-red-100 transition-all mr-2">
+                <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Export PDF
+            </a>
             <span
                 class="inline-flex items-center px-4 py-2 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-black uppercase tracking-widest border border-indigo-100">
                 <svg class="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -84,6 +93,26 @@
                 class="text-3xl font-black {{ $netProfit >= 0 ? 'text-emerald-400' : 'text-red-400' }} tracking-tighter relative">
                 Rp{{ number_format($netProfit, 0, ',', '.') }}</h3>
             <p class="text-xs font-bold text-white/30 mt-2 relative">Sudah Potong Semua Biaya</p>
+        </div>
+    </div>
+
+    <!-- Trend Chart -->
+    <div class="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm mb-8">
+        <div class="flex items-center justify-between mb-6">
+            <h2 class="text-xl font-black text-gray-900 uppercase tracking-widest text-sm">Trend Arus Kas (Harian)</h2>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                    <span class="text-xs font-bold text-gray-500">Pemasukan</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-red-500"></span>
+                    <span class="text-xs font-bold text-gray-500">Pengeluaran</span>
+                </div>
+            </div>
+        </div>
+        <div class="h-80 w-full relative">
+            <canvas id="balanceChart"></canvas>
         </div>
     </div>
 
@@ -163,6 +192,10 @@
             <h2 class="text-xl font-black text-gray-900 mb-8 uppercase tracking-widest text-sm text-center">Analisa
                 Pengeluaran</h2>
 
+            <div class="h-64 w-full relative mb-8">
+                <canvas id="expenseChart"></canvas>
+            </div>
+
             @if ($totalOperationalExpenses > 0)
                 <div class="space-y-4 flex-1 overflow-y-auto pr-4">
                     @foreach ($expensesByCategory as $exp)
@@ -207,4 +240,198 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // --- Balance Trend Chart ---
+        const ctxBalance = document.getElementById('balanceChart').getContext('2d');
+
+        // Gradient for Sales
+        const gradientSales = ctxBalance.createLinearGradient(0, 0, 0, 400);
+        gradientSales.addColorStop(0, 'rgba(16, 185, 129, 0.2)'); // Emerald-500
+        gradientSales.addColorStop(1, 'rgba(16, 185, 129, 0)');
+
+        // Gradient for Expenses
+        const gradientExpenses = ctxBalance.createLinearGradient(0, 0, 0, 400);
+        gradientExpenses.addColorStop(0, 'rgba(239, 68, 68, 0.2)'); // Red-500
+        gradientExpenses.addColorStop(1, 'rgba(239, 68, 68, 0)');
+
+        new Chart(ctxBalance, {
+            type: 'line',
+            data: {
+                labels: @json($chartLabels),
+                datasets: [{
+                        label: 'Pemasukan',
+                        data: @json($chartSales),
+                        borderColor: '#10b981', // Emerald-500
+                        backgroundColor: gradientSales,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#10b981',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Pengeluaran',
+                        data: @json($chartExpenses),
+                        borderColor: '#ef4444', // Red-500
+                        backgroundColor: gradientExpenses,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#ef4444',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false // We use custom custom legend
+                    },
+                    tooltip: {
+                        backgroundColor: '#1f2937',
+                        titleColor: '#f3f4f6',
+                        bodyColor: '#f3f4f6',
+                        padding: 12,
+                        cornerRadius: 12,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += new Intl.NumberFormat('id-ID', {
+                                        style: 'currency',
+                                        currency: 'IDR'
+                                    }).format(context.parsed.y);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            font: {
+                                size: 10,
+                                weight: 'bold'
+                            },
+                            color: '#9ca3af'
+                        }
+                    },
+                    y: {
+                        grid: {
+                            color: '#f3f4f6',
+                            drawBorder: false,
+                            borderDash: [5, 5]
+                        },
+                        ticks: {
+                            font: {
+                                size: 10,
+                                weight: 'bold'
+                            },
+                            color: '#9ca3af',
+                            callback: function(value) {
+                                if (value >= 1000000) return 'Rp' + (value / 1000000).toFixed(1) + 'jt';
+                                if (value >= 1000) return 'Rp' + (value / 1000).toFixed(0) + 'rb';
+                                return value;
+                            }
+                        },
+                        beginAtZero: true
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+            }
+        });
+
+        // --- Expense Donut Chart ---
+        const ctxExpense = document.getElementById('expenseChart');
+        if (ctxExpense) {
+            const expenseData = @json($expensesByCategory);
+
+            // Extract labels and values
+            const expenseLabels = expenseData.map(item => item.category);
+            const expenseValues = expenseData.map(item => item.total);
+
+            // Colors (Generate palette or use predefined)
+            const backgroundColors = [
+                '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e', '#f59e0b', '#10b981', '#06b6d4', '#3b82f6'
+            ];
+
+            new Chart(ctxExpense, {
+                type: 'doughnut',
+                data: {
+                    labels: expenseLabels,
+                    datasets: [{
+                        data: expenseValues,
+                        backgroundColor: backgroundColors,
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 11,
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#1f2937',
+                            padding: 12,
+                            cornerRadius: 12,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    let value = context.parsed;
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    let percentage = Math.round((value / total) * 100) + '%';
+
+                                    if (context.parsed !== null) {
+                                        label += new Intl.NumberFormat('id-ID', {
+                                            style: 'currency',
+                                            currency: 'IDR'
+                                        }).format(context.parsed);
+                                    }
+                                    return label + ' (' + percentage + ')';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
 @endsection
