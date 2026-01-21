@@ -57,6 +57,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf']);
     Route::post('invoices/print-multi-pdf', [InvoiceController::class, 'printMultiPdf'])->name('invoices.print-multi-pdf');
 
+    Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-delete');
     Route::resource('invoices', InvoiceController::class);
 
     // Admin & Ketua Only

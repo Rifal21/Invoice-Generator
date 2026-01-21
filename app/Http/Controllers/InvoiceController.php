@@ -227,7 +227,8 @@ class InvoiceController extends Controller
 
         $invoice->update(['total_amount' => $totalAmount]);
 
-        return redirect()->route('invoices.show', $invoice)->with('success', 'Invoice updated successfully.');
+        $filters = $request->input('filters', []);
+        return redirect()->route('invoices.index', $filters)->with('success', 'Invoice updated successfully.');
     }
 
     /**
@@ -236,7 +237,19 @@ class InvoiceController extends Controller
     public function destroy(Invoice $invoice)
     {
         $invoice->delete();
-        return redirect()->route('invoices.index')->with('success', 'Invoice deleted successfully.');
+        return back()->with('success', 'Invoice deleted successfully.');
+    }
+
+    public function bulkDestroy(Request $request)
+    {
+        $request->validate([
+            'invoice_ids' => 'required|array',
+            'invoice_ids.*' => 'exists:invoices,id'
+        ]);
+
+        Invoice::whereIn('id', $request->invoice_ids)->delete();
+
+        return back()->with('success', 'Invoices deleted successfully.');
     }
     public function exportPdf(Invoice $invoice)
     {
