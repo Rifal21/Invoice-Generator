@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Product extends Model
 {
-    protected $fillable = ['category_id', 'name', 'price', 'purchase_price', 'unit', 'stock', 'description'];
+    protected $fillable = ['category_id', 'supplier_id', 'name', 'price', 'purchase_price', 'unit', 'stock', 'description'];
 
     protected $casts = [
         'price' => 'float',
@@ -22,5 +22,10 @@ class Product extends Model
     public function stockHistories()
     {
         return $this->hasMany(StockHistory::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Category;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -26,8 +27,9 @@ class ProductController extends Controller
 
         $products = $query->paginate(10)->withQueryString();
         $categories = Category::all();
+        $suppliers = Supplier::all();
 
-        return view('products.index', compact('products', 'categories'));
+        return view('products.index', compact('products', 'categories', 'suppliers'));
     }
 
     /**
@@ -36,7 +38,8 @@ class ProductController extends Controller
     public function create()
     {
         $categories = Category::all();
-        return view('products.create', compact('categories'));
+        $suppliers = Supplier::all();
+        return view('products.create', compact('categories', 'suppliers'));
     }
 
     /**
@@ -47,6 +50,7 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'price' => 'required|numeric',
             'purchase_price' => 'nullable|numeric|min:0',
             'unit' => 'required|string',
@@ -64,6 +68,9 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        if (request()->wantsJson()) {
+            return response()->json($product->load(['category', 'supplier']));
+        }
         return view('products.show', compact('product'));
     }
 
@@ -73,7 +80,8 @@ class ProductController extends Controller
     public function edit(Product $product)
     {
         $categories = Category::all();
-        return view('products.edit', compact('product', 'categories'));
+        $suppliers = Supplier::all();
+        return view('products.edit', compact('product', 'categories', 'suppliers'));
     }
 
     /**
@@ -84,6 +92,7 @@ class ProductController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'price' => 'required|numeric',
             'purchase_price' => 'nullable|numeric|min:0',
             'unit' => 'required|string',
@@ -117,6 +126,34 @@ class ProductController extends Controller
 
         return redirect()->back()->with('success', count($request->ids) . ' products deleted successfully.');
     }
+
+    public function quickUpdate(Request $request, Product $product)
+    {
+        $data = $request->validate([
+            'category_id' => 'sometimes|exists:categories,id',
+            'supplier_id' => 'sometimes|nullable|exists:suppliers,id',
+            'name' => 'sometimes|string|max:255',
+            'price' => 'sometimes|numeric|min:0',
+            'purchase_price' => 'sometimes|nullable|numeric|min:0',
+            'stock' => 'sometimes|numeric|min:0',
+            'description' => 'sometimes|nullable|string',
+        ]);
+
+        // Ensure empty string is null for supplier_id
+        if (array_key_exists('supplier_id', $data) && $data['supplier_id'] === "") {
+            $data['supplier_id'] = null;
+        }
+
+        $product->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Data updated successfully',
+            'category_name' => $product->category->name,
+            'supplier_name' => $product->supplier ? $product->supplier->name : '-',
+            'product' => $product
+        ]);
+    }
     public function import(Request $request)
     {
         set_time_limit(300); // Increase time limit to 5 minutes
@@ -130,8 +167,10 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Products imported successfully.');
     }
 
-    public function export()
+    public function export(Request $request)
     {
-        return Excel::download(new \App\Exports\ProductExport, 'products_' . now()->format('d F Y') . '.xlsx');
+        $type = $request->query('type', 'client'); // default to client
+        $fileName = ($type === 'internal' ? 'internal_' : '') . 'products_' . now()->format('d F Y') . '.xlsx';
+        return Excel::download(new \App\Exports\ProductExport($type), $fileName);
     }
 }

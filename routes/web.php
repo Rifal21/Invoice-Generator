@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\CustomerController;
+use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\CategoryController;
@@ -44,7 +46,10 @@ Route::middleware(['auth'])->group(function () {
     // Profit Report Routes
     Route::get('profit', [ProfitController::class, 'index'])->name('profit.index');
 
+    Route::resource('customers', CustomerController::class);
+    Route::resource('suppliers', SupplierController::class);
     Route::resource('categories', CategoryController::class);
+    Route::patch('products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
     Route::post('products/bulk-delete', [ProductController::class, 'bulkDestroy'])->name('products.bulk-delete');
     Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
     Route::get('products/export', [ProductController::class, 'export'])->name('products.export');
