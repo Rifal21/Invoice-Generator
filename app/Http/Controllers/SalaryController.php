@@ -7,8 +7,16 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
+use Barryvdh\DomPDF\Facade\Pdf;
+
 class SalaryController extends Controller
 {
+    public function printSlip(Salary $salary)
+    {
+        $salary->load('user');
+        $pdf = Pdf::loadView('salaries.slip', compact('salary'));
+        return $pdf->stream('Slip_Gaji_' . $salary->user->name . '_' . $salary->period->format('M_Y') . '.pdf');
+    }
     public function index(Request $request)
     {
         $salaries = Salary::with('user')

@@ -29,10 +29,7 @@
             <div class="absolute top-0 left-full flex w-16 justify-center pt-5">
                 <button type="button" @click="sidebarOpen = false" class="-m-2.5 p-2.5 text-white">
                     <span class="sr-only">Tutup sidebar</span>
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
-                        aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+                    <i class="fas fa-times text-xl"></i>
                 </button>
             </div>
 
@@ -55,13 +52,17 @@
 </div>
 
 <!-- Static sidebar for desktop -->
-<div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col">
-    <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4">
-        <div class="flex h-16 shrink-0 items-center">
-            <h1 class="text-xl font-bold text-white">KOPERASI JR</h1>
+<div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col" :class="sidebarCollapsed ? 'lg:w-20' : 'lg:w-72'">
+    <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 transition-all duration-300">
+        <div class="flex h-16 shrink-0 items-center justify-between">
+            <h1 x-show="!sidebarCollapsed" class="text-xl font-bold text-white">KOPERASI JR</h1>
+            <button @click="sidebarCollapsed = !sidebarCollapsed"
+                class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg">
+                <i :class="sidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'" class="fas"></i>
+            </button>
         </div>
         <nav class="flex flex-1 flex-col">
-            <ul role="list" class="flex flex-1 flex-col gap-y-7" x-data="{ openMenu: '{{ $currentRouteGroup }}' }">
+            <ul role="list" class="flex flex-1 flex-col gap-y-7" x-data="{ openMenu: '{{ $currentRouteGroup }}', collapsed: sidebarCollapsed }">
                 <li>
                     <ul role="list" class="-mx-2 space-y-2">
                         @include('layouts.partials.menu-items')
@@ -72,28 +73,39 @@
 
         <!-- User Profile Section -->
         @auth
-            <div class="mt-auto border-t border-white/10 p-4">
-                <div class="flex items-center gap-3 px-2 py-3 rounded-2xl bg-white/5 mb-3">
+            <div class="mt-auto border-t border-white/10 pt-4 transition-all duration-300"
+                :class="sidebarCollapsed ? 'px-2' : 'px-4'">
+                <!-- User Info Card -->
+                <div class="flex items-center gap-3 rounded-2xl bg-white/5 mb-3 transition-all duration-300"
+                    :class="sidebarCollapsed ? 'px-0 py-2 justify-center' : 'px-2 py-3'">
                     <div
-                        class="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black shadow-lg">
+                        class="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
                         {{ substr(auth()->user()->name, 0, 1) }}
                     </div>
-                    <div class="flex-1 min-w-0">
+                    <div class="flex-1 min-w-0 overflow-hidden transition-all duration-300" x-show="!sidebarCollapsed"
+                        x-transition:enter="transition ease-out duration-200"
+                        x-transition:enter-start="opacity-0 transform scale-95"
+                        x-transition:enter-end="opacity-100 transform scale-100"
+                        x-transition:leave="transition ease-in duration-150"
+                        x-transition:leave-start="opacity-100 transform scale-100"
+                        x-transition:leave-end="opacity-0 transform scale-95">
                         <p class="text-sm font-black text-white truncate">{{ auth()->user()->name }}</p>
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                             {{ auth()->user()->role }}</p>
                     </div>
                 </div>
+
+                <!-- Logout Button -->
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
                     <button type="submit"
-                        class="w-full flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all group">
-                        <svg class="h-5 w-5 shrink-0 transition-colors" fill="none" viewBox="0 0 24 24" stroke-width="2"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
-                        </svg>
-                        <span>Keluar</span>
+                        class="w-full flex items-center gap-3 text-sm font-bold text-gray-400 hover:text-white hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all group"
+                        :class="sidebarCollapsed ? 'justify-center px-2 py-3' : 'px-4 py-3'">
+                        <i class="fas fa-right-from-bracket text-lg"></i>
+                        <span x-show="!sidebarCollapsed" x-transition:enter="transition ease-out duration-200"
+                            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                            x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100"
+                            x-transition:leave-end="opacity-0">Keluar</span>
                     </button>
                 </form>
             </div>
