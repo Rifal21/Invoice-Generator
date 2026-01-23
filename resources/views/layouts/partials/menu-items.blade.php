@@ -3,7 +3,7 @@
     <button
         @click="if (sidebarCollapsed) { sidebarCollapsed = false; openMenu = 'master'; } else { openMenu = (openMenu === 'master' ? '' : 'master'); }"
         class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
-        :class="sidebarCollapsed ? 'justify-center' : ''" x-data="{ tooltip: false }">
+        :class="sidebarCollapsed ? 'justify-center' : ''">
         <i class="fas fa-database text-lg w-6 text-center"></i>
         <span x-show="!sidebarCollapsed">Master Data</span>
         <i :class="openMenu === 'master' ? 'fa-angle-down' : 'fa-angle-right'"
@@ -54,10 +54,31 @@
     </button>
     <ul x-show="openMenu === 'ops' && !sidebarCollapsed" x-collapse class="mt-1 px-2 space-y-1">
         <li>
+            <a href="{{ route('rice-deliveries.index') }}"
+                class="{{ request()->routeIs('rice-deliveries.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                <i class="fas fa-shipping-fast text-sm w-4"></i>
+                Nota Pengiriman Beras
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('delivery-orders.index') }}"
+                class="{{ request()->routeIs('delivery-orders.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                <i class="fas fa-truck text-sm w-4"></i>
+                Surat Jalan
+            </a>
+        </li>
+        <li>
             <a href="{{ route('invoices.index') }}"
                 class="{{ request()->routeIs('invoices.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
                 <i class="fas fa-file-invoice text-sm w-4"></i>
                 Invoice Generator
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('vehicle-rentals.index') }}"
+                class="{{ request()->routeIs('vehicle-rentals.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                <i class="fas fa-car text-sm w-4"></i>
+                Invoice Sewa Kendaraan
             </a>
         </li>
         <li>
@@ -92,7 +113,7 @@
     </ul>
 </li>
 
-<!-- Analisis/Laporan Dropdown -->
+<!-- Analisa Keuangan Dropdown -->
 <li>
     <button
         @click="if (sidebarCollapsed) { sidebarCollapsed = false; openMenu = 'fin'; } else { openMenu = (openMenu === 'fin' ? '' : 'fin'); }"
@@ -123,6 +144,13 @@
                 class="{{ request()->routeIs('profit.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
                 <i class="fas fa-sack-dollar text-sm w-4"></i>
                 Detail Laba Rugi
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('rice-order-recap.index') }}"
+                class="{{ request()->routeIs('rice-order-recap.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                <i class="fas fa-list-check text-sm w-4"></i>
+                Rekap Pesanan Beras
             </a>
         </li>
     </ul>
@@ -167,30 +195,6 @@
                     class="text-emerald-400 hover:text-emerald-300 hover:bg-gray-800 flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-bold">
                     <i class="fas fa-qrcode text-sm w-4"></i>
                     Buka Scan Absensi ↗
-                </a>
-            </li>
-        </ul>
-    </li>
-@endif
-
-@if (auth()->user() && auth()->user()->isSuperAdmin())
-    <!-- Pengaturan Dropdown -->
-    <li>
-        <button
-            @click="if (sidebarCollapsed) { sidebarCollapsed = false; openMenu = 'usr'; } else { openMenu = (openMenu === 'usr' ? '' : 'usr'); }"
-            class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
-            :class="sidebarCollapsed ? 'justify-center' : ''">
-            <i class="fas fa-users-cog text-lg w-6 text-center"></i>
-            <span x-show="!sidebarCollapsed">Pengaturan</span>
-            <i :class="openMenu === 'usr' ? 'fa-angle-down' : 'fa-angle-right'"
-                class="fas ml-auto transition-transform duration-200" x-show="!sidebarCollapsed"></i>
-        </button>
-        <ul x-show="openMenu === 'usr' && !sidebarCollapsed" x-collapse class="mt-1 px-2 space-y-1">
-            <li>
-                <a href="{{ route('users.index') }}"
-                    class="{{ request()->routeIs('users.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
-                    <i class="fas fa-user-shield text-sm w-4"></i>
-                    Manajemen User
                 </a>
             </li>
         </ul>

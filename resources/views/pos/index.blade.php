@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Kasir Pintar')
+
 @section('content')
     <div class="max-w-7xl mx-auto lg:h-[calc(100vh-10rem)] pb-24 lg:pb-0">
         <!-- Header & Tab Switcher (Mobile Only) -->

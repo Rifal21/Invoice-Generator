@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Inventory Barang')
+
 @section('content')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="md:flex md:items-center md:justify-between mb-6">
