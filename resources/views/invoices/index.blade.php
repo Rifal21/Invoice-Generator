@@ -396,7 +396,7 @@
                         </div>
 
                         <div class="grid grid-cols-4 gap-2">
-                            <button type="button" onclick="toggleDetails('details-{{ $invoice->id }}')"
+                            <button type="button" onclick="toggleDetails('details-mobile-{{ $invoice->id }}')"
                                 class="flex items-center justify-center py-3 px-3 rounded-2xl bg-indigo-50 text-indigo-700 font-bold transition-all active:scale-90">
                                 <i class="fas fa-eye text-lg"></i>
                             </button>
@@ -412,6 +412,42 @@
                                 class="flex items-center justify-center py-3 px-3 rounded-2xl bg-red-50 text-red-700 font-bold transition-all active:scale-90">
                                 <i class="fas fa-trash-alt text-lg"></i>
                             </button>
+                        </div>
+
+                        <!-- Mobile Expandable Detail -->
+                        <div id="details-mobile-{{ $invoice->id }}"
+                            class="hidden mt-4 pt-4 border-t border-gray-100 space-y-3 transition-all duration-300">
+                            <div class="bg-gray-50 rounded-2xl p-4">
+                                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Rincian
+                                    Item</h4>
+                                <div class="space-y-3">
+                                    @foreach ($invoice->items as $item)
+                                        <div class="flex justify-between items-start gap-4">
+                                            <div class="flex-1">
+                                                <p class="text-sm font-bold text-gray-900 leading-tight">
+                                                    {{ $item->product_name }}</p>
+                                                @if ($item->description)
+                                                    <p class="text-[10px] text-gray-500 mt-0.5">{{ $item->description }}
+                                                    </p>
+                                                @endif
+                                            </div>
+                                            <div class="text-right whitespace-nowrap">
+                                                <p class="text-sm font-black text-indigo-600">Rp
+                                                    {{ number_format($item->total, 0, ',', '.') }}</p>
+                                                <p class="text-[10px] text-gray-400 font-bold">
+                                                    {{ number_format($item->quantity, 2, ',', '.') }} {{ $item->unit }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <div class="mt-4 pt-3 border-t border-gray-200 flex justify-between items-center">
+                                    <a href="{{ route('invoices.show', $invoice->id) }}"
+                                        class="text-[10px] font-black text-indigo-600 uppercase">Detail Lengkap ↗</a>
+                                    <a href="{{ route('invoices.export-pdf', $invoice->id) }}" target="_blank"
+                                        class="text-[10px] font-black text-red-600 uppercase">Cetak PDF</a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 @empty
