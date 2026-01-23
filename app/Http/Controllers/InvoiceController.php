@@ -53,9 +53,9 @@ class InvoiceController extends Controller
         // Pagination
         $perPage = $request->get('per_page', 10);
         if ($perPage === 'all') {
-            $invoices = $query->get();
+            $invoices = $query->with('items')->get();
         } else {
-            $invoices = $query->paginate(is_numeric($perPage) ? $perPage : 10)->withQueryString();
+            $invoices = $query->with('items')->paginate(is_numeric($perPage) ? $perPage : 10)->withQueryString();
         }
 
         $customers = Invoice::select('customer_name')->distinct()->orderBy('customer_name')->pluck('customer_name');

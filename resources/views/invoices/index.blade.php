@@ -180,14 +180,16 @@
                                         <input type="checkbox" name="invoice_ids[]" value="{{ $invoice->id }}"
                                             class="invoice-checkbox h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-5">
+                                    <td class="whitespace-nowrap px-3 py-5 cursor-pointer"
+                                        onclick="toggleDetails('details-{{ $invoice->id }}')">
                                         <div class="flex items-center">
                                             <div
                                                 class="h-10 w-10 flex-shrink-0 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600">
-                                                <svg class="h-6 w-6" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
+                                                <svg id="icon-details-{{ $invoice->id }}"
+                                                    class="h-6 w-6 transform transition-transform duration-200"
+                                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                        d="M9 5l7 7-7 7" />
                                                 </svg>
                                             </div>
                                             <div class="ml-4">
@@ -197,24 +199,116 @@
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-600 font-medium">
+                                    <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-600 font-medium cursor-pointer"
+                                        onclick="toggleDetails('details-{{ $invoice->id }}')">
                                         {{ \Carbon\Carbon::parse($invoice->date)->format('d M Y') }}
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-5">
+                                    <td class="whitespace-nowrap px-3 py-5 cursor-pointer"
+                                        onclick="toggleDetails('details-{{ $invoice->id }}')">
                                         <div class="text-sm font-bold text-gray-900">{{ $invoice->customer_name }}</div>
                                     </td>
-                                    <td class="whitespace-nowrap px-3 py-5">
+                                    <td class="whitespace-nowrap px-3 py-5 cursor-pointer"
+                                        onclick="toggleDetails('details-{{ $invoice->id }}')">
                                         <div class="text-sm font-black text-indigo-600">Rp
                                             {{ number_format($invoice->total_amount, 2, ',', '.') }}</div>
                                     </td>
                                     <td
-                                        class="relative whitespace-nowrap py-5 pl-3 pr-6 text-right text-sm font-bold space-x-2">
-                                        <a href="{{ route('invoices.show', $invoice->id) }}"
-                                            class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors inline-block">Lihat</a>
+                                        class="relative whitespace-nowrap py-5 pl-3 pr-6 text-right text-sm font-bold space-x-1">
+                                        <button type="button" onclick="toggleDetails('details-{{ $invoice->id }}')"
+                                            class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 p-2 rounded-xl transition-colors inline-flex items-center justify-center"
+                                            title="Lihat Detail">
+                                            <i class="fas fa-eye text-lg"></i>
+                                        </button>
+                                        <a href="{{ route('invoices.export-pdf', $invoice->id) }}" target="_blank"
+                                            class="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded-xl transition-colors inline-flex items-center justify-center"
+                                            title="Cetak PDF">
+                                            <i class="fas fa-print text-lg"></i>
+                                        </a>
                                         <a href="{{ route('invoices.edit', ['invoice' => $invoice->id] + request()->query()) }}"
-                                            class="text-amber-600 hover:text-amber-900 bg-amber-50 px-3 py-1.5 rounded-lg transition-colors inline-block">Edit</a>
+                                            class="text-amber-600 hover:text-amber-900 bg-amber-50 p-2 rounded-xl transition-colors inline-flex items-center justify-center"
+                                            title="Edit Invoice">
+                                            <i class="fas fa-edit text-lg"></i>
+                                        </a>
                                         <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
-                                            class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1.5 rounded-lg transition-colors inline-block">Hapus</button>
+                                            class="text-red-600 hover:text-red-900 bg-red-50 p-2 rounded-xl transition-colors inline-flex items-center justify-center"
+                                            title="Hapus Invoice">
+                                            <i class="fas fa-trash-alt text-lg"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Expandable Detail Row -->
+                                <tr id="details-{{ $invoice->id }}"
+                                    class="hidden bg-gray-50/50 border-t border-gray-100 transition-all duration-300">
+                                    <td colspan="6" class="px-6 py-6">
+                                        <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                                            <div
+                                                class="bg-gray-50/50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
+                                                <h4 class="text-xs font-black text-gray-400 uppercase tracking-widest">
+                                                    Detail Item</h4>
+                                                <div class="flex items-center gap-3">
+                                                    <a href="{{ route('invoices.show', $invoice->id) }}"
+                                                        class="text-[10px] font-black uppercase text-gray-400 hover:text-indigo-600 transition-colors flex items-center gap-1">
+                                                        <i class="fas fa-external-link-alt"></i> Halaman Detail
+                                                    </a>
+                                                    <div class="h-4 w-px bg-gray-200"></div>
+                                                    <a href="{{ route('invoices.export-pdf', $invoice->id) }}"
+                                                        target="_blank"
+                                                        class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-xl shadow-red-200 active:scale-95 group/print">
+                                                        <i
+                                                            class="fas fa-file-pdf text-xl group-hover/print:scale-110 transition-transform"></i>
+                                                        CETAK / DOWNLOAD INVOICE (PDF)
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <div class="overflow-x-auto">
+                                                <table class="min-w-full divide-y divide-gray-100">
+                                                    <thead class="bg-gray-50/30">
+                                                        <tr>
+                                                            <th
+                                                                class="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                Barang</th>
+                                                            <th
+                                                                class="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                Qty</th>
+                                                            <th
+                                                                class="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                Harga</th>
+                                                            <th
+                                                                class="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                Total</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody class="divide-y divide-gray-50">
+                                                        @foreach ($invoice->items as $item)
+                                                            <tr>
+                                                                <td class="px-4 py-3">
+                                                                    <div class="text-sm font-bold text-gray-900">
+                                                                        {{ $item->product_name }}</div>
+                                                                    @if ($item->description)
+                                                                        <div class="text-[10px] text-gray-400 font-medium">
+                                                                            {{ $item->description }}</div>
+                                                                    @endif
+                                                                </td>
+                                                                <td
+                                                                    class="px-4 py-3 text-right text-sm font-medium text-gray-600">
+                                                                    {{ number_format($item->quantity, 2, ',', '.') }}
+                                                                    {{ $item->unit }}
+                                                                </td>
+                                                                <td
+                                                                    class="px-4 py-3 text-right text-sm font-medium text-gray-600">
+                                                                    Rp {{ number_format($item->price, 0, ',', '.') }}
+                                                                </td>
+                                                                <td
+                                                                    class="px-4 py-3 text-right text-sm font-black text-indigo-600">
+                                                                    Rp {{ number_format($item->total, 0, ',', '.') }}
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -301,18 +395,22 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-3 gap-2">
-                            <a href="{{ route('invoices.show', $invoice->id) }}"
-                                class="flex items-center justify-center py-2 px-3 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-sm">
-                                Detail
+                        <div class="grid grid-cols-4 gap-2">
+                            <button type="button" onclick="toggleDetails('details-{{ $invoice->id }}')"
+                                class="flex items-center justify-center py-3 px-3 rounded-2xl bg-indigo-50 text-indigo-700 font-bold transition-all active:scale-90">
+                                <i class="fas fa-eye text-lg"></i>
+                            </button>
+                            <a href="{{ route('invoices.export-pdf', $invoice->id) }}" target="_blank"
+                                class="flex items-center justify-center py-3 px-3 rounded-2xl bg-red-50 text-red-700 font-bold transition-all active:scale-90">
+                                <i class="fas fa-print text-lg"></i>
                             </a>
                             <a href="{{ route('invoices.edit', ['invoice' => $invoice->id] + request()->query()) }}"
-                                class="flex items-center justify-center py-2 px-3 rounded-xl bg-amber-50 text-amber-700 font-bold text-sm">
-                                Edit
+                                class="flex items-center justify-center py-3 px-3 rounded-2xl bg-amber-50 text-amber-700 font-bold transition-all active:scale-90">
+                                <i class="fas fa-edit text-lg"></i>
                             </a>
                             <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
-                                class="flex items-center justify-center py-2 px-3 rounded-xl bg-red-50 text-red-700 font-bold text-sm">
-                                Hapus
+                                class="flex items-center justify-center py-3 px-3 rounded-2xl bg-red-50 text-red-700 font-bold transition-all active:scale-90">
+                                <i class="fas fa-trash-alt text-lg"></i>
                             </button>
                         </div>
                     </div>
@@ -487,6 +585,25 @@
                     form.submit();
                 }
             })
+        }
+
+        function toggleDetails(id) {
+            const row = document.getElementById(id);
+            const icon = document.getElementById('icon-' + id);
+
+            if (row.classList.contains('hidden')) {
+                row.classList.remove('hidden');
+                if (icon) icon.style.transform = 'rotate(90deg)';
+                // Fade in effect
+                row.style.opacity = '0';
+                setTimeout(() => {
+                    row.style.opacity = '1';
+                }, 10);
+            } else {
+                row.classList.add('hidden');
+                if (icon) icon.style.transform = 'rotate(0deg)';
+                row.style.opacity = '0';
+            }
         }
     </script>
 @endsection
