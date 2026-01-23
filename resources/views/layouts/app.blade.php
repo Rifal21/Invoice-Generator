@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>KOPERASI JR</title>
+    <link rel="shortcut icon" href="{{ asset('images/kopinvoice.png') }}" type="image/x-icon">
+    <title>@yield('title', 'KOPERASI JR') | KOPERASI JR</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -72,9 +73,14 @@
                 </button>
 
                 <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
-                    <div class="flex flex-1 items-center">
-                        <span
-                            class="text-xs font-black text-gray-400 uppercase tracking-widest lg:hidden">Dashboard</span>
+                    <div class="flex flex-1 items-center gap-3">
+                        <div class="flex items-center gap-2">
+                            <img src="{{ asset('images/kopinvoice.png') }}" class="h-8 w-8 object-contain"
+                                alt="Logo">
+                            <span class="text-sm font-black text-gray-900 uppercase tracking-widest">
+                                @yield('title', 'Dashboard')
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -17,6 +17,12 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\FinancialReportController;
+use App\Http\Controllers\VehicleRentalInvoiceController;
+use App\Http\Controllers\RiceDeliveryController;
+use App\Http\Controllers\DeliveryOrderController;
+use App\Http\Controllers\RiceOrderRecapController;
+
+
 
 // Auth Routes
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
@@ -66,6 +72,27 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-delete');
     Route::resource('invoices', InvoiceController::class);
+
+    // Vehicle Rental Invoice Routes
+    Route::get('vehicle-rentals/next-number', [VehicleRentalInvoiceController::class, 'getNextNumber'])->name('vehicle-rentals.next-number');
+    Route::get('vehicle-rentals/{vehicleRental}/export-pdf', [VehicleRentalInvoiceController::class, 'exportPdf'])->name('vehicle-rentals.export-pdf');
+    Route::resource('vehicle-rentals', VehicleRentalInvoiceController::class);
+
+    // Rice Delivery Routes
+    Route::get('rice-deliveries/next-number', [RiceDeliveryController::class, 'getNextNumber'])->name('rice-deliveries.next-number');
+    Route::get('rice-deliveries/{riceDelivery}/export-pdf', [RiceDeliveryController::class, 'exportPdf'])->name('rice-deliveries.export-pdf');
+    Route::resource('rice-deliveries', RiceDeliveryController::class);
+
+    // Delivery Order Routes (Surat Jalan)
+    Route::get('delivery-orders/next-number', [DeliveryOrderController::class, 'getNextNumber'])->name('delivery-orders.next-number');
+    Route::get('delivery-orders/{deliveryOrder}/export-pdf', [DeliveryOrderController::class, 'exportPdf'])->name('delivery-orders.export-pdf');
+    Route::resource('delivery-orders', DeliveryOrderController::class);
+
+    // Rice Order Recap Routes
+    Route::get('rice-order-recap', [RiceOrderRecapController::class, 'index'])->name('rice-order-recap.index');
+    Route::get('rice-order-recap/export-pdf', [RiceOrderRecapController::class, 'exportPdf'])->name('rice-order-recap.export-pdf');
+
+
 
     // Admin & Ketua Only
     Route::middleware(['role:super_admin,ketua'])->group(function () {

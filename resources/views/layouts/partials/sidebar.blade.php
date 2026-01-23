@@ -1,11 +1,11 @@
 @php
     $currentRouteGroup = request()->routeIs('categories.*', 'products.*')
         ? 'master'
-        : (request()->routeIs('invoices.*', 'pos.*')
+        : (request()->routeIs('invoices.*', 'pos.*', 'vehicle-rentals.*', 'rice-deliveries.*', 'delivery-orders.*')
             ? 'ops'
             : (request()->routeIs('inventory.*')
                 ? 'inv'
-                : (request()->routeIs('profit.*')
+                : (request()->routeIs('profit.*', 'rice-order-recap.*')
                     ? 'fin'
                     : (request()->routeIs('users.*')
                         ? 'usr'
@@ -34,8 +34,9 @@
             </div>
 
             <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 ring-1 ring-white/10">
-                <div class="flex h-16 shrink-0 items-center">
-                    <h1 class="text-xl font-bold text-white">Invoice App</h1>
+                <div class="flex h-16 shrink-0 items-center gap-3">
+                    <img src="{{ asset('images/kopinvoice.png') }}" class="h-8 w-8 object-contain" alt="Logo">
+                    <h1 class="text-xl font-bold text-white tracking-tight">KOPERASI JR</h1>
                 </div>
                 <nav class="flex flex-1 flex-col">
                     <ul role="list" class="flex flex-1 flex-col gap-y-7" x-data="{ openMenu: '{{ $currentRouteGroup }}' }">
@@ -55,7 +56,11 @@
 <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col" :class="sidebarCollapsed ? 'lg:w-20' : 'lg:w-72'">
     <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 transition-all duration-300">
         <div class="flex h-16 shrink-0 items-center justify-between">
-            <h1 x-show="!sidebarCollapsed" class="text-xl font-bold text-white">KOPERASI JR</h1>
+            <div class="flex items-center gap-3">
+                <img src="{{ asset('images/kopinvoice.png') }}" class="h-8 w-8 object-contain" alt="Logo">
+                <h1 x-show="!sidebarCollapsed" class="text-xl font-bold text-white tracking-tight uppercase">KOPERASI JR
+                </h1>
+            </div>
             <button @click="sidebarCollapsed = !sidebarCollapsed"
                 class="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg">
                 <i :class="sidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'" class="fas"></i>

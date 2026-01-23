@@ -1,5 +1,7 @@
 @extends('layouts.app')
 
+@section('title', 'Penggajian Pegawai')
+
 @section('content')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
