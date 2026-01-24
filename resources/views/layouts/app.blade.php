@@ -8,6 +8,12 @@
     <link rel="shortcut icon" href="{{ asset('images/kopinvoice.png') }}" type="image/x-icon">
     <title>@yield('title', 'KOPERASI JR') | KOPERASI JR</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#111827">
+    <link rel="apple-touch-icon" href="{{ asset('images/kopinvoice.png') }}">
+    <link rel="manifest" href="{{ asset('/manifest.json') }}">
+
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -64,13 +70,7 @@
         <div :class="sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'" class="transition-all duration-300 ease-in-out">
             <div
                 class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white/80 backdrop-blur-md px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
-                <button type="button" @click="sidebarOpen = true" class="-m-2.5 p-2.5 text-gray-700 lg:hidden">
-                    <span class="sr-only">Buka sidebar</span>
-                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                    </svg>
-                </button>
+
 
                 <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                     <div class="flex flex-1 items-center gap-3">
@@ -128,6 +128,13 @@
             </main>
         </div>
     </div>
+    <script>
+        if (!navigator.serviceWorker.controller) {
+            navigator.serviceWorker.register("/sw.js").then(function(reg) {
+                console.log("Service worker has been registered for scope: " + reg.scope);
+            });
+        }
+    </script>
     @stack('scripts')
 </body>
 

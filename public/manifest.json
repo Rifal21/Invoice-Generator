@@ -1,0 +1,17 @@
+{
+    "name": "KOPERASI JR",
+    "short_name": "KoperasiJR",
+    "start_url": "/",
+    "background_color": "#111827",
+    "description": "Aplikasi Invoice & Management KOPERASI JR",
+    "display": "standalone",
+    "theme_color": "#111827",
+    "icons": [
+        {
+            "src": "images/kopinvoice.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
+}

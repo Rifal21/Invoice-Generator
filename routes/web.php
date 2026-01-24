@@ -29,9 +29,6 @@ Route::get('login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('login', [AuthController::class, 'login'])->name('login.post');
 Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
-// Public Attendance Routes
-Route::get('attendance', [AttendanceController::class, 'publicScan'])->name('attendance.public');
-Route::post('attendance/scan', [AttendanceController::class, 'scan'])->name('attendance.scan');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {
@@ -105,6 +102,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('finance/export-pdf', [FinancialReportController::class, 'exportPdf'])->name('finance.export-pdf');
         Route::resource('expenses', ExpenseController::class);
 
+        Route::get('attendance', [AttendanceController::class, 'publicScan'])->name('attendance.public');
+        Route::post('attendance/scan', [AttendanceController::class, 'scan'])->name('attendance.scan');
+
         // Attendance Admin Routes
         Route::get('attendance/settings', [AttendanceController::class, 'settings'])->name('attendance.settings');
         Route::post('attendance/settings', [AttendanceController::class, 'updateSettings'])->name('attendance.update-settings');
@@ -113,7 +113,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Admin Only
-    Route::middleware(['role:super_admin'])->group(function () {
+    Route::middleware(['role:super_admin,ketua'])->group(function () {
         Route::get('qr-code/user/{code}', [UserController::class, 'generateQR'])->name('users.qr');
         Route::resource('users', UserController::class);
     });

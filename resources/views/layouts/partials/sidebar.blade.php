@@ -1,56 +1,21 @@
 @php
-    $currentRouteGroup = request()->routeIs('categories.*', 'products.*')
-        ? 'master'
-        : (request()->routeIs('invoices.*', 'pos.*', 'vehicle-rentals.*', 'rice-deliveries.*', 'delivery-orders.*')
-            ? 'ops'
-            : (request()->routeIs('inventory.*')
-                ? 'inv'
-                : (request()->routeIs('profit.*', 'rice-order-recap.*')
-                    ? 'fin'
-                    : (request()->routeIs('users.*')
-                        ? 'usr'
-                        : (request()->routeIs('salaries.*')
-                            ? 'hrd'
-                            : '')))));
+    $currentRouteGroup = '';
+    if (request()->routeIs('categories.*', 'customers.*', 'suppliers.*', 'products.*')) {
+        $currentRouteGroup = 'master';
+    } elseif (
+        request()->routeIs('rice-deliveries.*', 'delivery-orders.*', 'invoices.*', 'vehicle-rentals.*', 'pos.*')
+    ) {
+        $currentRouteGroup = 'ops';
+    } elseif (request()->routeIs('inventory.*')) {
+        $currentRouteGroup = 'inv';
+    } elseif (request()->routeIs('finance.summary', 'expenses.*', 'profit.*', 'rice-order-recap.*')) {
+        $currentRouteGroup = 'fin';
+    } elseif (request()->routeIs('users.*', 'salaries.*', 'attendance.*')) {
+        $currentRouteGroup = 'hrd';
+    }
 @endphp
 
-<!-- Mobile Sidebar Overlay -->
-<div x-show="sidebarOpen" class="relative z-50 lg:hidden" role="dialog" aria-modal="true">
-    <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
-        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
-        x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900/80"></div>
 
-    <div class="fixed inset-0 flex">
-        <div x-show="sidebarOpen" x-transition:enter="transition ease-in-out duration-300 transform"
-            x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
-            x-transition:leave="transition ease-in-out duration-300 transform" x-transition:leave-start="translate-x-0"
-            x-transition:leave-end="-translate-x-full" class="relative mr-16 flex w-full max-w-xs flex-1">
-            <div class="absolute top-0 left-full flex w-16 justify-center pt-5">
-                <button type="button" @click="sidebarOpen = false" class="-m-2.5 p-2.5 text-white">
-                    <span class="sr-only">Tutup sidebar</span>
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-
-            <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 ring-1 ring-white/10">
-                <div class="flex h-16 shrink-0 items-center gap-3">
-                    <img src="{{ asset('images/kopinvoice.png') }}" class="h-8 w-8 object-contain" alt="Logo">
-                    <h1 class="text-xl font-bold text-white tracking-tight">KOPERASI JR</h1>
-                </div>
-                <nav class="flex flex-1 flex-col">
-                    <ul role="list" class="flex flex-1 flex-col gap-y-7" x-data="{ openMenu: '{{ $currentRouteGroup }}' }">
-                        <li>
-                            <ul role="list" class="-mx-2 space-y-2">
-                                @include('layouts.partials.menu-items')
-                            </ul>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Static sidebar for desktop -->
 <div class="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col" :class="sidebarCollapsed ? 'lg:w-20' : 'lg:w-72'">
