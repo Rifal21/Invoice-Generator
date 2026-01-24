@@ -2,7 +2,7 @@
 <li>
     <button
         @click="if (sidebarCollapsed) { sidebarCollapsed = false; openMenu = 'master'; } else { openMenu = (openMenu === 'master' ? '' : 'master'); }"
-        class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
+        class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold {{ $currentRouteGroup === 'master' ? 'text-white bg-gray-800' : 'text-gray-400' }} hover:text-white hover:bg-gray-800 transition-all duration-200"
         :class="sidebarCollapsed ? 'justify-center' : ''">
         <i class="fas fa-database text-lg w-6 text-center"></i>
         <span x-show="!sidebarCollapsed">Master Data</span>
@@ -45,7 +45,7 @@
 <li>
     <button
         @click="if (sidebarCollapsed) { sidebarCollapsed = false; openMenu = 'ops'; } else { openMenu = (openMenu === 'ops' ? '' : 'ops'); }"
-        class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
+        class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold {{ $currentRouteGroup === 'ops' ? 'text-white bg-gray-800' : 'text-gray-400' }} hover:text-white hover:bg-gray-800 transition-all duration-200"
         :class="sidebarCollapsed ? 'justify-center' : ''">
         <i class="fas fa-cash-register text-lg w-6 text-center"></i>
         <span x-show="!sidebarCollapsed">Operasional</span>
@@ -95,7 +95,7 @@
 <li>
     <button
         @click="if (sidebarCollapsed) { sidebarCollapsed = false; openMenu = 'inv'; } else { openMenu = (openMenu === 'inv' ? '' : 'inv'); }"
-        class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
+        class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold {{ $currentRouteGroup === 'inv' ? 'text-white bg-gray-800' : 'text-gray-400' }} hover:text-white hover:bg-gray-800 transition-all duration-200"
         :class="sidebarCollapsed ? 'justify-center' : ''">
         <i class="fas fa-warehouse text-lg w-6 text-center"></i>
         <span x-show="!sidebarCollapsed">Gudang & Stok</span>
@@ -117,7 +117,7 @@
 <li>
     <button
         @click="if (sidebarCollapsed) { sidebarCollapsed = false; openMenu = 'fin'; } else { openMenu = (openMenu === 'fin' ? '' : 'fin'); }"
-        class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
+        class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold {{ $currentRouteGroup === 'fin' ? 'text-white bg-gray-800' : 'text-gray-400' }} hover:text-white hover:bg-gray-800 transition-all duration-200"
         :class="sidebarCollapsed ? 'justify-center' : ''">
         <i class="fas fa-chart-pie text-lg w-6 text-center"></i>
         <span x-show="!sidebarCollapsed">Analisa Keuangan</span>
@@ -161,7 +161,7 @@
     <li>
         <button
             @click="if (sidebarCollapsed) { sidebarCollapsed = false; openMenu = 'hrd'; } else { openMenu = (openMenu === 'hrd' ? '' : 'hrd'); }"
-            class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold text-gray-400 hover:text-white hover:bg-gray-800 transition-all duration-200"
+            class="w-full flex items-center gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold {{ $currentRouteGroup === 'hrd' ? 'text-white bg-gray-800' : 'text-gray-400' }} hover:text-white hover:bg-gray-800 transition-all duration-200"
             :class="sidebarCollapsed ? 'justify-center' : ''">
             <i class="fas fa-user-tie text-lg w-6 text-center"></i>
             <span x-show="!sidebarCollapsed">Kepegawaian</span>
@@ -169,6 +169,13 @@
                 class="fas ml-auto transition-transform duration-200" x-show="!sidebarCollapsed"></i>
         </button>
         <ul x-show="openMenu === 'hrd' && !sidebarCollapsed" x-collapse class="mt-1 px-2 space-y-1">
+            <li>
+                <a href="{{ route('users.index') }}"
+                    class="{{ request()->routeIs('users.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                    <i class="fas fa-users text-sm w-4"></i>
+                    Pegawai
+                </a>
+            </li>
             <li>
                 <a href="{{ route('salaries.index') }}"
                     class="{{ request()->routeIs('salaries.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
