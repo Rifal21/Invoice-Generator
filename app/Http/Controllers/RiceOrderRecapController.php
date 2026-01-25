@@ -17,12 +17,7 @@ class RiceOrderRecapController extends Controller
         $items = InvoiceItem::whereHas('invoice', function ($query) use ($startDate, $endDate) {
             $query->whereBetween('date', [$startDate, $endDate]);
         })
-            ->where(function ($query) {
-                $query->where('product_name', 'like', '%Beras%')
-                    ->orWhereHas('product.category', function ($q) {
-                        $q->where('name', 'like', '%Beras%');
-                    });
-            })
+            ->whereIn('product_name', ['Beras', 'Beras Premium'])
             ->select(
                 'product_name',
                 DB::raw('SUM(quantity) as total_quantity'),
@@ -38,12 +33,7 @@ class RiceOrderRecapController extends Controller
             ->whereHas('invoice', function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date', [$startDate, $endDate]);
             })
-            ->where(function ($query) {
-                $query->where('product_name', 'like', '%Beras%')
-                    ->orWhereHas('product.category', function ($q) {
-                        $q->where('name', 'like', '%Beras%');
-                    });
-            })
+            ->whereIn('product_name', ['Beras', 'Beras Premium'])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -60,12 +50,7 @@ class RiceOrderRecapController extends Controller
             ->whereHas('invoice', function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date', [$startDate, $endDate]);
             })
-            ->where(function ($query) {
-                $query->where('product_name', 'like', '%Beras%')
-                    ->orWhereHas('product.category', function ($q) {
-                        $q->where('name', 'like', '%Beras%');
-                    });
-            })
+            ->whereIn('product_name', ['Beras', 'Beras Premium'])
             ->get()
             ->groupBy(function ($item) {
                 return $item->invoice->customer_name;
