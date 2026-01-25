@@ -9,6 +9,8 @@ use App\Services\GeolocationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 class AttendanceController extends Controller
@@ -17,6 +19,52 @@ class AttendanceController extends Controller
     {
         $settings = AttendanceSetting::first();
         return view('attendance.public', compact('settings'));
+    }
+
+    public function checkStatus(Request $request)
+    {
+        $request->validate([
+            'code' => 'required|string',
+        ]);
+
+        $user = User::where('unique_code', $request->code)->first();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kode unik tidak valid!',
+            ], 404);
+        }
+
+        $today = Carbon::today();
+        $attendance = Attendance::where('user_id', $user->id)
+            ->where('date', $today)
+            ->first();
+
+        if (!$attendance) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Anda belum melakukan absensi hari ini.',
+            ]);
+        }
+
+        $distanceText = null;
+        if ($attendance->check_in_distance) {
+            $distanceText = number_format($attendance->check_in_distance, 0) . ' meter dari kantor';
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'user_name' => $user->name,
+                'user_role' => $user->role,
+                'date' => Carbon::parse($attendance->date)->isoFormat('dddd, D MMMM Y'),
+                'check_in' => Carbon::parse($attendance->check_in)->format('H:i'),
+                'check_out' => $attendance->check_out ? Carbon::parse($attendance->check_out)->format('H:i') : null,
+                'status' => $attendance->status,
+                'distance' => $distanceText,
+            ],
+        ]);
     }
 
     public function scan(Request $request)
@@ -45,7 +93,7 @@ class AttendanceController extends Controller
             'check_in_time' => '08:00',
             'check_out_time' => '17:00',
             'allowed_radius' => 100,
-            'require_photo' => false,
+            'require_photo' => true,
             'require_location' => false,
             'strict_time' => true,
         ]);
@@ -158,7 +206,7 @@ class AttendanceController extends Controller
 
             // Validate it's the same device
             if ($attendance->check_in_device_id && $attendance->check_in_device_id !== $deviceId) {
-                \Log::warning('Different device detected for check-out', [
+                Log::warning('Different device detected for check-out', [
                     'user_id' => $user->id,
                     'check_in_device' => $attendance->check_in_device_id,
                     'check_out_device' => $deviceId,
@@ -313,7 +361,7 @@ class AttendanceController extends Controller
             'check_out' => $request->check_out,
             'status' => $request->status,
             'is_manual_entry' => true,
-            'approved_by' => auth()->id(),
+            'approved_by' => Auth::id(),
             'approved_at' => now(),
             'correction_reason' => $request->correction_reason,
         ]);
