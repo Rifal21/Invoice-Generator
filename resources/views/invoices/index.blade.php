@@ -266,6 +266,9 @@
                                                     <thead class="bg-gray-50/30">
                                                         <tr>
                                                             <th
+                                                                class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest w-12">
+                                                                No</th>
+                                                            <th
                                                                 class="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                                                 Barang</th>
                                                             <th
@@ -280,8 +283,12 @@
                                                         </tr>
                                                     </thead>
                                                     <tbody class="divide-y divide-gray-50">
-                                                        @foreach ($invoice->items as $item)
+                                                        @foreach ($invoice->items as $index => $item)
                                                             <tr>
+                                                                <td
+                                                                    class="px-4 py-3 text-center text-sm font-bold text-gray-500">
+                                                                    {{ $index + 1 }}
+                                                                </td>
                                                                 <td class="px-4 py-3">
                                                                     <div class="text-sm font-bold text-gray-900">
                                                                         {{ $item->product_name }}</div>
@@ -292,7 +299,7 @@
                                                                 </td>
                                                                 <td
                                                                     class="px-4 py-3 text-right text-sm font-medium text-gray-600">
-                                                                    {{ number_format($item->quantity, 2, ',', '.') }}
+                                                                    {{ rtrim(rtrim(number_format($item->quantity, 2, ',', '.'), '0'), ',') }}
                                                                     {{ $item->unit }}
                                                                 </td>
                                                                 <td
@@ -421,8 +428,13 @@
                                 <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Rincian
                                     Item</h4>
                                 <div class="space-y-3">
-                                    @foreach ($invoice->items as $item)
-                                        <div class="flex justify-between items-start gap-4">
+                                    @foreach ($invoice->items as $index => $item)
+                                        <div class="flex justify-between items-start gap-3">
+                                            <div
+                                                class="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-100 flex items-center justify-center">
+                                                <span
+                                                    class="text-[10px] font-black text-indigo-600">{{ $index + 1 }}</span>
+                                            </div>
                                             <div class="flex-1">
                                                 <p class="text-sm font-bold text-gray-900 leading-tight">
                                                     {{ $item->product_name }}</p>
@@ -435,7 +447,8 @@
                                                 <p class="text-sm font-black text-indigo-600">Rp
                                                     {{ number_format($item->total, 0, ',', '.') }}</p>
                                                 <p class="text-[10px] text-gray-400 font-bold">
-                                                    {{ number_format($item->quantity, 2, ',', '.') }} {{ $item->unit }}
+                                                    {{ rtrim(rtrim(number_format($item->quantity, 2, ',', '.'), '0'), ',') }}
+                                                    {{ $item->unit }}
                                                 </p>
                                             </div>
                                         </div>

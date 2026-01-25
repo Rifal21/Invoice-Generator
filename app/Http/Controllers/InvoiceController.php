@@ -276,7 +276,8 @@ class InvoiceController extends Controller
             ->get();
 
         $pdf = Pdf::loadView('invoices.multi-pdf', compact('invoices'));
-        return $pdf->stream(' Gabungan invoice ' . $invoices->first()->customer_name . '.pdf');
+        $fileName = 'Gabungan invoice ' . $invoices->first()->customer_name . ' - ' . now()->format('d-m-Y') . '.pdf';
+        return $pdf->download($fileName);
     }
 
     public function bulkExportPdf(Request $request)
