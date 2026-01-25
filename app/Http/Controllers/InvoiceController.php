@@ -256,7 +256,7 @@ class InvoiceController extends Controller
     public function exportPdf(Invoice $invoice)
     {
         $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));
-        return $pdf->stream($invoice->invoice_number . ' - ' . $invoice->customer_name . '.pdf');
+        return $pdf->download($invoice->invoice_number . ' - ' . $invoice->customer_name . '.pdf');
     }
 
     public function printMultiPdf(Request $request)
@@ -344,7 +344,7 @@ class InvoiceController extends Controller
         });
 
         $pdf = Pdf::loadView('invoices.bulk-pdf', compact('groupedItems', 'invoices'));
-        return $pdf->stream('Laporan_Pemeriksaan_Bahan_Makanan_' . $invoices->first()->customer_name . '_' . $invoices->first()->created_at->format('d F Y') . '.pdf');
+        return $pdf->download('Laporan_Pemeriksaan_Bahan_Makanan_' . $invoices->first()->customer_name . '_' . $invoices->first()->created_at->format('d F Y') . '.pdf');
     }
 
     public function exportExcel(Invoice $invoice)
