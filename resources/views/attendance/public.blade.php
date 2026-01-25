@@ -38,15 +38,42 @@
             font-weight: 600 !important;
             margin-top: 1rem !important;
         }
+
+        #camera-preview {
+            transform: scaleX(-1);
+        }
+
+        .location-indicator {
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
     </style>
 </head>
 
 <body class="h-full flex items-center justify-center p-4">
-    <div class="max-w-md w-full">
+    <div class="max-w-2xl w-full">
         <!-- Header -->
         <div class="text-center mb-8">
             <h1 class="text-4xl font-black text-white tracking-tight mb-2">KOPERASI JR</h1>
             <p class="text-indigo-400 font-bold uppercase tracking-[0.2em] text-sm">Sistem Absensi Digital</p>
+            @if ($settings && $settings->require_location)
+                <div
+                    class="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full">
+                    <div class="location-indicator w-2 h-2 bg-emerald-400 rounded-full"></div>
+                    <span class="text-emerald-300 text-xs font-bold">GPS Tracking Aktif</span>
+                </div>
+            @endif
+            @if ($settings && $settings->require_photo)
+                <div
+                    class="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-blue-500/20 border border-blue-500/30 rounded-full">
+                    <svg class="w-4 h-4 text-blue-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span class="text-blue-300 text-xs font-bold">Foto Selfie Diperlukan</span>
+                </div>
+            @endif
         </div>
 
         <!-- Main Card -->
@@ -55,33 +82,91 @@
             <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-600/20 rounded-full blur-3xl"></div>
 
             <div class="relative z-10">
-                <div class="text-center mb-6">
-                    <div
-                        class="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl mb-4 border border-white/20">
-                        <svg class="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 17h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                        </svg>
+                <!-- Scanner Section -->
+                <div id="scanner-section">
+                    <div class="text-center mb-6">
+                        <div
+                            class="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl mb-4 border border-white/20">
+                            <svg class="w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 17h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Scan Barcode Anda</h2>
+                        <p class="text-gray-400 text-sm">Arahkan barcode ke kamera untuk absen</p>
                     </div>
-                    <h2 class="text-xl font-bold text-white">Scan Barcode Anda</h2>
-                    <p class="text-gray-400 text-sm">Arahkan barcode ke kamera untuk absen</p>
+
+                    <div class="scanner-container mb-6">
+                        <div id="reader" class="w-full"></div>
+                    </div>
+
+                    <!-- GPS Status -->
+                    <div id="gps-status" class="hidden mb-4 p-4 bg-white/5 rounded-2xl border border-white/10">
+                        <div class="flex items-center gap-3">
+                            <div class="flex-shrink-0">
+                                <div class="w-10 h-10 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                                    <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-white font-bold text-sm">Lokasi Terdeteksi</p>
+                                <p id="gps-coords" class="text-gray-400 text-xs"></p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="scanner-container mb-8">
-                    <div id="reader" class="w-full"></div>
+                <!-- Camera Section (for selfie) -->
+                <div id="camera-section" class="hidden">
+                    <div class="text-center mb-6">
+                        <div
+                            class="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl mb-4 border border-white/20">
+                            <svg class="w-8 h-8 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </div>
+                        <h2 class="text-xl font-bold text-white">Ambil Foto Selfie</h2>
+                        <p class="text-gray-400 text-sm">Pastikan wajah Anda terlihat jelas</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <video id="camera-preview" class="w-full rounded-2xl" autoplay></video>
+                        <canvas id="camera-canvas" class="hidden"></canvas>
+                    </div>
+
+                    <button onclick="capturePhoto()"
+                        class="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-black py-4 rounded-2xl hover:shadow-xl hover:shadow-indigo-500/50 transition-all active:scale-95">
+                        <svg class="w-6 h-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        </svg>
+                        AMBIL FOTO
+                    </button>
                 </div>
 
+                <!-- Processing State -->
                 <div id="result-container"
                     class="hidden text-center p-6 rounded-3xl bg-white/10 border border-white/20 animate-pulse">
                     <p class="text-indigo-400 font-black text-lg mb-1">MEMPROSES...</p>
                     <p class="text-white/60 text-sm">Mohon tunggu sebentar</p>
                 </div>
 
-                <div class="text-center">
+                <!-- Clock -->
+                <div class="text-center mt-6">
                     <p id="clock" class="text-3xl font-black text-white mb-1">00:00:00</p>
                     <p class="text-gray-500 font-bold text-xs uppercase tracking-widest">
-                        {{ Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y') }}</p>
+                        {{ \Carbon\Carbon::now()->isoFormat('dddd, D MMMM Y') }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -92,6 +177,14 @@
     </div>
 
     <script>
+        const requireLocation = {{ $settings && $settings->require_location ? 'true' : 'false' }};
+        const requirePhoto = {{ $settings && $settings->require_photo ? 'true' : 'false' }};
+
+        let currentPosition = null;
+        let scannedCode = null;
+        let photoBlob = null;
+        let cameraStream = null;
+
         // Digital Clock
         function updateClock() {
             const now = new Date();
@@ -105,7 +198,31 @@
         setInterval(updateClock, 1000);
         updateClock();
 
-        // Scanner Logic
+        // Get GPS Location
+        if (requireLocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    currentPosition = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude
+                    };
+                    document.getElementById('gps-status').classList.remove('hidden');
+                    document.getElementById('gps-coords').textContent =
+                        `${position.coords.latitude.toFixed(6)}, ${position.coords.longitude.toFixed(6)}`;
+                },
+                (error) => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'GPS Tidak Aktif',
+                        text: 'Aktifkan GPS untuk melanjutkan absensi',
+                        background: '#1e293b',
+                        color: '#fff',
+                    });
+                }
+            );
+        }
+
+        // QR Scanner
         const html5QrCode = new Html5Qrcode("reader");
         const config = {
             fps: 10,
@@ -121,28 +238,110 @@
             if (!isScanning) return;
             isScanning = false;
 
-            document.getElementById('reader').classList.add('hidden');
+            scannedCode = decodedText;
+
+            // Stop scanner
+            html5QrCode.stop();
+
+            // If photo required, show camera
+            if (requirePhoto) {
+                document.getElementById('scanner-section').classList.add('hidden');
+                document.getElementById('camera-section').classList.remove('hidden');
+                startCamera();
+            } else {
+                // Submit directly
+                submitAttendance();
+            }
+        };
+
+        function startCamera() {
+            navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user'
+                    }
+                })
+                .then(stream => {
+                    cameraStream = stream;
+                    document.getElementById('camera-preview').srcObject = stream;
+                })
+                .catch(error => {
+                    console.error('Camera error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Kamera Tidak Tersedia',
+                        text: 'Izinkan akses kamera untuk melanjutkan',
+                        background: '#1e293b',
+                        color: '#fff',
+                    });
+                });
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('camera-preview');
+            const canvas = document.getElementById('camera-canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+
+            // Flip horizontally
+            ctx.translate(canvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(video, 0, 0);
+
+            canvas.toBlob((blob) => {
+                photoBlob = blob;
+
+                // Stop camera
+                if (cameraStream) {
+                    cameraStream.getTracks().forEach(track => track.stop());
+                }
+
+                submitAttendance();
+            }, 'image/jpeg', 0.8);
+        }
+
+        function submitAttendance() {
+            document.getElementById('scanner-section').classList.add('hidden');
+            document.getElementById('camera-section').classList.add('hidden');
             document.getElementById('result-container').classList.remove('hidden');
+
+            const formData = new FormData();
+            formData.append('code', scannedCode);
+
+            if (currentPosition) {
+                formData.append('latitude', currentPosition.latitude);
+                formData.append('longitude', currentPosition.longitude);
+            }
+
+            if (photoBlob) {
+                formData.append('photo', photoBlob, 'selfie.jpg');
+            }
+
+            // Generate device fingerprint
+            const deviceId = generateDeviceId();
+            formData.append('device_id', deviceId);
 
             fetch("{{ route('attendance.scan') }}", {
                     method: "POST",
                     headers: {
-                        "Content-Type": "application/json",
                         "Accept": "application/json",
                         "X-CSRF-TOKEN": "{{ csrf_token() }}"
                     },
-                    body: JSON.stringify({
-                        code: decodedText
-                    })
+                    body: formData
                 })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
+                        let message = data.message;
+                        if (data.distance) {
+                            message += `\n\nJarak: ${data.distance}`;
+                        }
+
                         Swal.fire({
                             icon: 'success',
-                            title: data.type === 'check_in' ? 'ABSEN MASUK' : 'ABSEN PULANG',
-                            text: data.message,
-                            timer: 3000,
+                            title: data.type === 'check_in' ? 'ABSEN MASUK ✓' : 'ABSEN PULANG ✓',
+                            text: message,
+                            timer: 4000,
                             showConfirmButton: false,
                             background: '#1e293b',
                             color: '#fff',
@@ -158,8 +357,8 @@
                             icon: 'error',
                             title: 'GAGAL',
                             text: data.message,
-                            timer: 3000,
-                            showConfirmButton: false,
+                            timer: 4000,
+                            showConfirmButton: true,
                             background: '#1e293b',
                             color: '#fff',
                             customClass: {
@@ -173,16 +372,49 @@
                 })
                 .catch(error => {
                     console.error("Error:", error);
-                    resetScanner();
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'ERROR',
+                        text: 'Terjadi kesalahan sistem. Silakan coba lagi.',
+                        background: '#1e293b',
+                        color: '#fff',
+                    }).then(() => {
+                        resetScanner();
+                    });
                 });
-        };
-
-        function resetScanner() {
-            document.getElementById('reader').classList.remove('hidden');
-            document.getElementById('result-container').classList.add('hidden');
-            isScanning = true;
         }
 
+        function generateDeviceId() {
+            const ua = navigator.userAgent;
+            const screen = `${window.screen.width}x${window.screen.height}`;
+            const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const fingerprint = `${ua}|${screen}|${timezone}`;
+
+            // Simple hash
+            let hash = 0;
+            for (let i = 0; i < fingerprint.length; i++) {
+                const char = fingerprint.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return hash.toString(36);
+        }
+
+        function resetScanner() {
+            scannedCode = null;
+            photoBlob = null;
+
+            document.getElementById('scanner-section').classList.remove('hidden');
+            document.getElementById('camera-section').classList.add('hidden');
+            document.getElementById('result-container').classList.add('hidden');
+
+            isScanning = true;
+            html5QrCode.start({
+                facingMode: "user"
+            }, config, onScanSuccess);
+        }
+
+        // Start scanner
         html5QrCode.start({
             facingMode: "user"
         }, config, onScanSuccess);
