@@ -104,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('attendance', [AttendanceController::class, 'publicScan'])->name('attendance.public');
         Route::post('attendance/scan', [AttendanceController::class, 'scan'])->name('attendance.scan');
+        Route::post('attendance/check-status', [AttendanceController::class, 'checkStatus'])->name('attendance.check-status');
 
         // Attendance Admin Routes
         Route::get('attendance/settings', [AttendanceController::class, 'settings'])->name('attendance.settings');
