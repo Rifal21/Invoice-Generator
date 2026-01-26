@@ -360,7 +360,7 @@
             </div>
 
             <!-- Mobile Card View -->
-            <div class="md:hidden space-y-4">
+            <div id="mobile-invoices-list" class="md:hidden space-y-4">
                 <div class="flex items-center gap-3 mb-4 bg-indigo-50 p-3 rounded-xl">
                     <input type="checkbox" id="select-all-mobile"
                         class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
@@ -368,7 +368,8 @@
                 </div>
 
                 @forelse($invoices as $invoice)
-                    <div class="bg-white rounded-3xl p-5 shadow-lg border border-gray-100 relative overflow-hidden">
+                    <div
+                        class="invoice-card-mobile bg-white rounded-3xl p-5 shadow-lg border border-gray-100 relative overflow-hidden">
                         <!-- Selection Checkbox -->
                         <div class="absolute top-5 right-5">
                             <input type="checkbox" name="invoice_ids[]" value="{{ $invoice->id }}"
@@ -474,6 +475,15 @@
                     </div>
                 @endforelse
 
+                <!-- Loading Indicator for Infinite Scroll -->
+                <div id="infinite-scroll-loader" class="py-10 transition-opacity duration-300" style="opacity: 0;">
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin">
+                        </div>
+                        <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Memuat data...</span>
+                    </div>
+                </div>
+
                 <!-- Mobile Summary -->
                 @if (count($invoices) > 0)
                     <div class="bg-gray-900 text-white rounded-3xl p-6 shadow-xl space-y-4">
@@ -491,11 +501,11 @@
                 @endif
             </div>
 
-            @if ($invoices instanceof \Illuminate\Pagination\LengthAwarePaginator)
-                <div class="mt-8">
+            <div id="pagination-container" class="mt-8 lg:block {{ request('per_page') == 'all' ? 'hidden' : '' }}">
+                @if ($invoices instanceof \Illuminate\Pagination\LengthAwarePaginator)
                     {{ $invoices->links() }}
-                </div>
-            @endif
+                @endif
+            </div>
         </form>
 
         <form id="delete-form" action="" method="POST" class="hidden">
@@ -511,7 +521,7 @@
 
         // Mobile Select All
         const selectAllMobile = document.getElementById('select-all-mobile');
-        const checkboxesMobile = document.querySelectorAll('.invoice-checkbox-mobile');
+        let checkboxesMobile = document.querySelectorAll('.invoice-checkbox-mobile');
 
         const bulkExportBtn = document.getElementById('bulk-export-btn');
         const multiPrintBtn = document.getElementById('multi-print-btn');
@@ -546,7 +556,7 @@
                     Buat Laporan (PDF)
                 `;
                 multiPrintBtn.innerHTML = `
-                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2-2v4h10z"/></svg>
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Cetak Invoice (PDF)
                 `;
                 bulkDeleteBtn.innerHTML = `
@@ -565,18 +575,109 @@
 
         if (selectAllMobile) {
             selectAllMobile.addEventListener('change', function() {
-                checkboxesMobile.forEach(cb => cb.checked = this.checked);
+                document.querySelectorAll('.invoice-checkbox-mobile').forEach(cb => cb.checked = this.checked);
                 updateExportButton();
             });
         }
 
-        const allCheckboxes = [...checkboxes, ...checkboxesMobile];
-        allCheckboxes.forEach(cb => {
-            cb.addEventListener('change', function() {
+        // Use event delegation for checkboxes since they are added dynamically
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('invoice-checkbox') || e.target.classList.contains(
+                    'invoice-checkbox-mobile')) {
                 updateExportButton();
-                // Simple sync logic could be added here if needed, but since mobile/desktop are mutually exclusive view-wise, it's fine.
-            });
+            }
         });
+
+        // INFINITE SCROLL LOGIC
+        let isLoading = false;
+        const mobileList = document.getElementById('mobile-invoices-list');
+        const loader = document.getElementById('infinite-scroll-loader');
+        const paginationContainer = document.getElementById('pagination-container');
+
+        // Initial hide of loader visually
+        loader.style.opacity = '0';
+
+        // Wider range for mobile/tablet screens
+        if (window.innerWidth < 1024) {
+            if ('IntersectionObserver' in window) {
+                // Hide pagination container on mobile/tablet but keep in DOM
+                paginationContainer.style.display = 'none';
+
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting && !isLoading) {
+                        loadMore();
+                    }
+                }, {
+                    rootMargin: '400px', // Trigger earlier
+                    threshold: 0
+                });
+
+                observer.observe(loader);
+            }
+        }
+
+        async function loadMore() {
+            const nextLink = paginationContainer.querySelector('a[rel="next"]');
+            if (!nextLink) {
+                loader.style.display = 'none';
+                return;
+            }
+
+            isLoading = true;
+            loader.style.opacity = '1';
+            const url = nextLink.href;
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Extract mobile cards
+                const newCards = doc.querySelectorAll('.invoice-card-mobile');
+                newCards.forEach(card => {
+                    // Check if already exists to avoid duplicates
+                    const idInput = card.querySelector('input[type="checkbox"]');
+                    if (idInput) {
+                        const id = idInput.value;
+                        if (!mobileList.querySelector(`input[value="${id}"]`)) {
+                            // Append before the loader
+                            mobileList.insertBefore(card, loader);
+                        }
+                    }
+                });
+
+                // Update pagination container with new next link
+                const newPagination = doc.getElementById('pagination-container');
+                if (newPagination) {
+                    paginationContainer.innerHTML = newPagination.innerHTML;
+                }
+
+                // If no more pages, update loader message
+                if (!paginationContainer.querySelector('a[rel="next"]')) {
+                    loader.innerHTML =
+                        '<p class="text-center text-gray-300 font-bold uppercase tracking-widest text-[10px] py-4">Semua data telah dimuat</p>';
+                    loader.style.opacity = '1';
+                } else {
+                    loader.style.opacity = '0';
+                }
+
+                // Update select all state if checked
+                if (selectAllMobile.checked) {
+                    document.querySelectorAll('.invoice-checkbox-mobile').forEach(cb => cb.checked = true);
+                }
+
+            } catch (error) {
+                console.error('Error loading more invoices:', error);
+                loader.style.opacity = '0';
+            } finally {
+                isLoading = false;
+            }
+        }
 
         function submitBulkExport() {
             bulkForm.target = "_blank";

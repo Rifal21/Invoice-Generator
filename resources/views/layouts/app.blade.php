@@ -54,7 +54,7 @@
         /* Bottom Bar Padding */
         @media (max-width: 1023px) {
             body {
-                padding-bottom: 5rem;
+                padding-bottom: 8rem;
             }
         }
     </style>

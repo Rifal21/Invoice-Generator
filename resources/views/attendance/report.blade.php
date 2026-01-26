@@ -45,7 +45,8 @@
 
         <div class="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100">
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <!-- Desktop Table View -->
+                <table class="hidden md:table w-full text-left border-collapse">
                     <thead>
                         <tr class="bg-gray-50/50">
                             <th class="px-6 py-5 text-xs font-black text-gray-400 uppercase tracking-widest">Karyawan</th>
@@ -156,31 +157,12 @@
                                             class="px-3 py-1 bg-red-100 text-red-700 text-[10px] font-black uppercase tracking-widest rounded-full">Mangkir</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-5">
-                                    @if ($attendance->check_in_distance)
-                                        <div class="space-y-0.5">
-                                            <p class="text-xs font-bold text-gray-700">
-                                                <span class="text-emerald-600">In:</span>
-                                                {{ number_format($attendance->check_in_distance, 0) }}m
-                                            </p>
-                                            @if ($attendance->check_out_distance)
-                                                <p class="text-xs font-bold text-gray-700">
-                                                    <span class="text-red-600">Out:</span>
-                                                    {{ number_format($attendance->check_out_distance, 0) }}m
-                                                </p>
-                                            @endif
-                                        </div>
-                                    @else
-                                        <span class="text-xs text-gray-400 italic">-</span>
-                                    @endif
-                                </td>
                                 <td class="px-6 py-5 text-right">
                                     <div class="flex justify-end gap-2">
                                         <button onclick="editAttendance({{ json_encode($attendance) }})"
                                             class="p-2 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors"
                                             title="Edit">
-                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"
-                                                stroke="currentColor">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
@@ -223,16 +205,113 @@
                         @endforelse
                     </tbody>
                 </table>
+
+                <!-- Mobile Card View -->
+                <div id="mobile-attendance-list" class="md:hidden divide-y divide-gray-50">
+                    @forelse($attendances as $attendance)
+                        <div class="attendance-card-mobile p-5 space-y-4">
+                            <div class="flex justify-between items-start">
+                                <div class="flex items-center gap-3">
+                                    <div
+                                        class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-700 font-black text-sm">
+                                        {{ substr($attendance->user->name, 0, 1) }}
+                                    </div>
+                                    <div>
+                                        <p class="font-black text-gray-900 leading-tight">{{ $attendance->user->name }}
+                                        </p>
+                                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
+                                            {{ $attendance->user->role }}</p>
+                                    </div>
+                                </div>
+                                @if ($attendance->status == 'present')
+                                    <span
+                                        class="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-black uppercase tracking-widest rounded-full">Hadir</span>
+                                @elseif($attendance->status == 'late')
+                                    <span
+                                        class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[8px] font-black uppercase tracking-widest rounded-full">Terlambat</span>
+                                @else
+                                    <span
+                                        class="px-2 py-0.5 bg-red-100 text-red-700 text-[8px] font-black uppercase tracking-widest rounded-full">Mangkir</span>
+                                @endif
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="bg-gray-50 rounded-2xl p-3 flex flex-col items-center">
+                                    <span
+                                        class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Masuk</span>
+                                    <p class="text-sm font-black text-gray-700">
+                                        {{ \Carbon\Carbon::parse($attendance->check_in)->format('H:i') }}</p>
+                                    @if ($attendance->check_in_photo)
+                                        <button
+                                            onclick="showPhoto('{{ Storage::url($attendance->check_in_photo) }}', '{{ $attendance->user->name }} - In')"
+                                            class="mt-2 w-12 h-12 rounded-lg overflow-hidden border-2 border-emerald-100">
+                                            <img src="{{ Storage::url($attendance->check_in_photo) }}"
+                                                class="w-full h-full object-cover">
+                                        </button>
+                                    @endif
+                                </div>
+                                <div class="bg-gray-50 rounded-2xl p-3 flex flex-col items-center">
+                                    <span
+                                        class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Pulang</span>
+                                    <p class="text-sm font-black text-gray-700">
+                                        {{ $attendance->check_out ? \Carbon\Carbon::parse($attendance->check_out)->format('H:i') : '--:--' }}
+                                    </p>
+                                    @if ($attendance->check_out_photo)
+                                        <button
+                                            onclick="showPhoto('{{ Storage::url($attendance->check_out_photo) }}', '{{ $attendance->user->name }} - Out')"
+                                            class="mt-2 w-12 h-12 rounded-lg overflow-hidden border-2 border-red-100">
+                                            <img src="{{ Storage::url($attendance->check_out_photo) }}"
+                                                class="w-full h-full object-cover">
+                                        </button>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center pt-2">
+                                <div class="text-[10px] font-bold text-gray-400">
+                                    <i class="far fa-calendar-alt mr-1"></i>
+                                    {{ \Carbon\Carbon::parse($attendance->date)->format('d M Y') }}
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="editAttendance({{ json_encode($attendance) }})"
+                                        class="p-2 bg-amber-50 text-amber-600 rounded-lg">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button type="button" onclick="confirmDelete({{ $attendance->id }})"
+                                        class="p-2 bg-red-50 text-red-600 rounded-lg">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="p-10 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">
+                            Belum ada data absensi
+                        </div>
+                    @endforelse
+
+                    <!-- Infinite Scroll Loader -->
+                    <div id="infinite-scroll-loader" class="py-10 transition-opacity duration-300" style="opacity: 0;">
+                        <div class="flex flex-col items-center gap-3">
+                            <div
+                                class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin">
+                            </div>
+                            <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Memuat data...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="mt-4">
+
+        <div id="pagination-container" class="mt-4 lg:block">
             {{ $attendances->links() }}
         </div>
     </div>
 
-    <!-- Photo Modal -->
-    <div id="photoModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+    <!-- Photo Modal (existing code remains same) -->
+    <div id="photoModal" class="hidden fixed inset-0 bg-black/80 z-[60] flex items-center justify-center p-4"
         onclick="closePhotoModal()">
+        <!-- ... (existing modal code) ... -->
         <div class="relative max-w-4xl w-full" onclick="event.stopPropagation()">
             <button onclick="closePhotoModal()"
                 class="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors">
@@ -251,8 +330,8 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
-    <div id="editModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div id="editModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+        <!-- ... (existing edit modal code) ... -->
         <div class="max-w-md w-full bg-white rounded-[2.5rem] p-8 relative shadow-2xl">
             <button onclick="closeEditModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -313,6 +392,78 @@
     </div>
 
     <script>
+        // INFINITE SCROLL LOGIC
+        let isLoading = false;
+        const mobileList = document.getElementById('mobile-attendance-list');
+        const loader = document.getElementById('infinite-scroll-loader');
+        const paginationContainer = document.getElementById('pagination-container');
+
+        // Initial hide of loader visually
+        loader.style.opacity = '0';
+
+        // Wider range for mobile/tablet screens
+        if (window.innerWidth < 1024) {
+            if ('IntersectionObserver' in window) {
+                // Hide pagination container on mobile/tablet
+                paginationContainer.style.display = 'none';
+
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting && !isLoading) {
+                        loadMore();
+                    }
+                }, {
+                    rootMargin: '400px', // Trigger earlier
+                    threshold: 0
+                });
+
+                observer.observe(loader);
+            }
+        }
+
+        async function loadMore() {
+            const nextLink = paginationContainer.querySelector('a[rel="next"]');
+            if (!nextLink) {
+                loader.style.display = 'none';
+                return;
+            }
+
+            isLoading = true;
+            loader.style.opacity = '1';
+            const url = nextLink.href;
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newCards = doc.querySelectorAll('.attendance-card-mobile');
+                newCards.forEach(card => {
+                    mobileList.insertBefore(card, loader);
+                });
+
+                const newPagination = doc.getElementById('pagination-container');
+                if (newPagination) paginationContainer.innerHTML = newPagination.innerHTML;
+
+                if (!paginationContainer.querySelector('a[rel="next"]')) {
+                    loader.innerHTML =
+                        '<p class="text-center text-gray-300 font-bold uppercase tracking-widest text-[8px] py-4">Semua data telah dimuat</p>';
+                    loader.style.opacity = '1';
+                } else {
+                    loader.style.opacity = '0';
+                }
+            } catch (error) {
+                console.error('Error loading more attendance:', error);
+                loader.style.opacity = '0';
+            } finally {
+                isLoading = false;
+            }
+        }
+
         function showPhoto(photoUrl, title) {
             document.getElementById('photoImage').src = photoUrl;
             document.getElementById('photoTitle').textContent = title;
@@ -371,7 +522,6 @@
             })
         }
 
-        // Close modals on ESC key
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closePhotoModal();

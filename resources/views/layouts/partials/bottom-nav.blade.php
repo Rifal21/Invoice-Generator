@@ -28,7 +28,7 @@
 
         <!-- Laporan -->
         <a href="{{ route('profit.index') }}"
-            class="flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200 {{ request()->routeIs('profit.*', 'finance.*') ? 'text-indigo-600' : 'text-gray-400' }}">
+            class="flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200 {{ request()->routeIs('profit.*') ? 'text-indigo-600' : 'text-gray-400' }}">
             <i class="fas fa-chart-bar text-xl"></i>
             <span class="text-[10px] font-bold uppercase tracking-wider">Laporan</span>
         </a>
