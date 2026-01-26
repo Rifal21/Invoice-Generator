@@ -14,8 +14,36 @@ class ProfitController extends Controller
 {
     private function calculateProfitData($startDate, $endDate, $search = null)
     {
-        $query = Invoice::whereBetween('date', [$startDate, $endDate]);
+        // 1. Calculate Period Totals using SQL (Fast)
+        $totalsQuery = DB::table('invoice_items')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->leftJoin('products', 'products.id', '=', 'invoice_items.product_id')
+            ->whereBetween('invoices.date', [$startDate, $endDate]);
 
+        if ($search) {
+            $totalsQuery->where(function ($q) use ($search) {
+                $q->where('invoices.invoice_number', 'like', "%{$search}%")
+                    ->orWhere('invoices.customer_name', 'like', "%{$search}%");
+            });
+        }
+
+        $periodTotals = $totalsQuery->selectRaw('
+            SUM(invoice_items.total) as total_sales,
+            SUM(
+                CASE 
+                    WHEN invoice_items.purchase_price > 0 THEN invoice_items.purchase_price 
+                    WHEN products.purchase_price IS NOT NULL THEN products.purchase_price 
+                    ELSE 0 
+                END * invoice_items.quantity
+            ) as total_hpp
+        ')->first();
+
+        $totalSales = $periodTotals->total_sales ?? 0;
+        $totalHpp = $periodTotals->total_hpp ?? 0;
+        $totalProfit = $totalSales - $totalHpp;
+
+        // 2. Fetch Paginated Invoices (Efficient)
+        $query = Invoice::whereBetween('date', [$startDate, $endDate]);
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('invoice_number', 'like', "%{$search}%")
@@ -23,11 +51,10 @@ class ProfitController extends Controller
             });
         }
 
-        $invoices = $query->with(['items.product'])->orderBy('date', 'desc')->get();
+        // Use pagination to avoid loading everything at once
+        $invoices = $query->with(['items.product'])->orderBy('date', 'desc')->paginate(25)->withQueryString();
 
-        $totalSales = 0;
-        $totalHpp = 0;
-
+        // 3. Enrich current page invoices with calculated profit data
         foreach ($invoices as $invoice) {
             $invoiceSales = 0;
             $invoiceHpp = 0;
@@ -41,12 +68,7 @@ class ProfitController extends Controller
             $invoice->sales = $invoiceSales;
             $invoice->hpp = $invoiceHpp;
             $invoice->profit = $invoiceSales - $invoiceHpp;
-
-            $totalSales += $invoiceSales;
-            $totalHpp += $invoiceHpp;
         }
-
-        $totalProfit = $totalSales - $totalHpp;
 
         return compact('invoices', 'totalSales', 'totalHpp', 'totalProfit');
     }

@@ -16,22 +16,26 @@ class FinancialReportController extends Controller
 {
     private function getFinancialData($startDate, $endDate)
     {
-        // 1. Calculate Sales and Gross Profit (HPP)
-        $invoices = Invoice::whereBetween('date', [$startDate, $endDate])
-            ->with(['items.product'])
-            ->get();
+        // 1. Calculate Sales and Gross Profit (HPP) using specialized SQL aggregations
+        // Use join to directly sum data in the database
+        $salesData = DB::table('invoice_items')
+            ->join('invoices', 'invoices.id', '=', 'invoice_items.invoice_id')
+            ->leftJoin('products', 'products.id', '=', 'invoice_items.product_id')
+            ->whereBetween('invoices.date', [$startDate, $endDate])
+            ->selectRaw('
+                SUM(invoice_items.total) as total_sales,
+                SUM(
+                    CASE 
+                        WHEN invoice_items.purchase_price > 0 THEN invoice_items.purchase_price 
+                        WHEN products.purchase_price IS NOT NULL THEN products.purchase_price 
+                        ELSE 0 
+                    END * invoice_items.quantity
+                ) as total_hpp
+            ')
+            ->first();
 
-        $totalSales = 0;
-        $totalHpp = 0;
-
-        foreach ($invoices as $invoice) {
-            foreach ($invoice->items as $item) {
-                $totalSales += $item->total;
-                $hppPerUnit = $item->purchase_price > 0 ? $item->purchase_price : ($item->product ? $item->product->purchase_price : 0);
-                $totalHpp += ($hppPerUnit * $item->quantity);
-            }
-        }
-
+        $totalSales = $salesData->total_sales ?? 0;
+        $totalHpp = $salesData->total_hpp ?? 0;
         $grossProfit = $totalSales - $totalHpp;
 
         // 2. Total Salaries

@@ -58,7 +58,7 @@ class InvoiceController extends Controller
             $invoices = $query->with('items')->paginate(is_numeric($perPage) ? $perPage : 10)->withQueryString();
         }
 
-        $customers = Invoice::select('customer_name')->distinct()->orderBy('customer_name')->pluck('customer_name');
+        $customers = \App\Models\Customer::orderBy('name')->pluck('name');
 
         // Calculate total amount of filtered results
         $totalAmountFiltered = $query->sum('total_amount');

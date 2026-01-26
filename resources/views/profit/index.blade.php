@@ -303,6 +303,10 @@
                         ada data.</div>
                 @endforelse
             </div>
+            <!-- Pagination Links -->
+            <div class="px-8 py-4 border-t border-gray-100">
+                {{ $invoices->links() }}
+            </div>
         </div>
     </div>
     </div>
