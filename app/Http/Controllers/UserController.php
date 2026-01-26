@@ -43,7 +43,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'role' => ['required', Rule::in(['super_admin', 'pegawai', 'ketua'])],
+            'role' => ['required', Rule::in(['super_admin', 'pegawai', 'ketua', 'admin_absensi'])],
             'daily_salary' => 'required|numeric|min:0',
         ]);
 
@@ -75,7 +75,7 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->getKey())],
             'password' => 'nullable|string|min:8|confirmed',
-            'role' => ['required', Rule::in(['super_admin', 'pegawai', 'ketua'])],
+            'role' => ['required', Rule::in(['super_admin', 'pegawai', 'ketua', 'admin_absensi'])],
             'daily_salary' => 'required|numeric|min:0',
         ]);
 

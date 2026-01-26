@@ -81,4 +81,9 @@ class User extends Authenticatable
     {
         return $this->role === 'ketua';
     }
+
+    public function isAdminAbsensi()
+    {
+        return $this->role === 'admin_absensi';
+    }
 }

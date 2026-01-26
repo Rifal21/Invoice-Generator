@@ -43,6 +43,9 @@
                                 class="block w-full rounded-2xl border-2 border-gray-100 py-4 px-6 text-gray-900 shadow-sm focus:ring-8 focus:ring-indigo-500/5 focus:border-indigo-500 transition-all font-bold appearance-none">
                                 <option value="pegawai" {{ old('role', $user->role) == 'pegawai' ? 'selected' : '' }}>
                                     PEGAWAI</option>
+                                <option value="admin_absensi"
+                                    {{ old('role', $user->role) == 'admin_absensi' ? 'selected' : '' }}>
+                                    ADMIN ABSENSI</option>
                                 <option value="ketua" {{ old('role', $user->role) == 'ketua' ? 'selected' : '' }}>KETUA
                                 </option>
                                 <option value="super_admin"

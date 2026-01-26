@@ -77,6 +77,7 @@
                                             'super_admin' => 'SUPER ADMIN',
                                             'ketua' => 'KETUA',
                                             'pegawai' => 'PEGAWAI',
+                                            'admin_absensi' => 'ADMIN ABSENSI',
                                             default => strtoupper($user->role),
                                         };
                                     @endphp

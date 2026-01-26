@@ -91,17 +91,8 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-    // Admin & Ketua Only
-    Route::middleware(['role:super_admin,ketua'])->group(function () {
-        Route::resource('salaries', SalaryController::class);
-        Route::post('salaries/{salary}/pay', [SalaryController::class, 'markAsPaid'])->name('salaries.mark-as-paid');
-        Route::get('salaries/{salary}/print', [SalaryController::class, 'printSlip'])->name('salaries.print');
-
-        // Financial Report Routes
-        Route::get('finance/summary', [FinancialReportController::class, 'index'])->name('finance.summary');
-        Route::get('finance/export-pdf', [FinancialReportController::class, 'exportPdf'])->name('finance.export-pdf');
-        Route::resource('expenses', ExpenseController::class);
-
+    // Admin, Ketua & Admin Absensi
+    Route::middleware(['role:super_admin,ketua,admin_absensi'])->group(function () {
         Route::get('attendance', [AttendanceController::class, 'publicScan'])->name('attendance.public');
         Route::post('attendance/scan', [AttendanceController::class, 'scan'])->name('attendance.scan');
         Route::post('attendance/check-status', [AttendanceController::class, 'checkStatus'])->name('attendance.check-status');
@@ -113,6 +104,18 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('attendance/{attendance}', [AttendanceController::class, 'update'])->name('attendance.update');
         Route::delete('attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
         Route::get('attendance/count', [AttendanceController::class, 'getAttendanceCount'])->name('attendance.count');
+    });
+
+    // Admin & Ketua only (Financials & Salaries)
+    Route::middleware(['role:super_admin,ketua'])->group(function () {
+        Route::resource('salaries', SalaryController::class);
+        Route::post('salaries/{salary}/pay', [SalaryController::class, 'markAsPaid'])->name('salaries.mark-as-paid');
+        Route::get('salaries/{salary}/print', [SalaryController::class, 'printSlip'])->name('salaries.print');
+
+        // Financial Report Routes
+        Route::get('finance/summary', [FinancialReportController::class, 'index'])->name('finance.summary');
+        Route::get('finance/export-pdf', [FinancialReportController::class, 'exportPdf'])->name('finance.export-pdf');
+        Route::resource('expenses', ExpenseController::class);
     });
 
     // Admin Only
