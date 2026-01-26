@@ -110,6 +110,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('attendance/settings', [AttendanceController::class, 'settings'])->name('attendance.settings');
         Route::post('attendance/settings', [AttendanceController::class, 'updateSettings'])->name('attendance.update-settings');
         Route::get('attendance/report', [AttendanceController::class, 'report'])->name('attendance.report');
+        Route::patch('attendance/{attendance}', [AttendanceController::class, 'update'])->name('attendance.update');
+        Route::delete('attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
         Route::get('attendance/count', [AttendanceController::class, 'getAttendanceCount'])->name('attendance.count');
     });
 

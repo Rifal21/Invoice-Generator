@@ -17,7 +17,14 @@ class AttendanceController extends Controller
 {
     public function publicScan()
     {
-        $settings = AttendanceSetting::first();
+        $settings = AttendanceSetting::first() ?? new AttendanceSetting([
+            'check_in_time' => '08:00',
+            'check_out_time' => '17:00',
+            'require_photo' => true,
+            'require_location' => false,
+            'strict_time' => true,
+            'allowed_radius' => 100
+        ]);
         return view('attendance.public', compact('settings'));
     }
 
@@ -267,7 +274,14 @@ class AttendanceController extends Controller
 
     public function settings()
     {
-        $settings = AttendanceSetting::first() ?? AttendanceSetting::create();
+        $settings = AttendanceSetting::first() ?? AttendanceSetting::create([
+            'check_in_time' => '08:00',
+            'check_out_time' => '17:00',
+            'require_photo' => true,
+            'require_location' => false,
+            'strict_time' => true,
+            'allowed_radius' => 100
+        ]);
         return view('attendance.settings', compact('settings'));
     }
 
@@ -285,7 +299,13 @@ class AttendanceController extends Controller
         ]);
 
         $settings = AttendanceSetting::first() ?? new AttendanceSetting();
-        $settings->fill($request->all());
+
+        $data = $request->all();
+        $data['require_photo'] = $request->has('require_photo');
+        $data['require_location'] = $request->has('require_location');
+        $data['strict_time'] = $request->has('strict_time');
+
+        $settings->fill($data);
         $settings->save();
 
         return redirect()->back()->with('success', 'Pengaturan absensi berhasil diperbarui.');
@@ -367,6 +387,40 @@ class AttendanceController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Absensi manual berhasil ditambahkan.');
+    }
+
+    public function update(Request $request, Attendance $attendance)
+    {
+        $request->validate([
+            'check_in' => 'required',
+            'check_out' => 'nullable',
+            'status' => 'required|in:present,late,absent',
+            'date' => 'required|date',
+        ]);
+
+        $attendance->update([
+            'check_in' => $request->check_in,
+            'check_out' => $request->check_out,
+            'status' => $request->status,
+            'date' => $request->date,
+        ]);
+
+        return redirect()->back()->with('success', 'Data absensi berhasil diperbarui.');
+    }
+
+    public function destroy(Attendance $attendance)
+    {
+        // Delete photos if exist
+        if ($attendance->check_in_photo) {
+            Storage::disk('public')->delete($attendance->check_in_photo);
+        }
+        if ($attendance->check_out_photo) {
+            Storage::disk('public')->delete($attendance->check_out_photo);
+        }
+
+        $attendance->delete();
+
+        return redirect()->back()->with('success', 'Data absensi berhasil dihapus.');
     }
 
     /**
