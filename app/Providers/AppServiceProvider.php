@@ -22,7 +22,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useTailwind();
-        if (config('app.env') === 'production') {
+        if (str_contains(config('app.url'), 'https://') || $this->app->environment('production')) {
             URL::forceScheme('https');
         }
     }

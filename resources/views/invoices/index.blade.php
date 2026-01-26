@@ -625,7 +625,11 @@
 
             isLoading = true;
             loader.style.opacity = '1';
-            const url = nextLink.href;
+            let url = nextLink.href;
+            // Force HTTPS if the current page is HTTPS to avoid Mixed Content errors
+            if (window.location.protocol === 'https:' && url.startsWith('http:')) {
+                url = url.replace('http:', 'https:');
+            }
 
             try {
                 const response = await fetch(url, {
