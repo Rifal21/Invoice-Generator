@@ -212,7 +212,7 @@
             </div>
 
             <!-- Mobile Card View -->
-            <div class="md:hidden space-y-4">
+            <div id="mobile-products-list" class="md:hidden space-y-4">
                 <div class="flex items-center gap-3 px-2 mb-2">
                     <input type="checkbox" id="select-all-mobile"
                         class="h-6 w-6 rounded-xl border-gray-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer">
@@ -220,7 +220,7 @@
                         class="text-sm font-black text-gray-400 uppercase tracking-widest">Pilih Semua Produk</label>
                 </div>
                 @foreach ($products as $product)
-                    <div class="group bg-white rounded-3xl p-5 shadow-lg border border-gray-100 relative overflow-hidden cursor-pointer active:scale-[99%] transition-transform"
+                    <div class="product-card-mobile group bg-white rounded-3xl p-5 shadow-lg border border-gray-100 relative overflow-hidden cursor-pointer active:scale-[99%] transition-transform"
                         onclick="showDetail({{ $product->id }})">
                         <div class="absolute top-4 left-4">
                             <input type="checkbox" name="ids[]" value="{{ $product->id }}"
@@ -245,7 +245,8 @@
                                     {{ $product->name }}
                                 </h3>
                             </div>
-                            <span class="text-xs font-bold text-gray-400">#{{ $loop->iteration }}</span>
+                            <span
+                                class="text-xs font-bold text-gray-400">#{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}</span>
                         </div>
 
                         <div class="flex items-baseline gap-1 mb-4 ml-16">
@@ -281,16 +282,25 @@
                         </div>
                     </div>
                 @endforeach
+
+                <!-- Loading Indicator for Infinite Scroll -->
+                <div id="infinite-scroll-loader" class="py-10 transition-opacity duration-300" style="opacity: 0;">
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin">
+                        </div>
+                        <span class="text-xs font-black text-gray-400 uppercase tracking-widest">Memuat produk...</span>
+                    </div>
+                </div>
             </div>
         </form>
 
-        <div class="mt-8">
+        <div id="pagination-container" class="mt-8 lg:block">
             {{ $products->links() }}
         </div>
 
         <!-- Sticky Bulk Action Bar -->
         <div id="bulk-action-bar"
-            class="fixed bottom-20 left-1/2 -translate-x-1/2 z-[60] transform scale-0 opacity-0 transition-all duration-300">
+            class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[60] transform scale-0 opacity-0 transition-all duration-300">
             <div
                 class="bg-gray-900 border-2 border-white/10 text-white rounded-[2rem] px-8 py-5 shadow-2xl flex items-center gap-8 backdrop-blur-xl">
                 <div class="flex flex-col">
@@ -318,7 +328,6 @@
     <script>
         const bulkActionBar = document.getElementById('bulk-action-bar');
         const selectedCountText = document.getElementById('selected-count');
-        const checkboxes = document.querySelectorAll('.product-checkbox');
         const selectAllDesktop = document.getElementById('select-all-desktop');
         const selectAllMobile = document.getElementById('select-all-mobile');
 
@@ -335,13 +344,16 @@
             }
         }
 
-        checkboxes.forEach(cb => {
-            cb.addEventListener('change', updateBulkBar);
+        // Use event delegation for dynamically added checkboxes
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('product-checkbox')) {
+                updateBulkBar();
+            }
         });
 
         if (selectAllDesktop) {
             selectAllDesktop.addEventListener('change', function() {
-                checkboxes.forEach(cb => cb.checked = this.checked);
+                document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = this.checked);
                 if (selectAllMobile) selectAllMobile.checked = this.checked;
                 updateBulkBar();
             });
@@ -349,10 +361,92 @@
 
         if (selectAllMobile) {
             selectAllMobile.addEventListener('change', function() {
-                checkboxes.forEach(cb => cb.checked = this.checked);
+                document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = this.checked);
                 if (selectAllDesktop) selectAllDesktop.checked = this.checked;
                 updateBulkBar();
             });
+        }
+
+        // INFINITE SCROLL LOGIC
+        let isLoading = false;
+        const mobileList = document.getElementById('mobile-products-list');
+        const loader = document.getElementById('infinite-scroll-loader');
+        const paginationContainer = document.getElementById('pagination-container');
+
+        // Wider range for mobile/tablet screens
+        if (window.innerWidth < 1024) {
+            if ('IntersectionObserver' in window) {
+                // Hide pagination container on mobile/tablet but keep in DOM
+                paginationContainer.style.display = 'none';
+
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting && !isLoading) {
+                        loadMoreProducts();
+                    }
+                }, {
+                    rootMargin: '400px', // Trigger earlier
+                    threshold: 0
+                });
+
+                observer.observe(loader);
+            }
+        }
+
+        async function loadMoreProducts() {
+            const nextLink = paginationContainer.querySelector('a[rel="next"]');
+            if (!nextLink) {
+                loader.style.display = 'none';
+                return;
+            }
+
+            isLoading = true;
+            loader.style.opacity = '1';
+            const url = nextLink.href;
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                const newCards = doc.querySelectorAll('.product-card-mobile');
+                newCards.forEach(card => {
+                    const idInput = card.querySelector('input[type="checkbox"]');
+                    if (idInput) {
+                        const id = idInput.value;
+                        if (!mobileList.querySelector(`input[value="${id}"]`)) {
+                            mobileList.insertBefore(card, loader);
+                        }
+                    }
+                });
+
+                const newPagination = doc.getElementById('pagination-container');
+                if (newPagination) {
+                    paginationContainer.innerHTML = newPagination.innerHTML;
+                }
+
+                if (!paginationContainer.querySelector('a[rel="next"]')) {
+                    loader.innerHTML =
+                        '<p class="text-center text-gray-300 font-bold uppercase tracking-widest text-[10px] py-4">Semua produk telah dimuat</p>';
+                    loader.style.opacity = '1';
+                } else {
+                    loader.style.opacity = '0';
+                }
+
+                if (selectAllMobile && selectAllMobile.checked) {
+                    document.querySelectorAll('.product-checkbox').forEach(cb => cb.checked = true);
+                }
+
+            } catch (error) {
+                console.error('Error loading more products:', error);
+                loader.style.opacity = '0';
+            } finally {
+                isLoading = false;
+            }
         }
 
         function confirmBulkDelete() {
@@ -403,9 +497,6 @@
         // Detail Modal & Quick Update
         async function showDetail(productId) {
             try {
-                // Determine base URL dynamically or assume /products/{productId} is the show route
-                // Actually the show route is just /products/{id} and returns JSON if wantsJson()
-                // We will fetch it.
                 const response = await fetch(`/products/${productId}`, {
                     headers: {
                         'Accept': 'application/json'
@@ -488,11 +579,7 @@
                         title: 'Updated successfully'
                     });
 
-                    // If updated from modal, update the UI in background if visible
-                    // Or reload page? No, user wants real-time.
-                    // We should update the table text too.
                     if (field === 'category_id') {
-                        // Find row and update select value
                         const row = document.querySelector(`tr[data-product-id="${id}"]`);
                         if (row) {
                             const sel = row.querySelector('.category-select');

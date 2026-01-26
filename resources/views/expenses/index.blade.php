@@ -80,7 +80,8 @@
                 </div>
 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <!-- Desktop Table View -->
+                    <table class="hidden md:table w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-gray-50/50">
                                 <th class="px-8 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
@@ -162,14 +163,127 @@
                             @endforelse
                         </tbody>
                     </table>
+
+                    <!-- Mobile List View -->
+                    <div id="mobile-expenses-list" class="md:hidden divide-y divide-gray-50">
+                        @forelse($expenses as $expense)
+                            <div class="expense-card-mobile p-6 space-y-3">
+                                <div class="flex justify-between items-start">
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest bg-indigo-50 text-indigo-600">
+                                        {{ $expense->category }}
+                                    </span>
+                                    <p class="text-[10px] font-bold text-gray-400">
+                                        {{ \Carbon\Carbon::parse($expense->date)->format('d M Y') }}</p>
+                                </div>
+                                <h3 class="text-xl font-black text-gray-900">
+                                    Rp{{ number_format($expense->amount, 0, ',', '.') }}</h3>
+                                <p class="text-xs text-gray-500">{{ $expense->description ?: '-' }}</p>
+                                <div class="flex justify-start gap-4 pt-2">
+                                    <a href="{{ route('expenses.edit', $expense) }}"
+                                        class="text-indigo-600 text-[10px] font-black uppercase">Edit</a>
+                                    <form action="{{ route('expenses.destroy', $expense) }}" method="POST"
+                                        onsubmit="return confirm('Hapus?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit"
+                                            class="text-red-600 text-[10px] font-black uppercase">Hapus</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-10 text-center text-gray-400 text-xs font-bold uppercase tracking-widest">
+                                Belum ada data
+                            </div>
+                        @endforelse
+
+                        <!-- Infinite Scroll Loader -->
+                        <div id="infinite-scroll-loader" class="py-10 transition-opacity duration-300"
+                            style="opacity: 0;">
+                            <div class="flex flex-col items-center gap-3">
+                                <div
+                                    class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                @if ($expenses->hasPages())
-                    <div class="px-8 py-4 border-t border-gray-50">
-                        {{ $expenses->links() }}
-                    </div>
-                @endif
+                <div id="pagination-container"
+                    class="px-8 py-4 border-t border-gray-50 lg:block {{ $expenses->hasPages() ? '' : 'hidden' }}">
+                    {{ $expenses->links() }}
+                </div>
             </div>
         </div>
+    </div>
+
+    <script>
+        // INFINITE SCROLL LOGIC
+        let isLoading = false;
+        const mobileList = document.getElementById('mobile-expenses-list');
+        const loader = document.getElementById('infinite-scroll-loader');
+        const paginationContainer = document.getElementById('pagination-container');
+
+        // Initial hide of loader visually
+        loader.style.opacity = '0';
+
+        // Wider range for mobile/tablet screens
+        if (window.innerWidth < 1024 && 'IntersectionObserver' in window) {
+            // Hide pagination container on mobile/tablet but keep in DOM
+            paginationContainer.style.display = 'none';
+
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && !isLoading) loadMore();
+            }, {
+                rootMargin: '400px', // Trigger earlier
+                threshold: 0
+            });
+
+            observer.observe(loader);
+        }
+
+        async function loadMore() {
+            const nextLink = paginationContainer.querySelector('a[rel="next"]');
+            if (!nextLink) {
+                loader.style.display = 'none';
+                return;
+            }
+
+            isLoading = true;
+            loader.style.opacity = '1';
+
+            try {
+                const response = await fetch(nextLink.href, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                doc.querySelectorAll('.expense-card-mobile').forEach(card => {
+                    mobileList.insertBefore(card, loader);
+                });
+
+                const newPagination = doc.getElementById('pagination-container');
+                if (newPagination) paginationContainer.innerHTML = newPagination.innerHTML;
+
+                if (!paginationContainer.querySelector('a[rel="next"]')) {
+                    loader.innerHTML =
+                        '<p class="text-center text-gray-300 font-bold uppercase tracking-widest text-[8px] py-4">Selesai</p>';
+                    loader.style.opacity = '1';
+                } else {
+                    loader.style.opacity = '0';
+                }
+            } catch (e) {
+                console.error(e);
+                loader.style.opacity = '0';
+            } finally {
+                isLoading = false;
+            }
+        }
+    </script>
+    </div>
+    </div>
     </div>
 @endsection
