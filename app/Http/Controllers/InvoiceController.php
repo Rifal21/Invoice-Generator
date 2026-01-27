@@ -393,6 +393,20 @@ class InvoiceController extends Controller
                 $invoice->hpp = $invoiceHpp;
                 $invoice->profit = $invoiceSales - $invoiceHpp;
 
+                // 1.5 Kirim Pesan Pembatas (Header)
+                $headerMessage = "━━━━━━━━━━━━━━━━━━━━━━\n" .
+                    "🆕 *KIRIM DATA INVOICE*\n" .
+                    "👤 *Pelanggan:* {$invoice->customer_name}\n" .
+                    "📄 *No. Inv:* `{$invoice->invoice_number}`\n" .
+                    "📅 *Tanggal:* " . \Carbon\Carbon::parse($invoice->date)->format('d M Y') . "\n" .
+                    "━━━━━━━━━━━━━━━━━━━━━━";
+
+                Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+                    'chat_id' => $chatId,
+                    'text' => $headerMessage,
+                    'parse_mode' => 'Markdown',
+                ]);
+
                 // 2. Generate PDF Invoice
                 $pdfInvoice = Pdf::loadView('invoices.pdf', compact('invoice'));
                 $invoiceContent = $pdfInvoice->output();
