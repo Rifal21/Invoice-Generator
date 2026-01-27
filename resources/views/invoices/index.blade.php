@@ -90,6 +90,11 @@
                     </svg>
                     Cetak Invoice (PDF)
                 </button>
+                <button type="button" onclick="submitTelegram()" id="telegram-btn" disabled
+                    class="flex-1 md:flex-none bg-sky-50 text-sky-700 font-bold py-2.5 px-4 rounded-2xl hover:bg-sky-100 transition-all border border-sky-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center gap-2">
+                    <i class="fab fa-telegram text-base"></i>
+                    Kirim ke Telegram
+                </button>
                 <button type="button" onclick="submitBulkDelete()" id="bulk-delete-btn" disabled
                     class="flex-1 md:flex-none bg-red-600 text-white font-bold py-2.5 px-4 rounded-2xl hover:bg-red-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center gap-2">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -525,6 +530,7 @@
 
         const bulkExportBtn = document.getElementById('bulk-export-btn');
         const multiPrintBtn = document.getElementById('multi-print-btn');
+        const telegramBtn = document.getElementById('telegram-btn');
         const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
         const bulkForm = document.getElementById('bulk-export-form');
 
@@ -535,6 +541,7 @@
 
             bulkExportBtn.disabled = checkedCount === 0;
             multiPrintBtn.disabled = checkedCount === 0;
+            telegramBtn.disabled = checkedCount === 0;
             bulkDeleteBtn.disabled = checkedCount === 0;
 
             if (checkedCount > 0) {
@@ -549,6 +556,10 @@
                 bulkDeleteBtn.innerHTML = `
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     Hapus (${checkedCount})
+                `;
+                telegramBtn.innerHTML = `
+                    <i class="fab fa-telegram text-base"></i>
+                    Kirim (${checkedCount}) Telegram
                 `;
             } else {
                 bulkExportBtn.innerHTML = `
@@ -693,6 +704,37 @@
             bulkForm.target = "_blank";
             bulkForm.action = "{{ route('invoices.print-multi-pdf') }}";
             bulkForm.submit();
+        }
+
+        function submitTelegram() {
+            Swal.fire({
+                title: 'Kirim ke Telegram?',
+                text: "Setiap invoice akan dikirim sebagai file PDF terpisah ke bot Telegram.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0ea5e9',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Kirim Sekarang',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    container: 'rounded-3xl',
+                    popup: 'rounded-3xl',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Sedang Mengirim...',
+                        text: 'Mohon tunggu sebentar',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        }
+                    });
+                    bulkForm.target = "_self";
+                    bulkForm.action = "{{ route('invoices.send-telegram') }}";
+                    bulkForm.submit();
+                }
+            })
         }
 
         function submitBulkDelete() {

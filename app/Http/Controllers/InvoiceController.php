@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class InvoiceController extends Controller
 {
@@ -351,5 +353,98 @@ class InvoiceController extends Controller
     public function exportExcel(Invoice $invoice)
     {
         return Excel::download(new \App\Exports\InvoiceExport($invoice), $invoice->invoice_number . '.xlsx');
+    }
+
+    public function sendToTelegram(Request $request)
+    {
+        $request->validate([
+            'invoice_ids' => 'required|array',
+            'invoice_ids.*' => 'exists:invoices,id'
+        ]);
+
+        $token = env('TELEGRAM_BOT_TOKEN');
+        $chatId = env('TELEGRAM_CHAT_ID');
+
+        if (!$token || !$chatId) {
+            return back()->with('error', 'Konfigurasi Telegram (Token atau Chat ID) belum diatur di .env');
+        }
+
+        $invoices = Invoice::with(['items.product'])->whereIn('id', $request->invoice_ids)->get();
+        $successCount = 0;
+        $errorCount = 0;
+
+        foreach ($invoices as $invoice) {
+            try {
+                // 1. Persiapkan Data Laba Rugi (Sama seperti di ProfitController)
+                $invoiceSales = 0;
+                $invoiceHpp = 0;
+
+                foreach ($invoice->items as $item) {
+                    $invoiceSales += $item->total;
+                    $hppPerUnit = $item->purchase_price > 0 ? $item->purchase_price : ($item->product ? $item->product->purchase_price : 0);
+                    $invoiceHpp += ($hppPerUnit * $item->quantity);
+
+                    // Tambahkan data ke item untuk ditampilkan di PDF Profit
+                    $item->hpp_per_unit = $hppPerUnit;
+                    $item->total_hpp = $hppPerUnit * $item->quantity;
+                }
+
+                $invoice->sales = $invoiceSales;
+                $invoice->hpp = $invoiceHpp;
+                $invoice->profit = $invoiceSales - $invoiceHpp;
+
+                // 2. Generate PDF Invoice
+                $pdfInvoice = Pdf::loadView('invoices.pdf', compact('invoice'));
+                $invoiceContent = $pdfInvoice->output();
+                $invoiceFilename = $invoice->invoice_number . ' - ' . $invoice->customer_name . '.pdf';
+
+                // 3. Generate PDF Laba Rugi
+                $pdfProfit = Pdf::loadView('profit.pdf-invoice', compact('invoice'));
+                $profitContent = $pdfProfit->output();
+                $profitFilename = 'Laba Rugi - ' . $invoice->invoice_number . '.pdf';
+
+                // 4. Buat Caption yang Informatif
+                $caption = "📄 *INVOICE & LABA RUGI*\n\n" .
+                    "📌 *Info:* `{$invoice->invoice_number}`\n" .
+                    "👤 *Pelanggan:* {$invoice->customer_name}\n" .
+                    "📅 *Tanggal:* " . \Carbon\Carbon::parse($invoice->date)->format('d M Y') . "\n\n" .
+                    "💰 *Ringkasan Keuangan:*\n" .
+                    "• Total Jual: *Rp " . number_format($invoice->total_amount, 0, ',', '.') . "*\n" .
+                    "• Total HPP: *Rp " . number_format($invoiceHpp, 0, ',', '.') . "*\n" .
+                    "• Laba Bersih: *" . ($invoice->profit >= 0 ? '🟢' : '🔴') . " Rp " . number_format($invoice->profit, 0, ',', '.') . "*\n\n" .
+                    "Laporan detail terlampir di bawah ini 👇";
+
+                // 5. Kirim Invoice PDF
+                $response1 = Http::attach('document', $invoiceContent, $invoiceFilename)
+                    ->post("https://api.telegram.org/bot{$token}/sendDocument", [
+                        'chat_id' => $chatId,
+                        'caption' => $caption,
+                        'parse_mode' => 'Markdown',
+                    ]);
+
+                // 6. Kirim Laba Rugi PDF
+                if ($response1->successful()) {
+                    Http::attach('document', $profitContent, $profitFilename)
+                        ->post("https://api.telegram.org/bot{$token}/sendDocument", [
+                            'chat_id' => $chatId,
+                            'caption' => "📊 Laporan Laba Rugi untuk `{$invoice->invoice_number}`",
+                            'parse_mode' => 'Markdown',
+                        ]);
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                    Log::error("Telegram Send Error: " . $response1->body());
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                Log::error("Telegram Invoice Send Exception: " . $e->getMessage());
+            }
+        }
+
+        if ($errorCount > 0) {
+            return back()->with('warning', "Berhasil mengirim {$successCount} data, namun gagal mengirim {$errorCount} data ke Telegram.");
+        }
+
+        return back()->with('success', "Berhasil mengirim {$successCount} Invoice & Laporan Laba Rugi ke Telegram.");
     }
 }
