@@ -66,7 +66,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf'])->name('invoices.bulk-export-pdf');
     Route::get('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf']);
     Route::post('invoices/print-multi-pdf', [InvoiceController::class, 'printMultiPdf'])->name('invoices.print-multi-pdf');
-
+    Route::post('invoices/send-telegram', [InvoiceController::class, 'sendToTelegram'])->name('invoices.send-telegram');
     Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-delete');
     Route::resource('invoices', InvoiceController::class);
 
