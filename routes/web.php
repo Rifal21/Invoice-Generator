@@ -22,7 +22,7 @@ use App\Http\Controllers\VehicleRentalInvoiceController;
 use App\Http\Controllers\RiceDeliveryController;
 use App\Http\Controllers\DeliveryOrderController;
 use App\Http\Controllers\RiceOrderRecapController;
-
+use App\Http\Controllers\RadioController;
 
 
 // Auth Routes
@@ -74,6 +74,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-delete');
 
     Route::resource('invoices', InvoiceController::class);
+
+    // Radio Routes
+    Route::get('radio', [RadioController::class, 'index'])->name('radio.index');
+    Route::get('radio/search', [RadioController::class, 'search'])->name('radio.search');
+    Route::post('radio/request', [RadioController::class, 'requestSong'])->name('radio.request');
+    Route::get('radio/status', [RadioController::class, 'getCurrentStatus'])->name('radio.status');
+    Route::post('radio/chat', [RadioController::class, 'postMessage'])->name('radio.chat');
+    Route::post('radio/skip', [RadioController::class, 'skipCurrent'])->name('radio.skip');
     // Vehicle Rental Invoice Routes
     Route::get('vehicle-rentals/next-number', [VehicleRentalInvoiceController::class, 'getNextNumber'])->name('vehicle-rentals.next-number');
     Route::get('vehicle-rentals/{vehicleRental}/export-pdf', [VehicleRentalInvoiceController::class, 'exportPdf'])->name('vehicle-rentals.export-pdf');

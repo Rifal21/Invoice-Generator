@@ -91,6 +91,15 @@
                     Buat Pesanan (POS)
                 </a>
             </li>
+            <li class="border-t border-gray-800/50 mt-1 pt-1">
+                <a href="{{ route('radio.index') }}"
+                    class="{{ request()->routeIs('radio.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-bold text-indigo-400">
+                    <i class="fas fa-radio text-sm w-4"></i>
+                    Live Radio & Chat
+                    <span
+                        class="ml-auto inline-flex items-center rounded-md bg-red-400/10 px-1.5 py-0.5 text-[10px] font-medium text-red-400 ring-1 ring-inset ring-red-400/20 animate-pulse">LIVE</span>
+                </a>
+            </li>
         </ul>
     </li>
 @endif
