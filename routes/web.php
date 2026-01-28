@@ -4,6 +4,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductController;
@@ -67,9 +68,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf']);
     Route::post('invoices/print-multi-pdf', [InvoiceController::class, 'printMultiPdf'])->name('invoices.print-multi-pdf');
     Route::post('invoices/send-telegram', [InvoiceController::class, 'sendToTelegram'])->name('invoices.send-telegram');
+    Route::post('invoices/send-customer', [InvoiceController::class, 'sendToCustomer'])->name('invoices.send-customer');
+    Route::post('invoices/send-whatsapp', [InvoiceController::class, 'sendToWhatsApp'])->name('invoices.send-whatsapp');
     Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-delete');
-    Route::resource('invoices', InvoiceController::class);
 
+    Route::resource('invoices', InvoiceController::class);
     // Vehicle Rental Invoice Routes
     Route::get('vehicle-rentals/next-number', [VehicleRentalInvoiceController::class, 'getNextNumber'])->name('vehicle-rentals.next-number');
     Route::get('vehicle-rentals/{vehicleRental}/export-pdf', [VehicleRentalInvoiceController::class, 'exportPdf'])->name('vehicle-rentals.export-pdf');
@@ -123,4 +126,34 @@ Route::middleware(['auth'])->group(function () {
         Route::get('qr-code/user/{code}', [UserController::class, 'generateQR'])->name('users.qr');
         Route::resource('users', UserController::class);
     });
+});
+
+
+Route::get('/test-wa', function () {
+    $apiUrl = 'https://waapi.fkstudio.my.id';
+    $instance = 'default';
+    $phone = '6285179599150';
+    $chatId = $phone . '@c.us';
+
+    try {
+        $response = Http::withHeaders([
+            'X-Api-Key' => '80b4a1a50d074b669b9cc67251059004', // API key WAHA CORE
+            'Content-Type' => 'application/json',
+        ])->post("{$apiUrl}/api/sendText", [
+            'session' => $instance,
+            'chatId' => $chatId,
+            'text' => "🔔 Tes Koneksi WAHA CORE Sukses!\nJam: " . now()->format('H:i:s'),
+        ]);
+
+        return response()->json([
+            'status' => $response->status(),
+            'body' => $response->json(),
+            'url_used' => "{$apiUrl}/api/sendText"
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'url_target' => $apiUrl
+        ], 500);
+    }
 });

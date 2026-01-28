@@ -45,6 +45,7 @@ class CustomerController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
+            'telegram_chat_id' => 'nullable|string|max:50',
             'address' => 'nullable|string',
             'description' => 'nullable|string',
         ]);
@@ -71,6 +72,7 @@ class CustomerController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'phone' => 'nullable|string|max:20',
+            'telegram_chat_id' => 'nullable|string|max:50',
             'address' => 'nullable|string',
             'description' => 'nullable|string',
         ]);

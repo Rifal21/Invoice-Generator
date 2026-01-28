@@ -7,7 +7,7 @@ use App\Models\InvoiceItem;
 
 class Invoice extends Model
 {
-    protected $fillable = ['invoice_number', 'date', 'customer_name', 'total_amount'];
+    protected $fillable = ['invoice_number', 'date', 'customer_name', 'total_amount', 'whatsapp_sent_at', 'telegram_sent_at'];
 
     public function items()
     {

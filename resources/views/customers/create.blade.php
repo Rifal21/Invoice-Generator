@@ -33,12 +33,23 @@
                     @enderror
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label for="phone" class="block text-sm font-bold text-gray-700 mb-2">Nomor Telepon</label>
                         <input type="text" name="phone" id="phone" value="{{ old('phone') }}"
                             class="block w-full rounded-2xl border-gray-200 py-3 px-4 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                         @error('phone')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="telegram_chat_id" class="block text-sm font-bold text-gray-700 mb-2">Telegram Chat
+                            ID</label>
+                        <input type="text" name="telegram_chat_id" id="telegram_chat_id"
+                            value="{{ old('telegram_chat_id') }}" placeholder="Contoh: 7817420087"
+                            class="block w-full rounded-2xl border-gray-200 py-3 px-4 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        @error('telegram_chat_id')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

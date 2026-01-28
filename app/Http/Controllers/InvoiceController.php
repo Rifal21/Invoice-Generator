@@ -444,6 +444,8 @@ class InvoiceController extends Controller
                             'caption' => "📊 Laporan Laba Rugi untuk `{$invoice->invoice_number}`",
                             'parse_mode' => 'Markdown',
                         ]);
+
+                    $invoice->update(['telegram_sent_at' => now()]);
                     $successCount++;
                 } else {
                     $errorCount++;
@@ -456,9 +458,202 @@ class InvoiceController extends Controller
         }
 
         if ($errorCount > 0) {
-            return back()->with('warning', "Berhasil mengirim {$successCount} data, namun gagal mengirim {$errorCount} data ke Telegram.");
+            return back()->with('warning', "Berhasil mengirim {$successCount} data ke Group, namun gagal mengirim {$errorCount} data.");
         }
 
-        return back()->with('success', "Berhasil mengirim {$successCount} Invoice & Laporan Laba Rugi ke Telegram.");
+        return back()->with('success', "Berhasil mengirim {$successCount} Invoice & Laporan Laba Rugi ke Group Telegram.");
+    }
+
+    public function sendToCustomer(Request $request)
+    {
+        $request->validate([
+            'invoice_ids' => 'required|array',
+            'invoice_ids.*' => 'exists:invoices,id'
+        ]);
+
+        $token = env('TELEGRAM_BOT_TOKEN');
+
+        if (!$token) {
+            return back()->with('error', 'Konfigurasi Token Telegram belum diatur di .env');
+        }
+
+        $invoices = Invoice::with(['items.product'])->whereIn('id', $request->invoice_ids)->get();
+        $successCount = 0;
+        $errorCount = 0;
+        $noChatIdCount = 0;
+
+        foreach ($invoices as $invoice) {
+            $customer = \App\Models\Customer::where('name', $invoice->customer_name)->first();
+
+            if (!$customer || !$customer->telegram_chat_id) {
+                $noChatIdCount++;
+                continue;
+            }
+
+            try {
+                // Generate PDF Invoice
+                $pdfInvoice = Pdf::loadView('invoices.pdf', compact('invoice'));
+                $invoiceContent = $pdfInvoice->output();
+                $invoiceFilename = $invoice->invoice_number . ' - ' . $invoice->customer_name . '.pdf';
+
+                $caption = "📄 *INVOICE ANDA*\n\n" .
+                    "📌 *No:* `{$invoice->invoice_number}`\n" .
+                    "👤 *Pelanggan:* {$invoice->customer_name}\n" .
+                    "📅 *Tanggal:* " . \Carbon\Carbon::parse($invoice->date)->format('d M Y') . "\n" .
+                    "💰 *Total:* *Rp " . number_format($invoice->total_amount, 0, ',', '.') . "*\n\n" .
+                    "Terima kasih telah berlangganan!";
+
+                $response = Http::attach('document', $invoiceContent, $invoiceFilename)
+                    ->post("https://api.telegram.org/bot{$token}/sendDocument", [
+                        'chat_id' => $customer->telegram_chat_id,
+                        'caption' => $caption,
+                        'parse_mode' => 'Markdown',
+                    ]);
+
+                if ($response->successful()) {
+                    $invoice->update(['telegram_sent_at' => now()]);
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                    Log::error("Telegram Personal Sent Error: " . $response->body());
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                Log::error("Telegram Customer Send Exception: " . $e->getMessage());
+            }
+        }
+
+        $message = "Berhasil mengirim {$successCount} invoice ke pelanggan.";
+        if ($noChatIdCount > 0) {
+            $message .= " {$noChatIdCount} pelanggan tidak memiliki Chat ID.";
+        }
+        if ($errorCount > 0) {
+            $message .= " {$errorCount} gagal terkirim.";
+        }
+
+        return back()->with($errorCount > 0 ? 'warning' : 'success', $message);
+    }
+
+    public function sendToWhatsApp(Request $request)
+    {
+        $request->validate([
+            'invoice_ids' => 'required|array',
+            'invoice_ids.*' => 'exists:invoices,id'
+        ]);
+
+        $apiUrl = env('WHATSAPP_API_URL');
+        $apiKey = env('WHATSAPP_API_KEY');
+        $instance = env('WHATSAPP_SESSION', 'default');
+
+        // if (!$apiUrl || !$apiKey) {
+        //     return back()->with('error', 'Konfigurasi WhatsApp API URL atau Key belum diatur di .env');
+        // }
+
+        $invoices = Invoice::with(['items.product'])->whereIn('id', $request->invoice_ids)->get();
+        $successCount = 0;
+        $errorCount = 0;
+        $noPhoneCount = 0;
+
+        // Pastikan folder public ada
+        if (!file_exists(public_path('invoice-files'))) {
+            mkdir(public_path('invoice-files'), 0777, true);
+        }
+
+        foreach ($invoices as $invoice) {
+            $customer = \App\Models\Customer::where('name', $invoice->customer_name)->first();
+
+            if (!$customer || !$customer->phone) {
+                $noPhoneCount++;
+                continue;
+            }
+
+            // Bersihkan nomor telepon
+            $phone = preg_replace('/[^0-9]/', '', $customer->phone);
+            if (str_starts_with($phone, '0')) {
+                $phone = '62' . substr($phone, 1);
+            }
+            $chatId = $phone . '@c.us';
+
+            try {
+                // 1. Generate & Save PDF
+                $pdfInvoice = Pdf::loadView('invoices.pdf', compact('invoice'));
+                $pdfName = 'invoice-' . str_replace('/', '-', $invoice->invoice_number) . '.pdf';
+                $pdfPath = public_path('invoice-files/' . $pdfName);
+                $pdfInvoice->save($pdfPath);
+
+                $downloadLink = url('invoice-files/' . $pdfName);
+
+                // 2. Convert First Page to Image (JPG) using Imagick
+                $imageName = 'invoice-' . str_replace('/', '-', $invoice->invoice_number) . '.jpg';
+                $imagePath = public_path('invoice-files/' . $imageName);
+                $imageBase64 = null;
+
+                if (class_exists('Imagick')) {
+                    try {
+                        $imagick = new \Imagick();
+                        $imagick->setResolution(150, 150);
+                        $imagick->readImage($pdfPath . '[0]');
+                        $imagick->setImageFormat('jpg');
+                        $imagick->writeImage($imagePath);
+                        $imagick->clear();
+                        $imagick->destroy();
+
+                        $imageBase64 = 'data:image/jpeg;base64,' . base64_encode(file_get_contents($imagePath));
+                    } catch (\Exception $imgErr) {
+                        Log::error("Imagick Error: " . $imgErr->getMessage());
+                    }
+                } else {
+                    Log::warning("Imagick extension not found. Sending PDF link only.");
+                }
+
+                // Format Tanggal Indonesia (Opsional: pakai Carbon)
+                $date = \Carbon\Carbon::parse($invoice->date)->format('d-m-Y');
+
+                $caption = "🛒 *INVOICE TAGIHAN*\n\n" .
+                    "Halo *{$customer->name}*,\n" .
+                    "Berikut detail transaksi Anda:\n\n" .
+                    "📅 Tanggal : {$date}\n" .
+                    "🧾 No. Faktur : `{$invoice->invoice_number}`\n" .
+                    "💰 Total : *Rp " . number_format($invoice->total_amount, 0, ',', '.') . "*\n\n" .
+                    "----------------------------------\n" .
+                    "📄 *Silakan unduh dokumen PDF disini:*\n" .
+                    $downloadLink . "\n\n" .
+                    "----------------------------------\n" .
+                    "Terima kasih telah berbelanja! 🙏";
+
+                // 3. Kirim ke WAHA (TEXT ONLY - WAHA Core Friendly)
+                // Kita setup payload Teks saja agar gratis dan tidak kena limit Plus version
+                $payload = [
+                    'session' => $instance,
+                    'chatId' => $chatId,
+                    'text' => $caption
+                ];
+                $endpoint = "{$apiUrl}/api/sendText";
+
+                $response = Http::withHeaders([
+                    'X-Api-Key' => $apiKey,
+                    'Content-Type' => 'application/json'
+                ])->post($endpoint, $payload);
+
+                if ($response->successful()) {
+                    $invoice->update(['whatsapp_sent_at' => now()]);
+                    $successCount++;
+                    // Optional: Hapus file setelah kirim agar hemat storage
+                    // unlink($pdfPath); unlink($imagePath); 
+                } else {
+                    $errorCount++;
+                    Log::error("WAHA Send Error ({$invoice->invoice_number}): " . $response->body());
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                Log::error("Invoice WA Exception: " . $e->getMessage());
+            }
+        }
+
+        $message = "Berhasil mengirim {$successCount} Invoice.";
+        if ($noPhoneCount > 0) $message .= " {$noPhoneCount} tanpa nomor.";
+        if ($errorCount > 0) $message .= " {$errorCount} gagal.";
+
+        return back()->with($errorCount > 0 ? 'warning' : 'success', $message);
     }
 }
