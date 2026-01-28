@@ -656,4 +656,78 @@ class InvoiceController extends Controller
 
         return back()->with($errorCount > 0 ? 'warning' : 'success', $message);
     }
+
+    public function sendToWhapi(Request $request)
+    {
+        $request->validate([
+            'invoice_ids' => 'required|array',
+            'invoice_ids.*' => 'exists:invoices,id'
+        ]);
+
+        $whapiToken = 'QYBkexNHUc5ALtBa7KIyelEHAQWioYPP';
+        $whapiUrl = 'https://gate.whapi.cloud/messages';
+
+        $invoices = Invoice::with(['items.product'])->whereIn('id', $request->invoice_ids)->get();
+        $successCount = 0;
+        $errorCount = 0;
+
+        foreach ($invoices as $invoice) {
+            $customer = \App\Models\Customer::where('name', $invoice->customer_name)->first();
+            if (!$customer || !$customer->phone) continue;
+
+            $phone = preg_replace('/[^0-9]/', '', $customer->phone);
+            if (str_starts_with($phone, '0')) $phone = '62' . substr($phone, 1);
+
+            // Format ID Whapi
+            $chatId = $phone . '@s.whatsapp.net';
+
+            try {
+                $pdfInvoice = Pdf::loadView('invoices.pdf', compact('invoice'));
+                $pdfContent = base64_encode($pdfInvoice->output());
+                $filename = 'Invoice-' . str_replace('/', '-', $invoice->invoice_number) . '.pdf';
+
+                $date = \Carbon\Carbon::parse($invoice->date)->format('d-m-Y');
+
+                $itemDetails = "";
+                foreach ($invoice->items as $item) {
+                    $qty = rtrim(rtrim(number_format($item->quantity, 2, ',', '.'), '0'), ',');
+                    $itemDetails .= "- {$item->product_name} ({$qty} {$item->unit}) : *Rp " . number_format($item->total, 0, ',', '.') . "*\n";
+                }
+
+                $caption = " *INVOICE KOPERASI JR*\n\n" .
+                    "Halo *{$customer->name}*,\n" .
+                    "Berikut adalah rincian transaksi Anda:\n\n" .
+                    "📅 Tanggal : {$date}\n" .
+                    "🧾 No. Invoice : `{$invoice->invoice_number}`\n\n" .
+                    "*Rincian Barang:*\n" .
+                    $itemDetails . "\n" .
+                    "💰 *Total Tagihan : Rp " . number_format($invoice->total_amount, 0, ',', '.') . "*\n\n" .
+                    "Terima kasih atas kunjungan Anda! 🙏";
+
+                // Kirim Dokumen via Whapi
+                $response = Http::withHeaders([
+                    'Authorization' => "Bearer {$whapiToken}",
+                    'Content-Type' => 'application/json'
+                ])->post("{$whapiUrl}/document", [
+                    'to' => $chatId,
+                    'media' => "data:application/pdf;base64,{$pdfContent}",
+                    'filename' => $filename,
+                    'caption' => $caption
+                ]);
+
+                if ($response->successful()) {
+                    $invoice->update(['whatsapp_sent_at' => now()]);
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                    Log::error("Whapi Error ({$invoice->invoice_number}): " . $response->body());
+                }
+            } catch (\Exception $e) {
+                $errorCount++;
+                Log::error("Whapi Exception: " . $e->getMessage());
+            }
+        }
+
+        return back()->with($errorCount > 0 ? 'warning' : 'success', "Whapi: {$successCount} terkirim, {$errorCount} gagal.");
+    }
 }

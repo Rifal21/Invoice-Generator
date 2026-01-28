@@ -128,7 +128,12 @@
                             <button type="button" onclick="submitWhatsApp()" id="whatsapp-btn"
                                 class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-green-50 hover:text-green-700 w-full text-left transition-colors">
                                 <i class="fab fa-whatsapp text-green-600 text-xl"></i>
-                                <span id="whatsapp-btn-text">Kirim ke WhatsApp</span>
+                                <span id="whatsapp-btn-text">Kirim ke WhatsApp (WAHA)</span>
+                            </button>
+                            <button type="button" onclick="submitWhapi()" id="whapi-btn"
+                                class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-green-50 hover:text-green-700 w-full text-left transition-colors border-t border-gray-50">
+                                <i class="fab fa-whatsapp text-green-500 text-xl"></i>
+                                <span id="whapi-btn-text">Kirim ke WhatsApp (Whapi Cloud)</span>
                             </button>
                         </div>
                     </div>
@@ -583,6 +588,7 @@
         const telegramBtnText = document.getElementById('telegram-btn-text');
         const telegramCustomerBtnText = document.getElementById('telegram-customer-btn-text');
         const whatsappBtnText = document.getElementById('whatsapp-btn-text');
+        const whapiBtnText = document.getElementById('whapi-btn-text');
         const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
         const bulkForm = document.getElementById('bulk-export-form');
 
@@ -612,7 +618,8 @@
                 reportDropdownBtn.querySelector('span').innerText = `Kirim Laporan (${checkedCount})`;
                 telegramBtnText.innerText = `Ke Group Admin (${checkedCount})`;
                 telegramCustomerBtnText.innerText = `Ke Client Personal (${checkedCount})`;
-                whatsappBtnText.innerText = `WhatsApp Client (${checkedCount})`;
+                whatsappBtnText.innerText = `WhatsApp WAHA (${checkedCount})`;
+                whapiBtnText.innerText = `WhatsApp Whapi Cloud (${checkedCount})`;
             } else {
                 bulkExportBtn.innerHTML = `
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -625,7 +632,8 @@
                 reportDropdownBtn.querySelector('span').innerText = `Kirim Laporan`;
                 telegramBtnText.innerText = `Ke Group Admin`;
                 telegramCustomerBtnText.innerText = `Ke Client Personal`;
-                whatsappBtnText.innerText = `WhatsApp Client`;
+                whatsappBtnText.innerText = `WhatsApp WAHA`;
+                whapiBtnText.innerText = `WhatsApp Whapi Cloud`;
                 bulkDeleteBtn.innerHTML = `
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     Hapus Selected
@@ -826,8 +834,8 @@
 
         function submitWhatsApp() {
             Swal.fire({
-                title: 'Kirim ke WhatsApp?',
-                text: "Setiap invoice akan dikirim ke nomor WhatsApp pelanggan (pastikan engine Evolution API aktif).",
+                title: 'Kirim via WAHA?',
+                text: "Setiap invoice akan dikirim ke nomor WhatsApp pelanggan (pastikan server WAHA aktif).",
                 icon: 'success',
                 showCancelButton: true,
                 confirmButtonColor: '#10b981',
@@ -842,7 +850,7 @@
                 if (result.isConfirmed) {
                     Swal.fire({
                         title: 'Sedang Mengirim...',
-                        text: 'Mengirim lewat Evolution API',
+                        text: 'Mengirim via WAHA Core',
                         allowOutsideClick: false,
                         didOpen: () => {
                             Swal.showLoading()
@@ -850,6 +858,37 @@
                     });
                     bulkForm.target = "_self";
                     bulkForm.action = "{{ route('invoices.send-whatsapp') }}";
+                    bulkForm.submit();
+                }
+            })
+        }
+
+        function submitWhapi() {
+            Swal.fire({
+                title: 'Kirim via Whapi Cloud?',
+                text: "Setiap invoice akan dikirim ke WhatsApp pelanggan menggunakan Whapi.cloud API.",
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Kirim Whapi',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    container: 'rounded-3xl',
+                    popup: 'rounded-3xl',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Sedang Mengirim...',
+                        text: 'Mengirim via Whapi.cloud',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        }
+                    });
+                    bulkForm.target = "_self";
+                    bulkForm.action = "{{ route('invoices.send-whapi') }}";
                     bulkForm.submit();
                 }
             })

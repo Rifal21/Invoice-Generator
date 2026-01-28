@@ -70,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('invoices/send-telegram', [InvoiceController::class, 'sendToTelegram'])->name('invoices.send-telegram');
     Route::post('invoices/send-customer', [InvoiceController::class, 'sendToCustomer'])->name('invoices.send-customer');
     Route::post('invoices/send-whatsapp', [InvoiceController::class, 'sendToWhatsApp'])->name('invoices.send-whatsapp');
+    Route::post('invoices/send-whapi', [InvoiceController::class, 'sendToWhapi'])->name('invoices.send-whapi');
     Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-delete');
 
     Route::resource('invoices', InvoiceController::class);
