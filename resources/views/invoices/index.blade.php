@@ -90,11 +90,49 @@
                     </svg>
                     Cetak Invoice (PDF)
                 </button>
-                <button type="button" onclick="submitTelegram()" id="telegram-btn" disabled
-                    class="flex-1 md:flex-none bg-sky-50 text-sky-700 font-bold py-2.5 px-4 rounded-2xl hover:bg-sky-100 transition-all border border-sky-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center gap-2">
-                    <i class="fab fa-telegram text-base"></i>
-                    Kirim ke Telegram
-                </button>
+                <!-- Dropdown Kirim -->
+                <div class="relative flex-1 md:flex-none" x-data="{ open: false }">
+                    <button type="button" @click="open = !open" @click.away="open = false" id="report-dropdown-btn"
+                        disabled
+                        class="w-full md:w-auto bg-indigo-50 text-indigo-700 font-bold py-2.5 px-6 rounded-2xl hover:bg-indigo-100 transition-all border border-indigo-100 disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>Kirim Laporan</span>
+                        <svg class="h-4 w-4 transform transition-transform" :class="open ? 'rotate-180' : ''" fill="none"
+                            stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+
+                    <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="transform opacity-0 scale-95"
+                        x-transition:enter-end="transform opacity-100 scale-100"
+                        class="absolute left-0 mt-2 w-64 rounded-2xl shadow-2xl bg-white ring-1 ring-black ring-opacity-5 z-50 overflow-hidden border border-gray-100">
+                        <div class="py-1">
+                            <div
+                                class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-50">
+                                Telegram</div>
+                            <button type="button" onclick="submitTelegram()" id="telegram-btn"
+                                class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-sky-50 hover:text-sky-700 w-full text-left transition-colors">
+                                <i class="fab fa-telegram text-sky-600 text-lg"></i>
+                                <span id="telegram-btn-text">Ke Group Admin</span>
+                            </button>
+                            <button type="button" onclick="submitTelegramCustomer()" id="telegram-customer-btn"
+                                class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-indigo-50 hover:text-indigo-700 w-full text-left transition-colors border-t border-gray-50">
+                                <i class="fas fa-user-check text-indigo-600 text-lg"></i>
+                                <span id="telegram-customer-btn-text">Ke Client (Personal)</span>
+                            </button>
+
+                            <div
+                                class="px-4 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest border-y border-gray-50 mt-1">
+                                WhatsApp (WAHA)</div>
+                            <button type="button" onclick="submitWhatsApp()" id="whatsapp-btn"
+                                class="flex items-center gap-3 px-4 py-3 text-sm font-bold text-gray-700 hover:bg-green-50 hover:text-green-700 w-full text-left transition-colors">
+                                <i class="fab fa-whatsapp text-green-600 text-xl"></i>
+                                <span id="whatsapp-btn-text">Kirim ke WhatsApp</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
                 <button type="button" onclick="submitBulkDelete()" id="bulk-delete-btn" disabled
                     class="flex-1 md:flex-none bg-red-600 text-white font-bold py-2.5 px-4 rounded-2xl hover:bg-red-700 transition-all shadow-md disabled:opacity-50 disabled:cursor-not-allowed text-xs flex items-center justify-center gap-2">
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -198,9 +236,20 @@
                                                 </svg>
                                             </div>
                                             <div class="ml-4">
-                                                <div class="text-sm font-bold text-gray-900">
-                                                    {{ $invoice->invoice_number }}</div>
-                                                <div class="text-xs text-gray-400">ID: #{{ $invoice->id }}</div>
+                                                <div class="text-sm font-black text-gray-900 flex items-center gap-2">
+                                                    {{ $invoice->invoice_number }}
+                                                    <div class="flex gap-1">
+                                                        @if ($invoice->whatsapp_sent_at)
+                                                            <i class="fab fa-whatsapp text-green-500 text-[10px]"
+                                                                title="WA Terkirim: {{ \Carbon\Carbon::parse($invoice->whatsapp_sent_at)->format('d/m H:i') }}"></i>
+                                                        @endif
+                                                        @if ($invoice->telegram_sent_at)
+                                                            <i class="fab fa-telegram text-sky-500 text-[10px]"
+                                                                title="TG Terkirim: {{ \Carbon\Carbon::parse($invoice->telegram_sent_at)->format('d/m H:i') }}"></i>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="text-xs font-bold text-gray-400">Invoice Tagihan</div>
                                             </div>
                                         </div>
                                     </td>
@@ -530,7 +579,10 @@
 
         const bulkExportBtn = document.getElementById('bulk-export-btn');
         const multiPrintBtn = document.getElementById('multi-print-btn');
-        const telegramBtn = document.getElementById('telegram-btn');
+        const reportDropdownBtn = document.getElementById('report-dropdown-btn');
+        const telegramBtnText = document.getElementById('telegram-btn-text');
+        const telegramCustomerBtnText = document.getElementById('telegram-customer-btn-text');
+        const whatsappBtnText = document.getElementById('whatsapp-btn-text');
         const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
         const bulkForm = document.getElementById('bulk-export-form');
 
@@ -541,26 +593,26 @@
 
             bulkExportBtn.disabled = checkedCount === 0;
             multiPrintBtn.disabled = checkedCount === 0;
-            telegramBtn.disabled = checkedCount === 0;
+            reportDropdownBtn.disabled = checkedCount === 0;
             bulkDeleteBtn.disabled = checkedCount === 0;
 
             if (checkedCount > 0) {
                 bulkExportBtn.innerHTML = `
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                    Buat (${checkedCount}) Laporan
+                    Laporan (${checkedCount})
                 `;
                 multiPrintBtn.innerHTML = `
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                    Cetak (${checkedCount}) Invoice
+                    Print (${checkedCount})
                 `;
                 bulkDeleteBtn.innerHTML = `
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     Hapus (${checkedCount})
                 `;
-                telegramBtn.innerHTML = `
-                    <i class="fab fa-telegram text-base"></i>
-                    Kirim (${checkedCount}) Telegram
-                `;
+                reportDropdownBtn.querySelector('span').innerText = `Kirim Laporan (${checkedCount})`;
+                telegramBtnText.innerText = `Ke Group Admin (${checkedCount})`;
+                telegramCustomerBtnText.innerText = `Ke Client Personal (${checkedCount})`;
+                whatsappBtnText.innerText = `WhatsApp Client (${checkedCount})`;
             } else {
                 bulkExportBtn.innerHTML = `
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -570,6 +622,10 @@
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Cetak Invoice (PDF)
                 `;
+                reportDropdownBtn.querySelector('span').innerText = `Kirim Laporan`;
+                telegramBtnText.innerText = `Ke Group Admin`;
+                telegramCustomerBtnText.innerText = `Ke Client Personal`;
+                whatsappBtnText.innerText = `WhatsApp Client`;
                 bulkDeleteBtn.innerHTML = `
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     Hapus Selected
@@ -708,13 +764,13 @@
 
         function submitTelegram() {
             Swal.fire({
-                title: 'Kirim ke Telegram?',
-                text: "Setiap invoice akan dikirim sebagai file PDF terpisah ke bot Telegram.",
+                title: 'Kirim ke Group Telegram?',
+                text: "Setiap invoice beserta laporan Laba Rugi akan dikirim ke Group Telegram Admin.",
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#0ea5e9',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: 'Ya, Kirim Sekarang',
+                confirmButtonText: 'Ya, Kirim ke Group',
                 cancelButtonText: 'Batal',
                 customClass: {
                     container: 'rounded-3xl',
@@ -724,7 +780,7 @@
                 if (result.isConfirmed) {
                     Swal.fire({
                         title: 'Sedang Mengirim...',
-                        text: 'Mohon tunggu sebentar',
+                        text: 'Mengirim ke Group Admin',
                         allowOutsideClick: false,
                         didOpen: () => {
                             Swal.showLoading()
@@ -732,6 +788,68 @@
                     });
                     bulkForm.target = "_self";
                     bulkForm.action = "{{ route('invoices.send-telegram') }}";
+                    bulkForm.submit();
+                }
+            })
+        }
+
+        function submitTelegramCustomer() {
+            Swal.fire({
+                title: 'Kirim ke Pelanggan?',
+                text: "Setiap invoice akan dikirim ke Telegram Pribadi pelanggan (jika Chat ID terdaftar).",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Kirim ke Pelanggan',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    container: 'rounded-3xl',
+                    popup: 'rounded-3xl',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Sedang Mengirim...',
+                        text: 'Mengirim ke Telegram Client',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        }
+                    });
+                    bulkForm.target = "_self";
+                    bulkForm.action = "{{ route('invoices.send-customer') }}";
+                    bulkForm.submit();
+                }
+            })
+        }
+
+        function submitWhatsApp() {
+            Swal.fire({
+                title: 'Kirim ke WhatsApp?',
+                text: "Setiap invoice akan dikirim ke nomor WhatsApp pelanggan (pastikan engine Evolution API aktif).",
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Ya, Kirim WhatsApp',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    container: 'rounded-3xl',
+                    popup: 'rounded-3xl',
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Sedang Mengirim...',
+                        text: 'Mengirim lewat Evolution API',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading()
+                        }
+                    });
+                    bulkForm.target = "_self";
+                    bulkForm.action = "{{ route('invoices.send-whatsapp') }}";
                     bulkForm.submit();
                 }
             })

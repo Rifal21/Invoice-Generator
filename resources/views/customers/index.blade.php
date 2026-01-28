@@ -68,6 +68,10 @@
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">{{ $customer->phone ?? '-' }}</div>
                                     <div class="text-sm text-gray-500">{{ $customer->email ?? '-' }}</div>
+                                    @if ($customer->telegram_chat_id)
+                                        <div class="text-xs text-indigo-600 font-bold mt-1">TG:
+                                            {{ $customer->telegram_chat_id }}</div>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm text-gray-900 line-clamp-2 md:whitespace-pre-wrap">

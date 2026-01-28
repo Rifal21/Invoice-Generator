@@ -539,17 +539,10 @@
             isScanning = true;
             console.log('Restarting scanner...');
 
-            // Try with environment camera first (back camera)
+            // Use user camera (front camera) as requested
             html5QrCode.start({
-                    facingMode: "environment"
+                    facingMode: "user"
                 }, config, onScanSuccess, onScanError)
-                .catch(err => {
-                    console.warn('Environment camera not available, trying user camera:', err);
-                    // Fallback to user camera (front camera)
-                    return html5QrCode.start({
-                        facingMode: "user"
-                    }, config, onScanSuccess, onScanError);
-                })
                 .catch(err => {
                     console.error('Failed to start camera:', err);
                     Swal.fire({
@@ -576,20 +569,10 @@
         // Start scanner on page load
         console.log('Initializing QR scanner...');
 
-        // Try with environment camera first (back camera, better for QR scanning)
+        // Use user camera (front camera) as requested
         html5QrCode.start({
-                facingMode: "environment"
+                facingMode: "user"
             }, config, onScanSuccess, onScanError)
-            .then(() => {
-                console.log('Scanner started successfully with environment camera');
-            })
-            .catch(err => {
-                console.warn('Environment camera not available, trying user camera:', err);
-                // Fallback to user camera (front camera)
-                return html5QrCode.start({
-                    facingMode: "user"
-                }, config, onScanSuccess, onScanError);
-            })
             .then(() => {
                 console.log('Scanner started successfully with user camera');
             })
@@ -639,21 +622,12 @@
             };
 
             statusScanner.start({
-                    facingMode: "environment"
+                    facingMode: "user"
                 },
                 statusConfig,
                 onStatusScanSuccess,
                 onScanError
             ).catch(err => {
-                console.warn('Environment camera not available for status check, trying user camera:', err);
-                return statusScanner.start({
-                        facingMode: "user"
-                    },
-                    statusConfig,
-                    onStatusScanSuccess,
-                    onScanError
-                );
-            }).catch(err => {
                 console.error('Failed to start status scanner:', err);
                 Swal.fire({
                     icon: 'error',
@@ -773,11 +747,11 @@
                         </div>
                         ${checkOutInfo}
                         ${data.distance ? `
-                                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
-                                            <span class="text-gray-400 text-sm font-bold">Jarak dari Kantor</span>
-                                            <span class="text-white font-bold">${data.distance}</span>
-                                        </div>
-                                        ` : ''}
+                                            <div class="flex items-center justify-between p-4 bg-white/5 rounded-xl">
+                                                <span class="text-gray-400 text-sm font-bold">Jarak dari Kantor</span>
+                                                <span class="text-white font-bold">${data.distance}</span>
+                                            </div>
+                                            ` : ''}
                     </div>
 
                     <button onclick="closeStatusModal()" class="w-full mt-6 px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 text-white font-black rounded-2xl hover:shadow-xl transition-all">
