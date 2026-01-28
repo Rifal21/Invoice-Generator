@@ -73,6 +73,13 @@
                             </div>
                             <span class="text-[11px] font-black text-center text-gray-800">Gudang</span>
                         </a>
+                        <a href="{{ route('radio.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-indigo-600 border border-indigo-500 shadow-lg shadow-indigo-200">
+                            <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
+                                <i class="fas fa-radio text-xl animate-pulse"></i>
+                            </div>
+                            <span class="text-[11px] font-black text-center text-white">Live Radio</span>
+                        </a>
                     </div>
                 </div>
 
