@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AttendanceSetting extends Model
 {
+    use \App\Traits\LogsActivity;
+
     protected $fillable = [
         'check_in_time',
         'check_out_time',

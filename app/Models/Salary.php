@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Salary extends Model
 {
+    use \App\Traits\LogsActivity;
+
     protected $fillable = [
         'user_id',
         'period',
