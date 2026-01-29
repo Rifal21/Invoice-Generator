@@ -23,6 +23,8 @@ use App\Http\Controllers\RiceDeliveryController;
 use App\Http\Controllers\DeliveryOrderController;
 use App\Http\Controllers\RiceOrderRecapController;
 use App\Http\Controllers\RadioController;
+use App\Http\Controllers\ChatController;
+use App\Http\Controllers\NotificationController;
 
 
 // Auth Routes
@@ -80,8 +82,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('radio/search', [RadioController::class, 'search'])->name('radio.search');
     Route::post('radio/request', [RadioController::class, 'requestSong'])->name('radio.request');
     Route::get('radio/status', [RadioController::class, 'getCurrentStatus'])->name('radio.status');
-    Route::post('radio/chat', [RadioController::class, 'postMessage'])->name('radio.chat');
     Route::post('radio/skip', [RadioController::class, 'skipCurrent'])->name('radio.skip');
+
+    // Global Chat Routes
+    Route::get('chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::get('chat/messages', [ChatController::class, 'getMessages'])->name('chat.messages');
+    Route::get('chat/latest', [ChatController::class, 'latestMessage'])->name('chat.latest');
+    Route::post('chat/send', [ChatController::class, 'sendMessage'])->name('chat.send');
+    Route::post('chat/clear', [ChatController::class, 'clearChat'])->name('chat.clear');
+    Route::get('chat/users', [ChatController::class, 'getUsers'])->name('chat.users');
+
+    // Notification Routes
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     // Vehicle Rental Invoice Routes
     Route::get('vehicle-rentals/next-number', [VehicleRentalInvoiceController::class, 'getNextNumber'])->name('vehicle-rentals.next-number');
     Route::get('vehicle-rentals/{vehicleRental}/export-pdf', [VehicleRentalInvoiceController::class, 'exportPdf'])->name('vehicle-rentals.export-pdf');

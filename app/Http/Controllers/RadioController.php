@@ -13,6 +13,10 @@ class RadioController extends Controller
 {
     public function index()
     {
+        if (auth()->user()->name !== 'Rifal Kurniawan') {
+            abort(403, 'Hanya Rifal yang boleh mengakses radio ini!');
+        }
+
         $current = SongRequest::where('status', 'playing')->first();
 
         if (!$current) {
@@ -27,6 +31,8 @@ class RadioController extends Controller
 
     public function search(Request $request)
     {
+        if (auth()->user()->name !== 'Rifal Kurniawan') abort(403);
+
         $query = $request->get('q');
         if (!$query) return response()->json([]);
 
@@ -72,6 +78,8 @@ class RadioController extends Controller
 
     public function requestSong(Request $request)
     {
+        if (auth()->user()->name !== 'Rifal Kurniawan') abort(403);
+
         $request->validate([
             'video_id' => 'required',
             'title' => 'required',
@@ -91,6 +99,8 @@ class RadioController extends Controller
 
     public function getCurrentStatus()
     {
+        if (auth()->user()->name !== 'Rifal Kurniawan') abort(403);
+
         $current = SongRequest::where('status', 'playing')->first();
 
         // If nothing playing, check if there's any pending
@@ -107,31 +117,18 @@ class RadioController extends Controller
 
         // Get queue
         $queue = SongRequest::where('status', 'pending')->orderBy('created_at', 'asc')->get();
-        // Get recent chat
-        $messages = RadioMessage::orderBy('created_at', 'desc')->take(20)->get()->reverse()->values();
 
         return response()->json([
             'current' => $current,
             'queue' => $queue,
-            'messages' => $messages,
             'server_time' => now()->toIso8601String()
         ]);
     }
 
-    public function postMessage(Request $request)
-    {
-        $request->validate(['message' => 'required']);
-
-        RadioMessage::create([
-            'user_name' => auth()->user()->name,
-            'message' => $request->message
-        ]);
-
-        return response()->json(['status' => 'success']);
-    }
-
     public function skipCurrent()
     {
+        if (auth()->user()->name !== 'Rifal Kurniawan') abort(403);
+
         $current = SongRequest::where('status', 'playing')->first();
         if ($current) {
             $current->update(['status' => 'completed']);

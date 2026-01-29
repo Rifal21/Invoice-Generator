@@ -73,12 +73,22 @@
                             </div>
                             <span class="text-[11px] font-black text-center text-gray-800">Gudang</span>
                         </a>
-                        <a href="{{ route('radio.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-indigo-600 border border-indigo-500 shadow-lg shadow-indigo-200">
+                        @if (auth()->user()->name === 'Rifal Kurniawan')
+                            <a href="{{ route('radio.index') }}"
+                                class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-indigo-600 border border-indigo-500 shadow-lg shadow-indigo-200">
+                                <div
+                                    class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
+                                    <i class="fas fa-radio text-xl animate-pulse"></i>
+                                </div>
+                                <span class="text-[11px] font-black text-center text-white">Live Radio</span>
+                            </a>
+                        @endif
+                        <a href="{{ route('chat.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-emerald-600 border border-emerald-500 shadow-lg shadow-emerald-200">
                             <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
-                                <i class="fas fa-radio text-xl animate-pulse"></i>
+                                <i class="fas fa-comments text-xl"></i>
                             </div>
-                            <span class="text-[11px] font-black text-center text-white">Live Radio</span>
+                            <span class="text-[11px] font-black text-center text-white">Global Chat</span>
                         </a>
                     </div>
                 </div>
@@ -152,7 +162,8 @@
                         </a>
                         <a href="{{ route('suppliers.index') }}"
                             class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
-                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
                                 <i class="fas fa-truck text-lg"></i>
                             </div>
                             <span class="text-[10px] font-bold text-center text-gray-700">Supplier</span>
