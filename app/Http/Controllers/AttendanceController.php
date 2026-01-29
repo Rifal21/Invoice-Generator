@@ -169,7 +169,7 @@ class AttendanceController extends Controller
                 ], 422);
             }
 
-            $status = $now->gt(Carbon::parse($settings->check_in_time)->addMinutes(15)) ? 'late' : 'present';
+            $status = $now->gt(Carbon::parse($settings->check_in_time)->addMinutes(15)) ? 'present' : 'present';
 
             // Handle photo upload
             $photoPath = null;
