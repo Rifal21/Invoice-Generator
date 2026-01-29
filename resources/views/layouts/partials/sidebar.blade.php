@@ -3,7 +3,15 @@
     if (request()->routeIs('categories.*', 'customers.*', 'suppliers.*', 'products.*')) {
         $currentRouteGroup = 'master';
     } elseif (
-        request()->routeIs('rice-deliveries.*', 'delivery-orders.*', 'invoices.*', 'vehicle-rentals.*', 'pos.*')
+        request()->routeIs(
+            'rice-deliveries.*',
+            'delivery-orders.*',
+            'invoices.*',
+            'vehicle-rentals.*',
+            'pos.*',
+            'chat.*',
+            'radio.*',
+        )
     ) {
         $currentRouteGroup = 'ops';
     } elseif (request()->routeIs('inventory.*')) {

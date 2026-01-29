@@ -79,12 +79,10 @@
                                 class="w-10 h-10 rounded-xl bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-white transition-all flex items-center justify-center">
                                 <i class="fas fa-sync-alt text-sm"></i>
                             </button>
-                            @if (auth()->user()->isSuperAdmin())
-                                <button onclick="skipSong()" title="Skip This Song"
-                                    class="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all duration-500 flex items-center justify-center shadow-lg hover:shadow-red-500/20">
-                                    <i class="fas fa-forward"></i>
-                                </button>
-                            @endif
+                            <button onclick="skipSong()" title="Skip This Song"
+                                class="w-12 h-12 rounded-2xl bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500 hover:text-white transition-all duration-500 flex items-center justify-center shadow-lg hover:shadow-red-500/20">
+                                <i class="fas fa-forward"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -106,8 +104,8 @@
                 </div>
             </div>
 
-            <!-- Right Column: Chat & Search -->
-            <div class="lg:col-span-4 space-y-6 flex flex-col h-[calc(100vh-140px)]">
+            <!-- Right Column: Search Only -->
+            <div class="lg:col-span-4 space-y-6 flex flex-col">
 
                 <!-- Search Lagu -->
                 <div class="bg-white rounded-3xl shadow-xl p-6 border border-gray-100 flex-shrink-0">
@@ -122,30 +120,6 @@
                     <div id="search-results"
                         class="hidden absolute left-0 right-0 mt-2 bg-white rounded-3xl shadow-2xl border border-gray-100 p-2 z-50 max-h-[300px] overflow-y-auto">
                         <!-- Results injected here -->
-                    </div>
-                </div>
-
-                <!-- Live Chat -->
-                <div
-                    class="bg-white rounded-3xl shadow-xl border border-gray-100 flex-grow flex flex-col overflow-hidden min-h-[400px]">
-                    <div class="p-4 border-b border-gray-50 flex items-center gap-3">
-                        <div class="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
-                        <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Live Chat</h3>
-                    </div>
-
-                    <div id="chat-box" class="flex-grow p-4 overflow-y-auto space-y-4 custom-scrollbar bg-gray-50/50">
-                        <!-- Messages injected here -->
-                    </div>
-
-                    <div class="p-4 bg-white border-t border-gray-50">
-                        <form id="chat-form" class="relative">
-                            <input type="text" id="chat-input" placeholder="Tulis pesan..."
-                                class="w-full bg-gray-50 border-gray-100 rounded-2xl py-3 pl-4 pr-12 text-sm focus:ring-2 focus:ring-indigo-500 transition-all font-bold">
-                            <button type="submit"
-                                class="absolute right-2 top-1.5 bg-indigo-600 text-white p-2 rounded-xl hover:bg-indigo-700 transition-all shadow-md">
-                                <i class="fas fa-paper-plane"></i>
-                            </button>
-                        </form>
                     </div>
                 </div>
 
@@ -259,7 +233,6 @@
                 const data = await response.json();
 
                 updateQueue(data.queue);
-                updateChat(data.messages);
 
                 const noMusicOverlay = document.getElementById('no-music-overlay');
 
@@ -314,27 +287,6 @@
                 </div>
             </div>
         `).join('');
-        }
-
-        function updateChat(messages) {
-            const box = document.getElementById('chat-box');
-            const isAtBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 50;
-
-            box.innerHTML = messages.map(msg => `
-            <div class="flex flex-col">
-                <div class="flex items-center gap-2 mb-1">
-                    <span class="text-[10px] font-black uppercase tracking-widest ${msg.user_name === '{{ auth()->user()->name }}' ? 'text-indigo-600' : 'text-gray-400'}">${msg.user_name}</span>
-                    <span class="text-[8px] text-gray-300 italic">${new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                </div>
-                <div class="bg-white border border-gray-100 p-2.5 rounded-2xl rounded-tl-none shadow-sm text-sm text-gray-700 font-medium break-words">
-                    ${msg.message}
-                </div>
-            </div>
-        `).join('');
-
-            if (isAtBottom) {
-                box.scrollTop = box.scrollHeight;
-            }
         }
 
         // Search Logic
@@ -394,31 +346,6 @@
                 console.error('Request Error:', error);
             }
         }
-
-        // Chat Logic
-        document.getElementById('chat-form').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            if (!message) return;
-
-            input.value = '';
-            try {
-                await fetch('{{ route('radio.chat') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify({
-                        message
-                    })
-                });
-                syncRadio();
-            } catch (error) {
-                console.error('Chat Error:', error);
-            }
-        });
 
         async function skipSong() {
             await fetch('{{ route('radio.skip') }}', {
