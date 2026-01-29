@@ -8,7 +8,7 @@ class Product extends Model
 {
     use \App\Traits\LogsActivity;
 
-    protected $fillable = ['category_id', 'supplier_id', 'name', 'price', 'purchase_price', 'unit', 'stock', 'description'];
+    protected $fillable = ['category_id', 'supplier_id', 'name', 'price', 'purchase_price', 'unit', 'stock', 'description', 'image'];
 
     protected $casts = [
         'price' => 'float',

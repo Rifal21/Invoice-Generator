@@ -25,7 +25,8 @@ class ProductController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
-        $products = $query->paginate(10)->withQueryString();
+        $perPage = $request->input('per_page', 10);
+        $products = $query->paginate($perPage)->withQueryString();
         $categories = Category::all();
         $suppliers = Supplier::all();
 
@@ -56,9 +57,28 @@ class ProductController extends Controller
             'unit' => 'required|string',
             'stock' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'image' => 'nullable', // file or base64 string
         ]);
 
-        Product::create($request->all());
+        $data = $request->all();
+
+        if ($request->has('image') && $request->image) {
+            // Check if base64
+            if (preg_match('/^data:image\/(\w+);base64,/', $request->image, $type)) {
+                $image_data = substr($request->image, strpos($request->image, ',') + 1);
+                $type = strtolower($type[1]); // jpg, png, gif
+                $image_data = base64_decode($image_data);
+                $image_name = 'product_' . time() . '.' . $type;
+                \Storage::disk('public')->put('products/' . $image_name, $image_data);
+                $data['image'] = 'products/' . $image_name;
+            } elseif ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $path = $file->store('products', 'public');
+                $data['image'] = $path;
+            }
+        }
+
+        Product::create($data);
 
         return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
@@ -98,9 +118,31 @@ class ProductController extends Controller
             'unit' => 'required|string',
             'stock' => 'nullable|numeric|min:0',
             'description' => 'nullable|string',
+            'image' => 'nullable',
         ]);
 
-        $product->update($request->all());
+        $data = $request->all();
+
+        if ($request->has('image') && $request->image) {
+            // Check if base64
+            if (preg_match('/^data:image\/(\w+);base64,/', $request->image, $type)) {
+                $image_data = substr($request->image, strpos($request->image, ',') + 1);
+                $type = strtolower($type[1]); // jpg, png, gif
+                $image_data = base64_decode($image_data);
+                $image_name = 'product_' . time() . '.' . $type;
+                \Storage::disk('public')->put('products/' . $image_name, $image_data);
+                $data['image'] = 'products/' . $image_name;
+            } elseif ($request->hasFile('image')) {
+                $file = $request->file('image');
+                $path = $file->store('products', 'public');
+                $data['image'] = $path;
+            }
+        } else {
+            // Keep old image if no new one sent
+            unset($data['image']);
+        }
+
+        $product->update($data);
 
         return redirect()->route('products.index', $request->query())->with('success', 'Product updated successfully.');
     }
@@ -136,6 +178,7 @@ class ProductController extends Controller
             'price' => 'sometimes|numeric|min:0',
             'purchase_price' => 'sometimes|nullable|numeric|min:0',
             'stock' => 'sometimes|numeric|min:0',
+            'unit' => 'sometimes|string',
             'description' => 'sometimes|nullable|string',
         ]);
 
@@ -154,6 +197,17 @@ class ProductController extends Controller
             'product' => $product
         ]);
     }
+
+    public function deleteImage(Product $product)
+    {
+        if ($product->image) {
+            \Storage::disk('public')->delete($product->image);
+            $product->update(['image' => null]);
+            return response()->json(['success' => true, 'message' => 'Image deleted successfully.']);
+        }
+        return response()->json(['success' => false, 'message' => 'No image to delete.']);
+    }
+
     public function import(Request $request)
     {
         set_time_limit(300); // Increase time limit to 5 minutes

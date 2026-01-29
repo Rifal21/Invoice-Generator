@@ -61,6 +61,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
     Route::post('products/bulk-delete', [ProductController::class, 'bulkDestroy'])->name('products.bulk-delete');
     Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
+    Route::delete('products/{product}/image', [ProductController::class, 'deleteImage'])->name('products.delete-image'); // New Route
     Route::get('products/export', [ProductController::class, 'export'])->name('products.export');
     Route::resource('products', ProductController::class);
 
