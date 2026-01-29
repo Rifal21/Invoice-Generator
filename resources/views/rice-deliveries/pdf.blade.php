@@ -11,21 +11,21 @@
 
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 11px;
+            font-size: 14px;
             color: #000;
-            line-height: 1.2;
+            line-height: 1.3;
             margin: 0;
             padding: 10px;
         }
 
         .header {
             width: 100%;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             position: relative;
         }
 
         .logo {
-            width: 80px;
+            width: 90px;
             float: left;
         }
 
@@ -37,14 +37,15 @@
         }
 
         .company-name {
-            font-size: 14px;
+            font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
         }
 
         .company-details {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
+            margin-top: 5px;
         }
 
         .meta-info {
@@ -55,12 +56,12 @@
 
         .meta-date {
             font-weight: bold;
-            font-size: 12px;
-            margin-bottom: 10px;
+            font-size: 14px;
+            margin-bottom: 12px;
         }
 
         .recipient {
-            font-size: 11px;
+            font-size: 14px;
             font-weight: bold;
             text-align: left;
         }
@@ -72,33 +73,36 @@
         }
 
         .nota-title {
-            font-size: 13px;
+            font-size: 16px;
             font-weight: bold;
             border-bottom: 2px solid #000;
-            padding-bottom: 3px;
-            margin-top: 10px;
-            margin-bottom: 0px;
+            padding-bottom: 5px;
+            margin-top: 15px;
+            margin-bottom: 5px;
         }
 
         .items-table {
             width: 100%;
             border-collapse: collapse;
-            border: 1.5px solid #000;
+            border: 2px solid #000;
+            margin-top: 10px;
         }
 
         .items-table th {
             border: 1.5px solid #000;
-            padding: 5px;
+            padding: 8px;
             text-transform: uppercase;
             background-color: #fff;
             font-weight: bold;
+            font-size: 12px;
         }
 
         .items-table td {
             border: 1.5px solid #000;
-            padding: 5px;
+            padding: 8px;
             font-weight: bold;
             vertical-align: middle;
+            font-size: 13px;
         }
 
         .text-center {
@@ -114,15 +118,17 @@
         }
 
         .footer {
-            margin-top: 20px;
+            margin-top: 30px;
             width: 100%;
         }
 
         .payment-info {
             float: left;
             width: 60%;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
+            line-height: 1.5;
+            padding-top: 10px;
         }
 
         .signature-area {
@@ -133,8 +139,8 @@
         }
 
         .signature-img {
-            height: 60px;
-            margin: -20px 0;
+            height: 70px;
+            margin: -25px 0;
             opacity: 0.9;
         }
 
@@ -142,7 +148,8 @@
             text-decoration: underline;
             font-weight: bold;
             text-transform: uppercase;
-            margin-top: 30px;
+            margin-top: 40px;
+            font-size: 13px;
         }
 
         .total-row {
@@ -150,7 +157,7 @@
         }
 
         .total-cell {
-            font-size: 12px;
+            font-size: 14px;
             font-weight: 900;
         }
 

@@ -8,6 +8,7 @@
             'delivery-orders.*',
             'invoices.*',
             'vehicle-rentals.*',
+            'dedi-invoices.*',
             'pos.*',
             'chat.*',
             'radio.*',
