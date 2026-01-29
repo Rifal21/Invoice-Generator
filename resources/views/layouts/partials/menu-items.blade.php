@@ -85,6 +85,13 @@
                 </a>
             </li>
             <li>
+                <a href="{{ route('dedi-invoices.index') }}"
+                    class="{{ request()->routeIs('dedi-invoices.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                    <i class="fas fa-file-invoice text-sm w-4"></i>
+                    Nota Faktur H Dedi
+                </a>
+            </li>
+            <li>
                 <a href="{{ route('pos.index') }}"
                     class="{{ request()->routeIs('pos.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
                     <i class="fas fa-shopping-cart text-sm w-4"></i>

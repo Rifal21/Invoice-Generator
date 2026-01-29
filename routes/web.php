@@ -26,6 +26,7 @@ use App\Http\Controllers\RadioController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\DediInvoiceController;
 
 
 // Auth Routes
@@ -96,7 +97,13 @@ Route::middleware(['auth'])->group(function () {
 
     // Notification Routes
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    // Notification Routes
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('notifications/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+
+    // Dedi Invoice Routes
+    Route::get('dedi-invoices/{dedi_invoice}/export-pdf', [DediInvoiceController::class, 'exportPdf'])->name('dedi-invoices.export-pdf');
+    Route::resource('dedi-invoices', DediInvoiceController::class);
 
     // Activity Logs
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
