@@ -26,7 +26,7 @@
                 <!-- Search and Filter -->
                 <form action="{{ route('products.index') }}" method="GET"
                     class="w-full md:flex-1 grid grid-cols-1 sm:grid-cols-12 gap-4">
-                    <div class="sm:col-span-5">
+                    <div class="sm:col-span-6">
                         <label for="search" class="sr-only">Cari</label>
                         <input type="text" name="search" id="search" value="{{ request('search') }}"
                             placeholder="Cari produk..."
@@ -34,8 +34,8 @@
                     </div>
                     <div class="sm:col-span-4">
                         <label for="category_id" class="sr-only">Kategori</label>
-                        <select name="category_id" id="category_id"
-                            class="block w-full rounded-2xl border-gray-200 py-2.5 px-3 text-sm text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        <select name="category_id" id="category_id" onchange="this.form.submit()"
+                            class="block w-full rounded-2xl border-gray-200 py-2.5 px-3 text-sm text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
                             <option value="">Semua Kategori</option>
                             @foreach ($categories as $category)
                                 <option value="{{ $category->id }}"
@@ -45,11 +45,14 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="sm:col-span-3">
-                        <button type="submit"
-                            class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-2xl shadow-sm text-sm font-bold text-gray-900 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all">
-                            Filter
-                        </button>
+                    <div class="sm:col-span-2">
+                        <select name="per_page" id="per_page" onchange="this.form.submit()"
+                            class="block w-full rounded-2xl border-gray-200 py-2.5 px-3 text-sm text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer">
+                            <option value="10" {{ request('per_page') == 10 ? 'selected' : '' }}>10</option>
+                            <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
+                            <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
+                            <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
+                        </select>
                     </div>
                 </form>
 
@@ -155,7 +158,24 @@
                                     </td>
                                     <td
                                         class="whitespace-nowrap px-3 py-5 text-sm font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
-                                        {{ $product->name }}
+                                        <div class="flex items-center gap-3">
+                                            @if ($product->image)
+                                                <img src="{{ asset('storage/' . $product->image) }}"
+                                                    class="w-10 h-10 rounded-lg object-cover border border-gray-200 flex-shrink-0 cursor-zoom-in"
+                                                    onclick="event.stopPropagation(); openLightbox(this.src)">
+                                            @else
+                                                <div
+                                                    class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300 border border-gray-100 flex-shrink-0">
+                                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24"
+                                                        stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                            @endif
+                                            <span>{{ $product->name }}</span>
+                                        </div>
                                     </td>
                                     <td class="whitespace-nowrap px-3 py-5 text-sm font-medium text-gray-500">
                                         <select onchange="quickUpdate({{ $product->id }}, 'category_id', this.value)"
@@ -222,63 +242,88 @@
                 @foreach ($products as $product)
                     <div class="product-card-mobile group bg-white rounded-3xl p-5 shadow-lg border border-gray-100 relative overflow-hidden cursor-pointer active:scale-[99%] transition-transform"
                         onclick="showDetail({{ $product->id }})">
-                        <div class="absolute top-4 left-4">
-                            <input type="checkbox" name="ids[]" value="{{ $product->id }}"
-                                onclick="event.stopPropagation()"
-                                class="product-checkbox h-6 w-6 rounded-xl border-gray-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer">
-                        </div>
-                        <div class="flex justify-between items-start mb-3 ml-16">
-                            <div>
-                                <div class="flex flex-wrap gap-2 mb-2">
+                        <div class="flex gap-4 items-start">
+                            <!-- Left Sidebar: Checkbox & Image -->
+                            <div class="flex flex-col gap-3 items-center pt-1">
+                                <input type="checkbox" name="ids[]" value="{{ $product->id }}"
+                                    onclick="event.stopPropagation()"
+                                    class="product-checkbox h-6 w-6 rounded-xl border-gray-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer">
+
+                                <div
+                                    class="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden border border-gray-100 shadow-sm relative">
+                                    @if ($product->image)
+                                        <img src="{{ asset('storage/' . $product->image) }}"
+                                            class="w-full h-full object-cover cursor-zoom-in"
+                                            onclick="event.stopPropagation(); openLightbox(this.src)">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Right Content -->
+                            <div class="flex-1 min-w-0 pt-1">
+                                <div class="flex justify-between items-start mb-1">
+                                    <h3
+                                        class="text-base font-black text-gray-900 leading-tight group-hover:text-indigo-600 transition-colors">
+                                        {{ $product->name }}
+                                    </h3>
                                     <span
-                                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700">
+                                        class="text-[10px] font-bold text-gray-300 whitespace-nowrap ml-2">#{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}</span>
+                                </div>
+
+                                <div class="flex flex-wrap gap-1.5 mb-3">
+                                    <span
+                                        class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 uppercase tracking-wide">
                                         {{ $product->category->name }}
                                     </span>
                                     @if ($product->supplier)
                                         <span
-                                            class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-50 text-green-700">
+                                            class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold bg-green-50 text-green-700 uppercase tracking-wide">
                                             {{ $product->supplier->name }}
                                         </span>
                                     @endif
                                 </div>
-                                <h3 class="text-lg font-black text-gray-900 group-hover:text-indigo-600 transition-colors">
-                                    {{ $product->name }}
-                                </h3>
+
+                                <div class="flex flex-wrap items-center gap-3 mb-3">
+                                    <div class="bg-gray-50 px-2.5 py-1 rounded-lg">
+                                        <span class="text-sm font-black text-indigo-600">Rp
+                                            {{ number_format($product->price, 0, ',', '.') }}</span>
+                                        <span class="text-[10px] text-gray-500 font-medium">/{{ $product->unit }}</span>
+                                    </div>
+                                    <div
+                                        class="{{ $product->stock <= 5 ? 'text-red-600 bg-red-50' : 'text-green-600 bg-green-50' }} px-2.5 py-1 rounded-lg text-xs font-bold">
+                                        Stok: {{ (float) $product->stock }}
+                                    </div>
+                                </div>
+
+                                @if ($product->description)
+                                    <p class="text-xs text-gray-500 mb-4 line-clamp-2 italic">
+                                        "{{ Str::limit($product->description, 60) }}"
+                                    </p>
+                                @else
+                                    <div class="mb-4"></div>
+                                @endif
+
+                                <div class="flex gap-2">
+                                    <a href="{{ route('products.edit', array_merge(['product' => $product->id], request()->query())) }}"
+                                        onclick="event.stopPropagation()"
+                                        class="flex-1 flex items-center justify-center py-2 px-3 rounded-xl bg-amber-50 text-amber-700 font-bold text-xs hover:bg-amber-100 transition-colors">
+                                        Edit
+                                    </a>
+                                    <button type="button"
+                                        onclick="event.stopPropagation(); deleteProduct({{ $product->id }})"
+                                        class="flex-1 flex items-center justify-center py-2 px-3 rounded-xl bg-red-50 text-red-700 font-bold text-xs hover:bg-red-100 transition-colors">
+                                        Hapus
+                                    </button>
+                                </div>
                             </div>
-                            <span
-                                class="text-xs font-bold text-gray-400">#{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}</span>
-                        </div>
-
-                        <div class="flex items-baseline gap-1 mb-4 ml-16">
-                            <span class="text-sm font-medium text-gray-500">Harga:</span>
-                            <span class="text-xl font-black text-indigo-600">Rp
-                                {{ number_format($product->price, 0, ',', '.') }}</span>
-                            <span class="text-sm text-gray-400">/ {{ $product->unit }}</span>
-                        </div>
-
-                        <div class="mb-4 flex items-center gap-2 ml-16">
-                            <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Stok Tersedia:</span>
-                            <span
-                                class="px-3 py-1 rounded-xl text-xs font-black {{ $product->stock <= 5 ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600' }}">
-                                {{ (float) $product->stock }} {{ $product->unit }}
-                            </span>
-                        </div>
-
-                        @if ($product->description)
-                            <p class="text-sm text-gray-500 mb-5 bg-gray-50 p-3 rounded-xl italic ml-16">
-                                "{{ Str::limit($product->description, 80) }}"</p>
-                        @endif
-
-                        <div class="grid grid-cols-2 gap-3 ml-16">
-                            <a href="{{ route('products.edit', array_merge(['product' => $product->id], request()->query())) }}"
-                                onclick="event.stopPropagation()"
-                                class="flex items-center justify-center py-2.5 px-4 rounded-xl bg-amber-50 text-amber-700 font-bold text-sm">
-                                Edit
-                            </a>
-                            <button type="button" onclick="event.stopPropagation(); deleteProduct({{ $product->id }})"
-                                class="flex items-center justify-center py-2.5 px-4 rounded-xl bg-red-50 text-red-700 font-bold text-sm">
-                                Hapus
-                            </button>
                         </div>
                     </div>
                 @endforeach
@@ -511,7 +556,29 @@
                 document.getElementById('detail-stock').value = product.stock;
                 document.getElementById('detail-price').value = product.price;
                 document.getElementById('detail-purchase-price').value = product.purchase_price || 0;
+                document.getElementById('detail-unit').value = product.unit || '';
                 document.getElementById('detail-description').value = product.description || '';
+
+                // Set Edit Link
+                const currentQuery = window.location.search;
+                document.getElementById('detail-edit-link').href = `/products/${productId}/edit${currentQuery}`;
+
+                // Image logic
+                const imgEl = document.getElementById('detail-image');
+                const noImgEl = document.getElementById('detail-no-image');
+                const deleteBtn = document.getElementById('btn-delete-image');
+
+                if (product.image) {
+                    imgEl.src = '/storage/' + product.image;
+                    imgEl.classList.remove('hidden');
+                    deleteBtn.classList.remove('hidden');
+                    noImgEl.classList.add('hidden');
+                } else {
+                    imgEl.src = '';
+                    imgEl.classList.add('hidden');
+                    deleteBtn.classList.add('hidden');
+                    noImgEl.classList.remove('hidden');
+                }
 
                 // Set selects
                 const categorySelect = document.getElementById('detail-category');
@@ -530,6 +597,101 @@
             } catch (error) {
                 console.error(error);
                 Swal.fire('Error', 'Gagal memuat detail produk', 'error');
+            }
+        }
+
+        async function deleteDetailImage() {
+            const modal = document.getElementById('detail-modal');
+            const productId = modal.dataset.productId;
+
+            const result = await Swal.fire({
+                title: 'Hapus Foto?',
+                text: "Foto akan dihapus permanen.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#4f46e5',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                customClass: {
+                    container: 'rounded-3xl',
+                    popup: 'rounded-3xl',
+                }
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/products/${productId}/image`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        // Update UI
+                        document.getElementById('detail-image').classList.add('hidden');
+                        document.getElementById('btn-delete-image').classList.add('hidden');
+                        document.getElementById('detail-no-image').classList.remove('hidden');
+
+                        // Also update list items if possible (reload page easiest or generic update)
+                        // For now, let's just toast
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true
+                        });
+                        Toast.fire({
+                            icon: 'success',
+                            title: 'Foto dihapus'
+                        });
+
+                        // Ideally update the row image too, but page reload is cleaner for now or simple JS DOM manip
+                        const rowImg = document.querySelector(`tr[data-product-id="${productId}"] img`);
+                        if (rowImg) {
+                            // replace img with placeholder div
+                            const container = rowImg.parentElement;
+                            container.innerHTML = `
+                                <div class="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-300 border border-gray-100 flex-shrink-0">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                             `;
+                        }
+
+                        // Update Mobile Card
+                        // Mobile card logic is similar, find by id
+                        const mobileCard = document.querySelector(
+                            `.product-card-mobile[onclick="showDetail(${productId})"]`);
+                        if (mobileCard) {
+                            const imgContainer = mobileCard.querySelector(
+                                '.w-16.h-16'); // kinda fragile selector but works given structure
+                            if (imgContainer) {
+                                imgContainer.innerHTML = `
+                                        <div class="w-full h-full flex items-center justify-center text-gray-300">
+                                            <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                 `;
+                            }
+                        }
+
+                    } else {
+                        Swal.fire('Error', 'Gagal menghapus foto', 'error');
+                    }
+                } catch (e) {
+                    console.error(e);
+                    Swal.fire('Error', 'Terjadi kesalahan', 'error');
+                }
             }
         }
 
@@ -579,18 +741,79 @@
                         title: 'Updated successfully'
                     });
 
-                    if (field === 'category_id') {
-                        const row = document.querySelector(`tr[data-product-id="${id}"]`);
-                        if (row) {
-                            const sel = row.querySelector('.category-select');
-                            if (sel) sel.value = value;
-                        }
+
+                    // Update UI elements dynamically
+                    const updateElement = (selector, text) => {
+                        const els = document.querySelectorAll(selector);
+                        els.forEach(el => el.innerText = text);
+                    };
+
+                    const formatRupiah = (num) => {
+                        return new Intl.NumberFormat('id-ID').format(num);
+                    };
+
+                    // Desktop Row
+                    const row = document.querySelector(`tr[data-product-id="${id}"]`);
+                    if (row) {
+                        if (field === 'name') row.querySelector('td:nth-child(3) span').innerText = value;
+                        if (field === 'category_id') row.querySelector('.category-select').value = value;
+                        if (field === 'supplier_id') row.querySelector('.supplier-select').value = value;
+                        if (field === 'purchase_price') row.querySelector('td:nth-child(6)').innerText = 'Rp ' +
+                            formatRupiah(value);
+                        if (field === 'price') row.querySelector('td:nth-child(7)').innerText = 'Rp ' + formatRupiah(
+                            value);
+                        if (field === 'unit') row.querySelector('td:nth-child(8)').innerText = value;
+                        if (field === 'stock') row.querySelector('td:nth-child(9)').innerText = parseFloat(value);
+                        if (field === 'description') row.querySelector('td:nth-child(10)').innerText = value.length >
+                            30 ? value.substring(0, 30) + '...' : value;
                     }
-                    if (field === 'supplier_id') {
-                        const row = document.querySelector(`tr[data-product-id="${id}"]`);
-                        if (row) {
-                            const sel = row.querySelector('.supplier-select');
-                            if (sel) sel.value = value;
+
+                    // Mobile Card
+                    // Find card by checkbox value
+                    const mobileCheckbox = document.querySelector(`.product-card-mobile input[value="${id}"]`);
+                    if (mobileCheckbox) {
+                        const card = mobileCheckbox.closest('.product-card-mobile');
+                        if (card) {
+                            if (field === 'name') {
+                                const nameEl = card.querySelector('h3');
+                                if (nameEl) nameEl.innerText = value;
+                            }
+                            if (field === 'price') {
+                                // Price is in "Rp X / Unit" block
+                                // Structure: .bg-gray-50 span:nth-child(1) (Rp X), span:nth-child(2) (/ Unit)
+                                const priceEl = card.querySelector('.bg-gray-50 span:first-child');
+                                if (priceEl) priceEl.innerText = 'Rp ' + formatRupiah(value);
+                            }
+                            if (field === 'unit') {
+                                // Update price suffix and stock suffix
+                                const priceUnitEl = card.querySelector('.bg-gray-50 span:nth-child(2)');
+                                if (priceUnitEl) priceUnitEl.innerText = '/ ' + value;
+                            }
+                            if (field === 'stock') {
+                                // Stock badge: "Stok: X"
+                                // Structure: second div in flex items-center
+                                // It has class text-green-600 or text-red-600.
+                                // Let's use flexible selector or just query selector with unique enough classes key
+                                const stockEl = card.querySelectorAll('.flex.flex-wrap.items-center.gap-3 div')[1];
+                                if (stockEl) stockEl.innerText = 'Stok: ' + parseFloat(value);
+                            }
+                            if (field === 'description') {
+                                const descEl = card.querySelector('p.text-xs.italic');
+                                if (descEl) descEl.innerText = '"' + (value.length > 60 ? value.substring(0, 60) +
+                                    '...' : value) + '"';
+                                else if (value) {
+                                    // If desc was empty before, element might not exist or be empty. Implementation details vary.
+                                    // For now ignore create new element case for simplicity unless critical.
+                                }
+                            }
+                            if (field === 'category_id') {
+                                const catBadge = card.querySelector('.text-indigo-700'); // Fragile?
+                                if (catBadge && data.category_name) catBadge.innerText = data.category_name;
+                            }
+                            if (field === 'supplier_id') {
+                                const supBadge = card.querySelector('.text-green-700');
+                                if (supBadge && data.supplier_name) supBadge.innerText = data.supplier_name;
+                            }
                         }
                     }
 
@@ -602,7 +825,54 @@
                 Swal.fire('Error', 'Gagal update data: ' + error.message, 'error');
             }
         }
+
+        // Lightbox Functions
+        function openLightbox(src) {
+            const lightbox = document.getElementById('image-lightbox');
+            const img = document.getElementById('lightbox-image');
+
+            img.src = src;
+            lightbox.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Animation
+            setTimeout(() => {
+                img.classList.remove('scale-95', 'opacity-0');
+                img.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeLightbox() {
+            const lightbox = document.getElementById('image-lightbox');
+            const img = document.getElementById('lightbox-image');
+
+            img.classList.remove('scale-100', 'opacity-100');
+            img.classList.add('scale-95', 'opacity-0');
+
+            setTimeout(() => {
+                lightbox.classList.add('hidden');
+                img.src = '';
+                document.body.style.overflow = '';
+            }, 300);
+        }
     </script>
+
+    <!-- Image Lightbox Modal -->
+    <div id="image-lightbox" class="fixed inset-0 z-[110] hidden bg-black/90 backdrop-blur-sm transition-all duration-300"
+        onclick="closeLightbox()">
+        <div class="absolute top-4 right-4 z-20">
+            <button onclick="closeLightbox()" class="text-white hover:text-gray-300 focus:outline-none">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+        <div class="h-full w-full flex items-center justify-center p-4">
+            <img id="lightbox-image" src="" alt="Full view"
+                class="max-h-full max-w-full object-contain rounded-lg shadow-2xl scale-95 opacity-0 transition-all duration-300">
+        </div>
+    </div>
 
     <!-- Detail Modal -->
     <div id="detail-modal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog"
@@ -630,6 +900,35 @@
                     <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start">
                             <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left w-full">
+                                <div class="mb-6 flex justify-center">
+                                    <div
+                                        class="h-40 w-40 rounded-2xl bg-gray-100 overflow-hidden border border-gray-200 group relative">
+                                        <img id="detail-image" src="" alt="Product"
+                                            class="w-full h-full object-cover hidden cursor-zoom-in transition-transform group-hover:scale-105"
+                                            onclick="openLightbox(this.src)">
+
+                                        <!-- Delete Image Button -->
+                                        <button id="btn-delete-image" type="button" onclick="deleteDetailImage()"
+                                            class="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 focus:outline-none hidden"
+                                            title="Hapus Foto">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                </path>
+                                            </svg>
+                                        </button>
+
+                                        <div id="detail-no-image"
+                                            class="w-full h-full flex items-center justify-center text-gray-300">
+                                            <svg class="h-12 w-12" fill="none" viewBox="0 0 24 24"
+                                                stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="mb-4">
                                     <label for="detail-name"
                                         class="block text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Nama
@@ -675,6 +974,17 @@
                                                 placeholder="0">
                                         </div>
                                     </div>
+                                    <div
+                                        class="bg-gray-50 p-4 rounded-2xl group focus-within:ring-2 focus-within:ring-indigo-500 focus-within:bg-white transition-all col-span-2">
+                                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Satuan
+                                        </p>
+                                        <div class="flex items-center">
+                                            <input type="text" id="detail-unit"
+                                                onchange="quickUpdateFromModal('unit', this.value)"
+                                                class="block w-full text-lg font-black text-gray-900 bg-transparent border-none p-0 focus:ring-0"
+                                                placeholder="Pcs, Kg, Unit...">
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="space-y-4">
@@ -710,7 +1020,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-2">
+                        <a id="detail-edit-link" href="#"
+                            class="inline-flex w-full justify-center rounded-2xl bg-indigo-600 px-3 py-2 text-sm font-bold text-white shadow-sm hover:bg-indigo-500 sm:w-auto">
+                            Edit Lengkap & Ganti Foto
+                        </a>
                         <button type="button"
                             class="mt-3 inline-flex w-full justify-center rounded-2xl bg-white px-3 py-2 text-sm font-bold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
                             onclick="closeDetailModal()">Tutup</button>
