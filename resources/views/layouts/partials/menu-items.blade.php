@@ -237,3 +237,13 @@
         </ul>
     </li>
 @endif
+@if (auth()->user()->name === 'Rifal Kurniawan')
+    <li class="mt-4">
+        <a href="{{ route('activity-logs.index') }}"
+            class="{{ request()->routeIs('activity-logs.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md p-2 text-sm font-semibold transition-all duration-200"
+            :class="sidebarCollapsed ? 'justify-center' : ''">
+            <i class="fas fa-history text-lg w-6 text-center text-amber-500"></i>
+            <span x-show="!sidebarCollapsed">Log Aktivitas</span>
+        </a>
+    </li>
+@endif
