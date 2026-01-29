@@ -46,7 +46,9 @@ trait LogsActivity
                 'model_id' => $this->id,
                 'description' => ucfirst($action) . ' activity on ' . class_basename($this) . ' #' . $this->id,
                 'changes' => $changes,
-                'ip_address' => request()->ip(),
+                'ip_address' => request()->header('X-Forwarded-For')
+                    ? explode(',', request()->header('X-Forwarded-For'))[0]
+                    : request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
         }
