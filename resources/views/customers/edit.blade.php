@@ -45,6 +45,15 @@
                     </div>
 
                     <div>
+                        <label for="pic" class="block text-sm font-bold text-gray-700 mb-2">PIC</label>
+                        <input type="text" name="pic" id="pic" value="{{ old('pic', $customer->pic) }}"
+                            class="block w-full rounded-2xl border-gray-200 py-3 px-4 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                        @error('pic')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
                         <label for="telegram_chat_id" class="block text-sm font-bold text-gray-700 mb-2">Telegram Chat
                             ID</label>
                         <input type="text" name="telegram_chat_id" id="telegram_chat_id"
@@ -64,6 +73,17 @@
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
+                </div>
+
+                <div>
+                    <label for="bank_account_info" class="block text-sm font-bold text-gray-700 mb-2">Info Rekening
+                        Pembayaran</label>
+                    <textarea name="bank_account_info" id="bank_account_info" rows="2"
+                        class="block w-full rounded-2xl border-gray-200 py-3 px-4 text-gray-900 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                        placeholder="Contoh: BCA 1234567890 a.n Nama">{{ old('bank_account_info', $customer->bank_account_info) }}</textarea>
+                    @error('bank_account_info')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div>

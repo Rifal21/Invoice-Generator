@@ -27,6 +27,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DediInvoiceController;
+use App\Http\Controllers\KitchenIncentiveController;
 
 
 // Auth Routes
@@ -104,6 +105,10 @@ Route::middleware(['auth'])->group(function () {
     // Dedi Invoice Routes
     Route::get('dedi-invoices/{dedi_invoice}/export-pdf', [DediInvoiceController::class, 'exportPdf'])->name('dedi-invoices.export-pdf');
     Route::resource('dedi-invoices', DediInvoiceController::class);
+
+    // Kitchen Incentive Routes
+    Route::get('kitchen-incentives/{kitchenIncentive}/export-pdf', [KitchenIncentiveController::class, 'exportPdf'])->name('kitchen-incentives.export-pdf');
+    Route::resource('kitchen-incentives', KitchenIncentiveController::class);
 
     // Activity Logs
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
