@@ -9,6 +9,7 @@
             'invoices.*',
             'vehicle-rentals.*',
             'dedi-invoices.*',
+            'kitchen-incentives.*',
             'pos.*',
             'chat.*',
             'radio.*',

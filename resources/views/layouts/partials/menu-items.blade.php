@@ -92,6 +92,13 @@
                 </a>
             </li>
             <li>
+                <a href="{{ route('kitchen-incentives.index') }}"
+                    class="{{ request()->routeIs('kitchen-incentives.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                    <i class="fas fa-utensils text-sm w-4"></i>
+                    Invoice Insentif Dapur
+                </a>
+            </li>
+            <li>
                 <a href="{{ route('pos.index') }}"
                     class="{{ request()->routeIs('pos.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
                     <i class="fas fa-shopping-cart text-sm w-4"></i>

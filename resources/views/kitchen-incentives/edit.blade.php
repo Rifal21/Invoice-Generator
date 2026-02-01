@@ -1,0 +1,297 @@
+@extends('layouts.app')
+
+@section('content')
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        <div class="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h2 class="text-3xl font-black text-gray-900 tracking-tight">Edit Invoice Insentif Dapur</h2>
+                <p class="mt-1 text-sm text-gray-500">Perbarui data invoice insentif dapur.</p>
+            </div>
+            <a href="{{ route('kitchen-incentives.index') }}"
+                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-xl text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all shadow-sm">
+                <i class="fas fa-arrow-left mr-2"></i> Kembali
+            </a>
+        </div>
+
+        <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border border-gray-100">
+            <form action="{{ route('kitchen-incentives.update', $kitchenIncentive->id) }}" method="POST" id="invoiceForm">
+                @csrf
+                @method('PUT')
+
+                <!-- Top Section: General Info -->
+                <div class="p-6 md:p-8 bg-gray-50 border-b border-gray-100">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Invoice Number -->
+                        <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Nomor
+                                Invoice</label>
+                            <div class="flex items-center gap-2">
+                                <span class="p-2 bg-gray-100 rounded-lg text-gray-400">
+                                    <i class="fas fa-hashtag"></i>
+                                </span>
+                                <input type="text" value="{{ $kitchenIncentive->invoice_number }}"
+                                    class="w-full border-none bg-transparent text-gray-900 font-black text-lg focus:ring-0 p-0 cursor-not-allowed"
+                                    readonly>
+                            </div>
+                        </div>
+
+                        <!-- Date -->
+                        <div
+                            class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative group transition-all hover:border-indigo-200">
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Tanggal
+                                Invoice</label>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="p-2 bg-indigo-50 text-indigo-600 rounded-lg group-hover:bg-indigo-100 transition-colors">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </span>
+                                <input type="date" name="date" value="{{ old('date', $kitchenIncentive->date) }}"
+                                    class="w-full border-none bg-transparent text-gray-900 font-bold text-lg focus:ring-0 p-0"
+                                    required>
+                            </div>
+                        </div>
+
+                        <!-- Customer Selection -->
+                        <div
+                            class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative group transition-all hover:border-indigo-200">
+                            <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Penerima
+                                (Pelanggan)</label>
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="p-2 bg-emerald-50 text-emerald-600 rounded-lg group-hover:bg-emerald-100 transition-colors">
+                                    <i class="fas fa-user-tie"></i>
+                                </span>
+                                <div class="flex-1">
+                                    <select name="customer_id" id="customer_select"
+                                        class="w-full border-none bg-transparent font-bold text-lg focus:ring-0 p-0"
+                                        required>
+                                        <option value="">-- Pilih Pelanggan --</option>
+                                        @foreach ($customers as $customer)
+                                            <option value="{{ $customer->id }}"
+                                                {{ (old('customer_id') ?? $kitchenIncentive->customer_id) == $customer->id ? 'selected' : '' }}>
+                                                {{ $customer->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Middle Section: Items -->
+                <div class="p-6 md:p-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-black text-gray-900 flex items-center gap-2">
+                            <span
+                                class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">
+                                <i class="fas fa-list-ul"></i>
+                            </span>
+                            Item Transaksi
+                        </h3>
+                        <button type="button" onclick="addNewItem()"
+                            class="inline-flex items-center px-4 py-2 bg-indigo-50 text-indigo-700 font-bold rounded-xl hover:bg-indigo-100 transition-all transform hover:scale-105 active:scale-95">
+                            <i class="fas fa-plus mr-2"></i> Tambah Item
+                        </button>
+                    </div>
+
+                    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-gray-50/30">
+                        <!-- Table Header (Desktop) -->
+                        <div
+                            class="hidden md:grid grid-cols-12 gap-4 p-4 bg-gray-100 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                            <div class="col-span-4">Deskripsi</div>
+                            <div class="col-span-2">Durasi (Teks)</div>
+                            <div class="col-span-2">QTY</div>
+                            <div class="col-span-1">Satuan</div>
+                            <div class="col-span-2">Harga</div>
+                            <div class="col-span-1 text-center">Aksi</div>
+                        </div>
+
+                        <!-- Items Container -->
+                        <div id="items-container" class="space-y-2 p-2">
+                            <!-- Items will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Section: Totals & Submit -->
+                <div class="bg-gray-50 p-6 md:p-8 border-t border-gray-100">
+                    <div class="flex flex-col md:flex-row justify-end items-center gap-6">
+                        <div class="text-right">
+                            <p class="text-sm font-bold text-gray-500 uppercase">Total Estimasi</p>
+                            <p id="grand-total-display" class="text-3xl font-black text-indigo-600 tracking-tight">Rp 0</p>
+                        </div>
+                        <button type="submit"
+                            class="w-full md:w-auto px-8 py-4 bg-indigo-600 text-white font-bold rounded-2xl hover:bg-indigo-700 shadow-xl shadow-indigo-200 transform hover:-translate-y-1 transition-all">
+                            <i class="fas fa-save mr-2"></i> Update Invoice
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <template id="item-template">
+        <div
+            class="item-row grid grid-cols-1 md:grid-cols-12 gap-4 items-start bg-white p-4 rounded-xl border border-gray-200 shadow-sm relative transition-all hover:shadow-md">
+            <!-- Deskripsi -->
+            <div class="col-span-1 md:col-span-4">
+                <label class="md:hidden block text-xs font-bold text-gray-400 uppercase mb-1">Deskripsi</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-3 text-gray-300"><i class="fas fa-pen"></i></span>
+                    <input type="text" name="items[INDEX][description]"
+                        class="item-desc w-full pl-9 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-medium"
+                        placeholder="Contoh: Insentif Bangunan..." required>
+                </div>
+            </div>
+
+            <!-- Durasi -->
+            <div class="col-span-1 md:col-span-2">
+                <label class="md:hidden block text-xs font-bold text-gray-400 uppercase mb-1">Durasi</label>
+                <input type="text" name="items[INDEX][duration_text]"
+                    class="item-duration w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-sm"
+                    placeholder="(26 Jan - 31 Jan)">
+            </div>
+
+            <!-- QTY -->
+            <div class="col-span-1 md:col-span-2">
+                <label class="md:hidden block text-xs font-bold text-gray-400 uppercase mb-1">QTY</label>
+                <input type="number" step="0.01" name="items[INDEX][quantity]" oninput="calculateTotal()"
+                    class="item-qty w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-bold text-center"
+                    placeholder="0" required>
+            </div>
+
+            <!-- Satuan -->
+            <div class="col-span-1 md:col-span-1">
+                <label class="md:hidden block text-xs font-bold text-gray-400 uppercase mb-1">Satuan</label>
+                <input type="text" name="items[INDEX][unit]"
+                    class="item-unit w-full rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all text-center text-sm"
+                    placeholder="Hari" required>
+            </div>
+
+            <!-- Harga -->
+            <div class="col-span-1 md:col-span-2">
+                <label class="md:hidden block text-xs font-bold text-gray-400 uppercase mb-1">Harga</label>
+                <div class="relative">
+                    <span class="absolute left-3 top-3 text-gray-400 text-xs font-bold">Rp</span>
+                    <input type="number" step="0.01" name="items[INDEX][price]" oninput="calculateTotal()"
+                        class="item-price w-full pl-8 rounded-xl border-gray-200 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-bold text-right"
+                        placeholder="0" required>
+                </div>
+            </div>
+
+            <!-- Aksi -->
+            <div class="col-span-1 md:col-span-1 flex justify-center pt-1">
+                <button type="button" onclick="this.closest('.item-row').remove(); calculateTotal();"
+                    class="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 hover:text-red-700 transition-colors">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        let itemIndex = 0;
+
+        function createItemHtml(index, data = {}) {
+            const template = document.getElementById('item-template').innerHTML;
+            let html = template.replace(/INDEX/g, index);
+
+            // Create a temporary element to manipulate values
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // Set values if data exists by setting the value attribute directly AND property
+            if (data.description) {
+                tempDiv.querySelector('.item-desc').setAttribute('value', data.description);
+                tempDiv.querySelector('.item-desc').value = data.description;
+            }
+            if (data.duration_text) {
+                tempDiv.querySelector('.item-duration').setAttribute('value', data.duration_text);
+                tempDiv.querySelector('.item-duration').value = data.duration_text;
+            }
+            if (data.quantity) {
+                tempDiv.querySelector('.item-qty').setAttribute('value', data.quantity);
+                tempDiv.querySelector('.item-qty').value = data.quantity;
+            }
+            if (data.unit) {
+                tempDiv.querySelector('.item-unit').setAttribute('value', data.unit);
+                tempDiv.querySelector('.item-unit').value = data.unit;
+            }
+            if (data.price) {
+                tempDiv.querySelector('.item-price').setAttribute('value', data.price);
+                tempDiv.querySelector('.item-price').value = data.price;
+            }
+
+            return tempDiv.innerHTML;
+        }
+
+        function addNewItem(data = {}) {
+            const container = document.getElementById('items-container');
+            const div = document.createElement('div');
+            div.innerHTML = createItemHtml(itemIndex, data);
+
+            const newItem = div.firstElementChild;
+            container.appendChild(newItem);
+
+            // Focus if it's a new empty item (not loading existing data)
+            if (Object.keys(data).length === 0) {
+                setTimeout(() => {
+                    newItem.querySelector('input').focus();
+                }, 50);
+            }
+
+            itemIndex++;
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            let total = 0;
+            const rows = document.querySelectorAll('.item-row');
+
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                total += qty * price;
+            });
+
+            // Format Currency
+            const formatted = new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(total);
+
+            document.getElementById('grand-total-display').textContent = formatted;
+        }
+
+        function loadExistingItems() {
+            const items = @json($kitchenIncentive->items);
+            if (items.length > 0) {
+                items.forEach(item => {
+                    addNewItem({
+                        description: item.description,
+                        duration_text: item.duration_text,
+                        quantity: item.quantity,
+                        unit: item.unit,
+                        price: item.price
+                    });
+                });
+            } else {
+                addNewItem();
+            }
+        }
+
+        $(document).ready(function() {
+            $('#customer_select').select2({
+                placeholder: "-- Pilih Pelanggan --",
+                width: '100%',
+                allowClear: true,
+                dropdownAutoWidth: true
+            });
+
+            loadExistingItems();
+        });
+    </script>
+@endsection

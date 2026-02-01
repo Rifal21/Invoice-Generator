@@ -67,7 +67,17 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-gray-900">{{ $customer->phone ?? '-' }}</div>
-                                    <div class="text-sm text-gray-500">{{ $customer->email ?? '-' }}</div>
+                                    <div class="text-xs text-gray-500">{{ $customer->email ?? '' }}</div>
+                                    @if ($customer->pic)
+                                        <div class="text-xs text-gray-600 mt-1"><strong>PIC:</strong> {{ $customer->pic }}
+                                        </div>
+                                    @endif
+                                    @if ($customer->bank_account_info)
+                                        <div class="text-xs text-blue-600 mt-0.5"
+                                            title="{{ $customer->bank_account_info }}">
+                                            <i class="fas fa-university"></i> Info Rekening
+                                        </div>
+                                    @endif
                                     @if ($customer->telegram_chat_id)
                                         <div class="text-xs text-indigo-600 font-bold mt-1">TG:
                                             {{ $customer->telegram_chat_id }}</div>
