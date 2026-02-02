@@ -313,24 +313,89 @@ class AttendanceController extends Controller
 
     public function report(Request $request)
     {
-        $query = Attendance::with(['user', 'approver'])->orderBy('date', 'desc')->orderBy('check_in', 'desc');
+        $type = $request->get('type', 'daily'); // daily or rekap
 
-        if ($request->date) {
-            $query->where('date', $request->date);
+        if ($type === 'rekap') {
+            $month = $request->get('month', now()->format('Y-m'));
+            $startOfMonth = Carbon::parse($month)->startOfMonth();
+            $endOfMonth = Carbon::parse($month)->endOfMonth();
+
+            // Get all days in month
+            $dates = [];
+            $current = $startOfMonth->copy();
+            while ($current <= $endOfMonth) {
+                $dates[] = $current->copy();
+                $current->addDay();
+            }
+
+            $users = User::orderBy('name')->where('role', '!=', 'super_admin')->get();
+            $attendances = Attendance::whereBetween('date', [$startOfMonth, $endOfMonth])->get();
+
+            $recapData = [];
+            foreach ($users as $user) {
+                $userAttendances = $attendances->where('user_id', $user->id);
+
+                $summary = [
+                    'present' => $userAttendances->where('status', 'present')->count(),
+                    'late' => $userAttendances->where('status', 'late')->count(),
+                    'absent' => $userAttendances->where('status', 'absent')->count(), // Explicit absent status
+                    'alpha' => 0, // No record found
+                ];
+
+                // Calculate daily status map
+                $daily = [];
+                foreach ($dates as $date) {
+                    $att = $userAttendances->first(function ($item) use ($date) {
+                        return Carbon::parse($item->date)->isSameDay($date);
+                    });
+
+                    if ($att) {
+                        $daily[$date->format('Y-m-d')] = [
+                            'status' => $att->status,
+                            'in' => $att->check_in ? Carbon::parse($att->check_in)->format('H:i') : '-',
+                            'out' => $att->check_out ? Carbon::parse($att->check_out)->format('H:i') : '-',
+                            'notes' => $att->notes
+                        ];
+                    } else {
+                        // If no record and date is past, count as Alpha (unless simple 'absent' status is used manually)
+                        if ($date->lt(now())) {
+                            $daily[$date->format('Y-m-d')] = ['status' => 'alpha', 'in' => '-', 'out' => '-'];
+                            $summary['alpha']++;
+                        } else {
+                            $daily[$date->format('Y-m-d')] = ['status' => 'future', 'in' => '-', 'out' => '-'];
+                        }
+                    }
+                }
+
+                $recapData[] = [
+                    'user' => $user,
+                    'summary' => $summary,
+                    'daily' => $daily
+                ];
+            }
+
+            return view('attendance.report', compact('recapData', 'dates', 'month', 'type'));
+        } else {
+            // Existing Daily Logic
+            $query = Attendance::with(['user', 'approver'])->orderBy('date', 'desc')->orderBy('check_in', 'desc');
+
+            if ($request->date) {
+                $query->where('date', $request->date);
+            }
+
+            if ($request->user_id) {
+                $query->where('user_id', $request->user_id);
+            }
+
+            if ($request->status) {
+                $query->where('status', $request->status);
+            }
+
+            $attendances = $query->paginate(20);
+            $users = User::orderBy('name')->get();
+
+            return view('attendance.report', compact('attendances', 'users', 'type'));
         }
-
-        if ($request->user_id) {
-            $query->where('user_id', $request->user_id);
-        }
-
-        if ($request->status) {
-            $query->where('status', $request->status);
-        }
-
-        $attendances = $query->paginate(20);
-        $users = User::orderBy('name')->get();
-
-        return view('attendance.report', compact('attendances', 'users'));
     }
 
     public function getAttendanceCount(Request $request)
