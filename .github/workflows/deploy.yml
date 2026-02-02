@@ -44,7 +44,7 @@ jobs:
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.SERVER_PATH }} && \
           php artisan down && \
-          composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev && \
+          composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev --ignore-platform-reqs && \
           php artisan migrate --force && \
           php artisan optimize:clear && \
           php artisan config:cache && \
