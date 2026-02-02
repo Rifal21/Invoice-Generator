@@ -42,7 +42,7 @@ jobs:
 
       - name: Sync files via Rsync
         run: |
-          rsync -rlgoDzvO --delete --exclude='.git/' --exclude='node_modules/' -e "ssh" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
+          rsync -avz --delete --no-o --no-g --omit-dir-times --exclude='.git/' --exclude='node_modules/' --exclude='storage/' --exclude='.env' -e "ssh" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
 
       - name: Execute Remote Commands
         run: |
