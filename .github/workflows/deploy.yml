@@ -40,10 +40,6 @@ jobs:
             StrictHostKeyChecking no
             ProxyCommand /usr/bin/cloudflared access ssh --hostname %h" > ~/.ssh/config
 
-      - name: Sync files via Rsync
-        run: |
-          rsync -avz --delete --no-o --no-g --omit-dir-times --exclude='.git/' --exclude='node_modules/' --exclude='storage/' --exclude='.env' -e "ssh" ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:${{ secrets.SERVER_PATH }}
-
       - name: Execute Remote Commands
         run: |
           ssh ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }} "cd ${{ secrets.SERVER_PATH }} && \
