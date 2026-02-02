@@ -104,6 +104,10 @@
                                         {{ $order->location ?? '-' }}</div>
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-5 text-right text-sm font-bold space-x-2">
+                                    <a href="{{ route('delivery-orders.export-pdf', $order->id) }}" target="_blank"
+                                        class="text-gray-600 hover:text-gray-900 bg-gray-100 px-3 py-1.5 rounded-lg transition-colors inline-block">
+                                        <i class="fas fa-print"></i>
+                                    </a>
                                     <a href="{{ route('delivery-orders.show', $order->id) }}"
                                         class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors inline-block">Lihat</a>
                                     <a href="{{ route('delivery-orders.edit', $order->id) }}"
@@ -154,7 +158,11 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-4 gap-2">
+                        <a href="{{ route('delivery-orders.export-pdf', $order->id) }}" target="_blank"
+                            class="flex items-center justify-center py-2 px-3 rounded-xl bg-gray-100 text-gray-700 font-bold text-sm text-center">
+                            <i class="fas fa-print"></i>
+                        </a>
                         <a href="{{ route('delivery-orders.show', $order->id) }}"
                             class="flex items-center justify-center py-2 px-3 rounded-xl bg-indigo-50 text-indigo-700 font-bold text-sm text-center">
                             Detail

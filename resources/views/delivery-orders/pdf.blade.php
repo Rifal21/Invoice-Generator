@@ -11,7 +11,7 @@
 
         body {
             font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 12px;
+            font-size: 14px;
             color: #000;
             line-height: 1.4;
             margin: 0;
@@ -20,63 +20,64 @@
 
         .header {
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
             position: relative;
         }
 
         .logo {
-            width: 90px;
+            width: 150px;
             float: left;
             margin-top: -10px;
         }
 
         .company-info {
             float: left;
-            margin-left: 10px;
+            margin-left: 15px;
             width: 60%;
-            text-align: left;
+            text-align: center;
         }
 
         .company-name {
-            font-size: 15px;
+            font-size: 18px;
             font-weight: bold;
             text-transform: uppercase;
-            margin-bottom: 2px;
+            margin-bottom: 5px;
             text-align: center;
         }
 
         .company-details {
-            font-size: 9px;
+            font-size: 11px;
             font-weight: bold;
-            text-align: center;
+            text-align: left;
         }
 
         .meta-info {
             float: right;
-            text-align: right;
+            margin-top: 55px;
+            text-align: center;
             width: 30%;
         }
 
         .meta-date {
             font-weight: bold;
-            font-size: 11px;
-            margin-bottom: 15px;
+            font-size: 12px;
+            margin-bottom: 20px;
         }
 
         .recipient {
-            font-size: 11px;
-            text-align: right;
+            font-size: 12px;
+            text-align: center;
         }
 
         .recipient-label {
             font-weight: bold;
-            margin-bottom: 2px;
+            margin-bottom: 5px;
         }
 
         .recipient-name {
             font-weight: bold;
-            font-size: 12px;
-            line-height: 1.2;
+            font-size: 14px;
+            line-height: 1.3;
         }
 
         .clearfix::after {
@@ -86,37 +87,37 @@
         }
 
         .nota-title {
-            font-size: 20px;
+            font-size: 24px;
             font-weight: bold;
-            margin-top: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             text-align: center;
             text-transform: uppercase;
             width: 100%;
+            text-decoration: underline;
         }
 
         .items-table {
             width: 100%;
             border-collapse: collapse;
             border: 1px solid #000;
-            margin-bottom: 10px;
+            margin-bottom: 20px;
         }
 
         .items-table th {
             border: 1px solid #000;
-            padding: 5px;
+            padding: 8px;
             text-transform: uppercase;
-            background-color: #fff;
+            background-color: #f0f0f0;
             font-weight: bold;
-            font-size: 12px;
+            font-size: 13px;
         }
 
         .items-table td {
             border: 1px solid #000;
-            padding: 5px;
+            padding: 8px;
             font-weight: bold;
             vertical-align: middle;
-            font-size: 11px;
+            font-size: 13px;
         }
 
         .text-center {
@@ -133,27 +134,29 @@
 
         .footer-note {
             font-weight: bold;
-            font-size: 11px;
-            margin-bottom: 20px;
+            font-size: 13px;
+            margin-bottom: 30px;
+            font-style: italic;
         }
 
         .footer-signatures {
             width: 100%;
-            margin-top: 20px;
+            margin-top: 30px;
         }
 
         .signature-box {
             width: 33.33%;
             float: left;
             text-align: center;
-            min-height: 120px;
+            min-height: 140px;
             position: relative;
         }
 
         .signature-label {
             font-weight: bold;
-            margin-bottom: 60px;
+            margin-bottom: 100px;
             display: block;
+            font-size: 13px;
         }
 
         .signature-line {
@@ -165,20 +168,22 @@
 
         .signature-img {
             position: absolute;
-            height: 80px;
-            top: 20px;
-            right: 15px;
+            width: 100px;
+            height: 100px;
+            top: 25px;
+            right: 100px;
             z-index: 1;
-            opacity: 0.8;
+            opacity: 0.9;
         }
 
         .signer-name {
             font-weight: bold;
             text-decoration: underline;
             text-transform: uppercase;
-            font-size: 12px;
+            font-size: 13px;
             position: relative;
             z-index: 2;
+            margin-top: 40px;
         }
     </style>
 </head>
@@ -234,7 +239,7 @@
                     <td class="text-center">{{ $item->description ?? '-' }}</td>
                 </tr>
             @endforeach
-            @for ($i = count($delivery->items); $i < 6; $i++)
+            @for ($i = count($delivery->items); $i < 3; $i++)
                 <tr>
                     <td class="text-center" style="color: white; height: 20px;">.</td>
                     <td></td>
