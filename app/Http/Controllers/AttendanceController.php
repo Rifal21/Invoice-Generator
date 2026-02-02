@@ -328,7 +328,7 @@ class AttendanceController extends Controller
                 $current->addDay();
             }
 
-            $users = User::orderBy('name')->where('role', '!=', 'super_admin')->get();
+            $users = User::orderBy('name')->get();
             $attendances = Attendance::whereBetween('date', [$startOfMonth, $endOfMonth])->get();
 
             $recapData = [];
