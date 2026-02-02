@@ -412,6 +412,92 @@
             });
         }
 
+        // AJAX SEARCH LOGIC
+        const searchInput = document.getElementById('search');
+        let searchTimeout = null;
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value;
+
+                // Clear previous timeout
+                if (searchTimeout) clearTimeout(searchTimeout);
+
+                // Logic: Search if length >= 3 OR if empty (to reset)
+                if (query.length >= 3 || query.length === 0) {
+                    searchTimeout = setTimeout(() => {
+                        performSearch(query);
+                    }, 500); // 500ms debounce
+                }
+            });
+        }
+
+        async function performSearch(query) {
+            const currentUrl = new URL(window.location.href);
+            if (query) {
+                currentUrl.searchParams.set('search', query);
+            } else {
+                currentUrl.searchParams.delete('search');
+            }
+            // Reset page to 1 on new search
+            currentUrl.searchParams.delete('page');
+
+            // Update Browser URL without reload
+            window.history.pushState({}, '', currentUrl);
+
+            // Show loading state (optional, or just opacity)
+            const desktopTableBody = document.querySelector('table tbody');
+            const mobileListContainer = document.getElementById('mobile-products-list');
+
+            if (desktopTableBody) desktopTableBody.style.opacity = '0.5';
+            if (mobileListContainer) mobileListContainer.style.opacity = '0.5';
+
+            try {
+                const response = await fetch(currentUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+
+                // Update Desktop Table
+                const newTbody = doc.querySelector('table tbody');
+                if (desktopTableBody && newTbody) {
+                    desktopTableBody.innerHTML = newTbody.innerHTML;
+                }
+
+                // Update Mobile List
+                const newMobileList = doc.getElementById('mobile-products-list');
+                // We need to preserve the "Check All" header in mobile list if it exists, or just replace content properly
+                // The mobile list structure in the file includes the header div inside #mobile-products-list. 
+                // Let's replace the INNER HTML of the container
+                if (mobileListContainer && newMobileList) {
+                    mobileListContainer.innerHTML = newMobileList.innerHTML;
+                }
+
+                // Update Pagination
+                const newPagination = doc.getElementById('pagination-container');
+                const currentPagination = document.getElementById('pagination-container');
+                if (currentPagination && newPagination) {
+                    currentPagination.innerHTML = newPagination.innerHTML;
+                }
+
+                // Re-initialize any listeners if needed (like checkboxes)
+                // Note: Since we use event delegation for checkboxes (document.addEventListener), we don't need to re-bind them!
+
+            } catch (error) {
+                console.error('Search failed:', error);
+            } finally {
+                if (desktopTableBody) desktopTableBody.style.opacity = '1';
+                if (mobileListContainer) mobileListContainer.style.opacity = '1';
+            }
+        }
+
         // INFINITE SCROLL LOGIC
         let isLoading = false;
         const mobileList = document.getElementById('mobile-products-list');
