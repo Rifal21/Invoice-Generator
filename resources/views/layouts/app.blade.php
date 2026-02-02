@@ -52,12 +52,7 @@
             box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important;
         }
 
-        /* Bottom Bar Padding */
-        @media (max-width: 1023px) {
-            body {
-                padding-bottom: 8rem;
-            }
-        }
+        /* Bottom Bar Padding removed - handled by utility classes */
     </style>
 </head>
 
@@ -131,8 +126,8 @@
                 </div>
             </div>
 
-            <main class="py-4 md:py-6">
-                <div class="px-4 sm:px-6 lg:px-8">
+            <main class="px-4 sm:px-6 lg:px-8 pyt-4 pb-28 lg:py-6">
+                <div>
                     <script>
                         const Toast = Swal.mixin({
                             toast: true,

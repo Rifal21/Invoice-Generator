@@ -1,6 +1,6 @@
 <!-- Bottom Navigation for Mobile -->
 <div
-    class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+    class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-transparent backdrop-blur-sm border-t border-gray-200 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
     <div class="flex items-center justify-around h-20 px-2">
         <!-- Home/Dashboard -->
         <a href="{{ route('finance.summary') }}"

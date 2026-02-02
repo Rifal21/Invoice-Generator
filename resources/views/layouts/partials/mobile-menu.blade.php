@@ -20,29 +20,49 @@
 
         <div class="px-6 pb-12 space-y-8">
             @if (!auth()->user()->isAdminAbsensi())
+                <!-- Master Data Section -->
+                <div>
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Master Data
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="{{ route('categories.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
+                                <i class="fas fa-tags text-lg"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-700">Kategori</span>
+                        </a>
+                        <a href="{{ route('customers.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
+                                <i class="fas fa-users text-lg"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-700">Pelanggan</span>
+                        </a>
+                        <a href="{{ route('suppliers.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
+                                <i class="fas fa-truck text-lg"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-700">Supplier</span>
+                        </a>
+                        <a href="{{ route('products.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
+                                <i class="fas fa-boxes text-lg"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-700">Produk</span>
+                        </a>
+                    </div>
+                </div>
+
                 <!-- Operasional Section -->
                 <div>
                     <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Operasional
                     </h4>
                     <div class="grid grid-cols-2 gap-3">
-                        <a href="{{ route('invoices.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
-                            <div
-                                class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                <i class="fas fa-file-invoice text-xl"></i>
-                            </div>
-                            <span class="text-[11px] font-black text-center text-gray-800">Invoice Gen</span>
-                        </a>
-                        <a href="{{ route('pos.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
-                            <div
-                                class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                <i class="fas fa-shopping-cart text-xl"></i>
-                            </div>
-                            <span class="text-[11px] font-black text-center text-gray-800">Kasir (POS)</span>
-                        </a>
                         <a href="{{ route('rice-deliveries.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
                                 <i class="fas fa-shipping-fast text-xl"></i>
@@ -50,28 +70,59 @@
                             <span class="text-[11px] font-black text-center text-gray-800">Nota Beras</span>
                         </a>
                         <a href="{{ route('delivery-orders.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
                                 <i class="fas fa-truck text-xl"></i>
                             </div>
                             <span class="text-[11px] font-black text-center text-gray-800">Surat Jalan</span>
                         </a>
+                        <a href="{{ route('invoices.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                <i class="fas fa-file-invoice text-xl"></i>
+                            </div>
+                            <span class="text-[11px] font-black text-center text-gray-800">Invoice Gen</span>
+                        </a>
                         <a href="{{ route('vehicle-rentals.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
                                 <i class="fas fa-car text-xl"></i>
                             </div>
                             <span class="text-[11px] font-black text-center text-gray-800">Sewa Mobil</span>
                         </a>
-                        <a href="{{ route('inventory.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                        <a href="{{ route('dedi-invoices.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div
-                                class="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600">
-                                <i class="fas fa-warehouse text-xl"></i>
+                                class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                <i class="fas fa-file-invoice text-xl"></i>
                             </div>
-                            <span class="text-[11px] font-black text-center text-gray-800">Gudang</span>
+                            <span class="text-[11px] font-black text-center text-gray-800">Faktur H. Dedi</span>
+                        </a>
+                        <a href="{{ route('kitchen-incentives.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-600">
+                                <i class="fas fa-utensils text-xl"></i>
+                            </div>
+                            <span class="text-[11px] font-black text-center text-gray-800">Insentif Dapur</span>
+                        </a>
+                        <a href="{{ route('pos.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                <i class="fas fa-shopping-cart text-xl"></i>
+                            </div>
+                            <span class="text-[11px] font-black text-center text-gray-800">Kasir (POS)</span>
+                        </a>
+                        <a href="{{ route('chat.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-emerald-600 border border-emerald-500 shadow-lg shadow-emerald-200">
+                            <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
+                                <i class="fas fa-comments text-xl"></i>
+                            </div>
+                            <span class="text-[11px] font-black text-center text-white">Global Chat</span>
                         </a>
                         @if (auth()->user()->name === 'Rifal Kurniawan')
                             <a href="{{ route('radio.index') }}"
@@ -83,12 +134,22 @@
                                 <span class="text-[11px] font-black text-center text-white">Live Radio</span>
                             </a>
                         @endif
-                        <a href="{{ route('chat.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-emerald-600 border border-emerald-500 shadow-lg shadow-emerald-200">
-                            <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
-                                <i class="fas fa-comments text-xl"></i>
+                    </div>
+                </div>
+
+                <!-- Inventori Section -->
+                <div>
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Inventori &
+                        Stok
+                    </h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="{{ route('inventory.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div
+                                class="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600">
+                                <i class="fas fa-cubes text-xl"></i>
                             </div>
-                            <span class="text-[11px] font-black text-center text-white">Global Chat</span>
+                            <span class="text-[11px] font-black text-center text-gray-800">Gudang Utama</span>
                         </a>
                     </div>
                 </div>
@@ -100,7 +161,7 @@
                     </h4>
                     <div class="grid grid-cols-2 gap-3">
                         <a href="{{ route('finance.summary') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
                                 <i class="fas fa-chart-line text-xl"></i>
@@ -108,7 +169,7 @@
                             <span class="text-[11px] font-black text-center text-gray-800">Ringkasan</span>
                         </a>
                         <a href="{{ route('profit.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
                                 <i class="fas fa-sack-dollar text-xl"></i>
@@ -116,7 +177,7 @@
                             <span class="text-[11px] font-black text-center text-gray-800">Laba Rugi</span>
                         </a>
                         <a href="{{ route('expenses.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
                                 <i class="fas fa-money-bill-wave text-xl"></i>
@@ -124,49 +185,12 @@
                             <span class="text-[11px] font-black text-center text-gray-800">Pengeluaran</span>
                         </a>
                         <a href="{{ route('rice-order-recap.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div
                                 class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
                                 <i class="fas fa-list-check text-xl"></i>
                             </div>
                             <span class="text-[11px] font-black text-center text-gray-800">Rekap Beras</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Master Data Section -->
-                <div>
-                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Master Data
-                    </h4>
-                    <div class="grid grid-cols-2 gap-3">
-                        <a href="{{ route('products.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
-                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
-                                <i class="fas fa-boxes text-lg"></i>
-                            </div>
-                            <span class="text-[10px] font-bold text-center text-gray-700">Produk</span>
-                        </a>
-                        <a href="{{ route('categories.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
-                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
-                                <i class="fas fa-tags text-lg"></i>
-                            </div>
-                            <span class="text-[10px] font-bold text-center text-gray-700">Kategori</span>
-                        </a>
-                        <a href="{{ route('customers.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
-                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
-                                <i class="fas fa-users text-lg"></i>
-                            </div>
-                            <span class="text-[10px] font-bold text-center text-gray-700">Pelanggan</span>
-                        </a>
-                        <a href="{{ route('suppliers.index') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
-                            <div
-                                class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
-                                <i class="fas fa-truck text-lg"></i>
-                            </div>
-                            <span class="text-[10px] font-bold text-center text-gray-700">Supplier</span>
                         </a>
                     </div>
                 </div>
@@ -180,7 +204,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         @if (auth()->user()->isSuperAdmin() || auth()->user()->isKetua())
                             <a href="{{ route('users.index') }}"
-                                class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                                class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                                 <div
                                     class="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600">
                                     <i class="fas fa-user-tie text-lg"></i>
@@ -188,7 +212,7 @@
                                 <span class="text-[10px] font-bold text-center text-gray-700">Pegawai</span>
                             </a>
                             <a href="{{ route('salaries.index') }}"
-                                class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                                class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                                 <div
                                     class="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600">
                                     <i class="fas fa-wallet text-lg"></i>
@@ -197,15 +221,23 @@
                             </a>
                         @endif
                         <a href="{{ route('attendance.report') }}"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm">
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div
                                 class="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600">
                                 <i class="fas fa-clipboard-list text-lg"></i>
                             </div>
                             <span class="text-[10px] font-bold text-center text-gray-700">Absensi</span>
                         </a>
+                        <a href="{{ route('attendance.settings') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center text-cyan-600">
+                                <i class="fas fa-cog text-lg"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-700">Pengaturan</span>
+                        </a>
                         <a href="{{ route('attendance.public') }}" target="_blank"
-                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-emerald-50 border border-emerald-100 shadow-sm">
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-emerald-50 border border-emerald-100 shadow-sm hover:bg-emerald-100 transition-colors">
                             <div
                                 class="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-600">
                                 <i class="fas fa-qrcode text-lg"></i>
@@ -213,6 +245,21 @@
                             <span class="text-[10px] font-black text-center text-emerald-700">Scan QR</span>
                         </a>
                     </div>
+                </div>
+            @endif
+
+            @if (auth()->user()->name === 'Rifal Kurniawan')
+                <!-- Log Aktivitas -->
+                <div>
+                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Log Sistem
+                    </h4>
+                    <a href="{{ route('activity-logs.index') }}"
+                        class="flex items-center gap-3 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
+                            <i class="fas fa-history text-lg"></i>
+                        </div>
+                        <span class="text-[12px] font-bold text-gray-700">Log Aktivitas</span>
+                    </a>
                 </div>
             @endif
 
