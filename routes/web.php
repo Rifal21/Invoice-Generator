@@ -38,8 +38,10 @@ Route::post('logout', [AuthController::class, 'logout'])->name('logout');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {
-        return redirect()->route('invoices.index');
+        return redirect()->route('dashboard');
     });
+
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::post('invoices/scan', [ScanController::class, 'scan'])->name('invoices.scan');
 

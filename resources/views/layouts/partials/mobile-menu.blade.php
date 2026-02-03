@@ -253,13 +253,30 @@
                 <div>
                     <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Log Sistem
                     </h4>
-                    <a href="{{ route('activity-logs.index') }}"
-                        class="flex items-center gap-3 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
-                        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
-                            <i class="fas fa-history text-lg"></i>
-                        </div>
-                        <span class="text-[12px] font-bold text-gray-700">Log Aktivitas</span>
-                    </a>
+                    <div class="grid grid-cols-2 gap-3">
+                        <a href="{{ route('activity-logs.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500">
+                                <i class="fas fa-history text-lg"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-700">Log Aktivitas</span>
+                        </a>
+
+                        <a href="{{ route('monitor.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors relative overflow-hidden">
+                            <div class="absolute top-2 right-2 flex h-2 w-2">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                            </div>
+                            <div
+                                class="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+                                <i class="fas fa-desktop text-lg"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-700">Monitor Login</span>
+                        </a>
+                    </div>
                 </div>
             @endif
 
