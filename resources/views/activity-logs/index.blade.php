@@ -86,20 +86,144 @@
                                             class="text-indigo-600 hover:text-indigo-900 font-bold text-xs">View
                                             Changes</button>
 
-                                        <!-- Modal for Changes -->
                                         <div x-show="open"
                                             class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm"
-                                            style="display: none;">
+                                            style="display: none;" x-transition.opacity>
                                             <div @click.away="open = false"
-                                                class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6 transform transition-all">
-                                                <h3 class="text-lg font-black text-gray-900 mb-4">Change Details</h3>
-                                                <div
-                                                    class="bg-gray-50 rounded-xl p-4 overflow-auto max-h-96 text-xs font-mono text-gray-700">
-                                                    <pre>{{ json_encode($log->changes, JSON_PRETTY_PRINT) }}</pre>
+                                                class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 transform transition-all flex flex-col max-h-[90vh]">
+                                                <div class="flex justify-between items-center mb-4">
+                                                    <div>
+                                                        <h3 class="text-lg font-black text-gray-900">Detail Perubahan</h3>
+                                                        <p class="text-xs text-gray-500">
+                                                            {{ $log->action }} on {{ class_basename($log->model_type) }}
+                                                            #{{ $log->model_id }}
+                                                        </p>
+                                                    </div>
+                                                    <button @click="open = false" class="text-gray-400 hover:text-gray-600">
+                                                        <i class="fas fa-times text-xl"></i>
+                                                    </button>
                                                 </div>
-                                                <div class="mt-6 flex justify-end">
+
+                                                <div class="overflow-y-auto flex-1 pr-2">
+                                                    @if (isset($log->changes['before']) || isset($log->changes['after']))
+                                                        <table class="w-full text-sm text-left">
+                                                            <thead
+                                                                class="text-xs text-gray-500 uppercase bg-gray-50 sticky top-0">
+                                                                <tr>
+                                                                    <th class="px-4 py-2 w-1/4">Field</th>
+                                                                    <th class="px-4 py-2 w-1/3 text-red-600 bg-red-50/50">
+                                                                        Sebelum</th>
+                                                                    <th
+                                                                        class="px-4 py-2 w-1/3 text-green-600 bg-green-50/50">
+                                                                        Sesudah</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody
+                                                                class="divide-y divide-gray-100 border-b border-gray-100">
+                                                                @php
+                                                                    $before = $log->changes['before'] ?? [];
+                                                                    $after = $log->changes['after'] ?? [];
+                                                                    // Get all unique keys from both arrays
+                                                                    $allKeys = array_unique(
+                                                                        array_merge(
+                                                                            array_keys($before),
+                                                                            array_keys($after),
+                                                                        ),
+                                                                    );
+                                                                    // Filter out keys that shouldn't be shown (like timestamps if unchanged, but usually we want to see everything that changed)
+                                                                    // Or just iterate all keys.
+                                                                @endphp
+
+                                                                @foreach ($allKeys as $key)
+                                                                    @php
+                                                                        $valBefore = $before[$key] ?? '-';
+                                                                        $valAfter = $after[$key] ?? '-';
+
+                                                                        // Skip updated_at if it's the only change? Maybe not, strict audit wants everything.
+// But let's format dates nicely
+                                                                        if (
+                                                                            str_contains($key, '_at') ||
+                                                                            str_contains($key, 'date')
+                                                                        ) {
+                                                                            try {
+                                                                                if ($valBefore !== '-') {
+                                                                                    $valBefore = \Carbon\Carbon::parse(
+                                                                                        $valBefore,
+                                                                                    )->format('d M Y H:i:s');
+                                                                                }
+                                                                                if ($valAfter !== '-') {
+                                                                                    $valAfter = \Carbon\Carbon::parse(
+                                                                                        $valAfter,
+                                                                                    )->format('d M Y H:i:s');
+                                                                                }
+                                                                            } catch (\Exception $e) {
+                                                                            }
+                                                                        }
+
+                                                                        // Format numbers/money
+                                                                        if (
+                                                                            in_array($key, [
+                                                                                'amount',
+                                                                                'price',
+                                                                                'total',
+                                                                                'salary',
+                                                                                'balance',
+                                                                            ])
+                                                                        ) {
+                                                                            if (is_numeric($valBefore)) {
+                                                                                $valBefore = number_format(
+                                                                                    $valBefore,
+                                                                                    0,
+                                                                                    ',',
+                                                                                    '.',
+                                                                                );
+                                                                            }
+                                                                            if (is_numeric($valAfter)) {
+                                                                                $valAfter = number_format(
+                                                                                    $valAfter,
+                                                                                    0,
+                                                                                    ',',
+                                                                                    '.',
+                                                                                );
+                                                                            }
+                                                                        }
+
+                                                                        // Handle Arrays/Objects
+                                                                        if (is_array($valBefore)) {
+                                                                            $valBefore = json_encode($valBefore);
+                                                                        }
+                                                                        if (is_array($valAfter)) {
+                                                                            $valAfter = json_encode($valAfter);
+                                                                        }
+                                                                    @endphp
+                                                                    <tr class="hover:bg-gray-50/50">
+                                                                        <td
+                                                                            class="px-4 py-3 font-medium text-gray-700 font-mono text-xs border-r border-gray-50">
+                                                                            {{ $key }}</td>
+                                                                        <td
+                                                                            class="px-4 py-3 text-red-600 bg-red-50/20 font-mono text-xs break-all">
+                                                                            {{ $valBefore }}</td>
+                                                                        <td
+                                                                            class="px-4 py-3 text-green-600 bg-green-50/20 font-mono text-xs break-all">
+                                                                            {{ $valAfter }}</td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    @else
+                                                        <div class="text-center py-8 text-gray-500 italic">
+                                                            Tidak ada detail field yang tercatat (mungkin data raw).
+                                                            <pre class="mt-4 text-xs font-mono bg-gray-50 p-3 rounded-lg text-left overflow-auto max-h-40">{{ json_encode($log->changes, JSON_PRETTY_PRINT) }}</pre>
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                <div class="mt-6 pt-4 border-t border-gray-100 flex justify-end gap-3">
+                                                    <div class="mr-auto text-xs text-gray-400 self-center">
+                                                        Browser: {{ Str::limit($log->user_agent, 40) }}
+                                                    </div>
                                                     <button @click="open = false"
-                                                        class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-lg hover:bg-indigo-700">Close</button>
+                                                        class="bg-gray-100 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors">Tutup</button>
                                                 </div>
                                             </div>
                                         </div>

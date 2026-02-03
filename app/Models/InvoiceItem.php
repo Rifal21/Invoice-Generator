@@ -8,6 +8,8 @@ use App\Models\Product; // Added for relationship
 
 class InvoiceItem extends Model
 {
+    use \App\Traits\LogsActivity;
+
     protected $fillable = ['invoice_id', 'product_id', 'product_name', 'quantity', 'unit', 'price', 'purchase_price', 'total', 'description'];
 
     protected $casts = [
