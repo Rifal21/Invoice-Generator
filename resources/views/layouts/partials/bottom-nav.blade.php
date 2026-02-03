@@ -3,10 +3,11 @@
     class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-transparent backdrop-blur-sm border-t border-gray-200 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
     <div class="flex items-center justify-around h-20 px-2">
         <!-- Home/Dashboard -->
-        <a href="{{ route('finance.summary') }}"
-            class="flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200 {{ request()->routeIs('finance.summary') ? 'text-indigo-600' : 'text-gray-400' }}">
+        <!-- Home/Dashboard -->
+        <a href="{{ route('dashboard') }}"
+            class="flex flex-col items-center justify-center w-full h-full gap-1 transition-all duration-200 {{ request()->routeIs('dashboard') ? 'text-indigo-600' : 'text-gray-400' }}">
             <i class="fas fa-home text-xl"></i>
-            <span class="text-[10px] font-bold uppercase tracking-wider">Beranda</span>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Dashboard</span>
         </a>
 
         <!-- Gudang -->

@@ -1,3 +1,12 @@
+<li>
+    <a href="{{ route('dashboard') }}"
+        class="{{ request()->routeIs('dashboard') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md p-2 text-sm font-semibold transition-all duration-200"
+        :class="sidebarCollapsed ? 'justify-center' : ''">
+        <i class="fas fa-home text-lg w-6 text-center text-indigo-400"></i>
+        <span x-show="!sidebarCollapsed">Dashboard</span>
+    </a>
+</li>
+
 @if (!auth()->user()->isAdminAbsensi())
     <!-- Master Data Dropdown -->
     <li>
