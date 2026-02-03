@@ -334,7 +334,7 @@
                                 <!-- Expandable Detail Row -->
                                 <tr id="details-{{ $invoice->id }}"
                                     class="hidden bg-gray-50/50 border-t border-gray-100 transition-all duration-300">
-                                    <td colspan="6" class="px-6 py-6">
+                                    <td colspan="8" class="px-6 py-6">
                                         <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
                                             <div
                                                 class="bg-gray-50/50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
@@ -414,7 +414,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="py-20 text-center">
+                                    <td colspan="8" class="py-20 text-center">
                                         <div class="flex flex-col items-center">
                                             <svg class="h-16 w-16 text-gray-200 mb-4" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24">
