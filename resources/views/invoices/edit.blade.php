@@ -19,7 +19,7 @@
                 <div class="flex items-center gap-4">
                     <h2 class="text-2xl md:text-3xl font-extrabold leading-7 text-gray-900 sm:truncate sm:tracking-tight">
                         Edit Invoice</h2>
-                    <span
+                    <span id="invoice_number_display"
                         class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-bold bg-indigo-100 text-indigo-800">
                         {{ $invoice->invoice_number }}
                     </span>
@@ -33,6 +33,10 @@
                 class="p-5 sm:p-10 space-y-8 md:space-y-10">
                 @csrf
                 @method('PUT')
+
+                <!-- Hidden Invoice Number (Must be inside form) -->
+                <input type="hidden" name="invoice_number" id="invoice_number"
+                    value="{{ old('invoice_number', $invoice->invoice_number) }}">
 
                 {{-- Preserve Filters --}}
                 @foreach (request()->query() as $key => $value)
@@ -63,14 +67,20 @@
                             class="block w-full rounded-2xl border-2 border-gray-200 py-3 px-3 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
                             <option value="">Pilih Tipe</option>
                             <option value="BSH"
-                                {{ old('tipe', str_contains($invoice->invoice_number, 'BSH') ? 'BSH' : '') == 'BSH' ? 'selected' : '' }}>
-                                Basahan</option>
+                                {{ old('tipe', str_contains($invoice->invoice_number, '-BSH') ? 'BSH' : '') == 'BSH' ? 'selected' : '' }}>
+                                Basahan (BSH)</option>
                             <option value="KR"
-                                {{ old('tipe', str_contains($invoice->invoice_number, 'KR') ? 'KR' : '') == 'KR' ? 'selected' : '' }}>
-                                Keringan</option>
+                                {{ old('tipe', str_contains($invoice->invoice_number, '-KR') && !str_contains($invoice->invoice_number, '-KRBSBM') ? 'KR' : '') == 'KR' ? 'selected' : '' }}>
+                                Keringan (KR)</option>
+                            <option value="KRBSBM"
+                                {{ old('tipe', str_contains($invoice->invoice_number, '-KRBSBM') ? 'KRBSBM' : '') == 'KRBSBM' ? 'selected' : '' }}>
+                                Keringan Bumil Busui (KRBSBM)</option>
                             <option value="OPR"
-                                {{ old('tipe', str_contains($invoice->invoice_number, 'OPR') ? 'OPR' : '') == 'OPR' ? 'selected' : '' }}>
-                                Operasional</option>
+                                {{ old('tipe', str_contains($invoice->invoice_number, '-OPR') ? 'OPR' : '') == 'OPR' ? 'selected' : '' }}>
+                                Operasional (OPR)</option>
+                            <option value="LMN"
+                                {{ old('tipe', str_contains($invoice->invoice_number, '-LMN') ? 'LMN' : '') == 'LMN' ? 'selected' : '' }}>
+                                Lain-lain (LMN)</option>
                         </select>
                     </div>
 
@@ -128,13 +138,40 @@
 
                 <!-- Totals Section -->
                 <div class="bg-gray-50 rounded-3xl p-6 md:p-8 border border-gray-100">
-                    <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-                        <div class="text-center sm:text-left">
-                            <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Keseluruhan</p>
-                            <p class="text-xs text-gray-500 mt-1">Sudah termasuk semua item</p>
+                    <div class="flex flex-col space-y-4">
+                        <!-- Subtotal -->
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-gray-500 uppercase tracking-widest">Subtotal</span>
+                            <span class="text-xl font-bold text-gray-900">Rp <span id="subtotal">0</span></span>
                         </div>
-                        <div class="text-3xl font-black text-indigo-600">
-                            Rp <span id="grand-total">0</span>
+
+                        <!-- Discount -->
+                        <div class="flex justify-between items-center">
+                            <label for="discount" class="text-sm font-bold text-gray-500 uppercase tracking-widest">Diskon
+                                (Rp)</label>
+                            <div class="relative w-40 sm:w-60">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-400 font-bold">Rp</span>
+                                </div>
+                                <input type="number" name="discount" id="discount"
+                                    value="{{ old('discount', $invoice->discount) }}"
+                                    class="block w-full rounded-xl border-2 border-gray-200 py-2 pl-10 text-right text-gray-900 font-bold focus:ring-indigo-500 focus:border-indigo-500"
+                                    min="0" step="0.01" oninput="calculateGrandTotal()">
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-200"></div>
+
+                        <!-- Grand Total -->
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Keseluruhan
+                                </p>
+                                <p class="text-xs text-gray-500 mt-1">Sudah dikurangi diskon</p>
+                            </div>
+                            <div class="text-3xl font-black text-indigo-600">
+                                Rp <span id="grand-total">0</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -411,13 +448,28 @@
         }
 
         function calculateGrandTotal() {
-            let grandTotal = 0;
+            let subtotal = 0;
             document.querySelectorAll('.item-card').forEach(card => {
                 const price = parseFloat(card.querySelector('.price-input').value) || 0;
                 const quantity = parseFloat(card.querySelector('.quantity-input').value) || 0;
-                grandTotal += (price * quantity);
+                subtotal += (price * quantity);
             });
-            document.getElementById('grand-total').innerText = formatCurrency(grandTotal);
+
+            // Get discount
+            const discountInput = document.getElementById('discount');
+            let discount = parseFloat(discountInput.value) || 0;
+
+            // Ensure discount isn't greater than subtotal
+            if (discount > subtotal) {
+                // discount = subtotal; 
+                // discountInput.value = subtotal;
+                // Optional: clamp logic or layout warning
+            }
+
+            const grandTotal = subtotal - discount;
+
+            document.getElementById('subtotal').innerText = formatCurrency(subtotal);
+            document.getElementById('grand-total').innerText = formatCurrency(grandTotal < 0 ? 0 : grandTotal);
         }
 
         $(document).ready(function() {
@@ -437,6 +489,49 @@
                 allowClear: true,
                 width: '100%'
             });
+
+            // Auto-update Invoice Number Logic
+            const invoiceInput = document.getElementById('invoice_number');
+            const invoiceDisplay = document.getElementById('invoice_number_display');
+            const dateInput = document.getElementById('date');
+            const typeSelect = document.getElementById('tipe');
+
+            function updateInvoiceNumber() {
+                const currentDate = dateInput.value; // YYYY-MM-DD
+                const currentType = typeSelect.value;
+                let currentNumber = invoiceInput.value;
+
+                if (!currentDate || !currentNumber) return;
+
+                let parts = currentNumber.split('-');
+
+                // Standard Format expectation: INV-DATE-SEQ-TYPE (4 parts) or INV-DATE-SEQ (3 parts)
+                // We ensure we have at least 3 parts (Prefix, Date, Seq) to proceed safely
+                if (parts.length < 3) return;
+
+                // 1. Update Date Part (Index 1)
+                // Use string split to avoid timezone issues with Date object
+                const dateComponents = currentDate.split('-'); // [YYYY, MM, DD]
+                if (dateComponents.length === 3) {
+                    parts[1] = dateComponents.join('');
+                }
+
+                // 2. Update Type Part (If exists)
+                if (currentType) {
+                    // Only replace the last part if we have 4 or more parts (assuming the last one is the type)
+                    // This preserves the Sequence Number which is usually at Index 2
+                    if (parts.length >= 4) {
+                        parts[parts.length - 1] = currentType;
+                    }
+                }
+
+                const newNumber = parts.join('-');
+                invoiceInput.value = newNumber;
+                if (invoiceDisplay) invoiceDisplay.textContent = newNumber;
+            }
+
+            dateInput.addEventListener('change', updateInvoiceNumber);
+            typeSelect.addEventListener('change', updateInvoiceNumber);
         });
     </script>
 @endsection

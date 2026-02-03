@@ -215,6 +215,12 @@
                                     Pelanggan</th>
                                 <th scope="col"
                                     class="px-3 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
+                                    Tipe</th>
+                                <th scope="col"
+                                    class="px-3 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
+                                    Diskon</th>
+                                <th scope="col"
+                                    class="px-3 py-5 text-left text-xs font-black text-gray-400 uppercase tracking-widest">
                                     Total</th>
                                 <th scope="col"
                                     class="relative py-5 pl-3 pr-6 text-right text-xs font-black text-gray-400 uppercase tracking-widest">
@@ -265,6 +271,35 @@
                                     <td class="whitespace-nowrap px-3 py-5 cursor-pointer"
                                         onclick="toggleDetails('details-{{ $invoice->id }}')">
                                         <div class="text-sm font-bold text-gray-900">{{ $invoice->customer_name }}</div>
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-5 cursor-pointer"
+                                        onclick="toggleDetails('details-{{ $invoice->id }}')">
+                                        @php
+                                            $type = 'UNKNOWN';
+                                            if (str_contains($invoice->invoice_number, 'BSH')) {
+                                                $type = 'Basahan Siswa';
+                                            } elseif (str_contains($invoice->invoice_number, 'KRBSBM')) {
+                                                $type = 'Keringan B3';
+                                            } elseif (str_contains($invoice->invoice_number, 'KR')) {
+                                                $type = 'Keringan Siswa';
+                                            } elseif (str_contains($invoice->invoice_number, 'OPR')) {
+                                                $type = 'Operasional';
+                                            } elseif (str_contains($invoice->invoice_number, 'LMN')) {
+                                                $type = 'Lain-lain';
+                                            }
+                                        @endphp
+                                        <div class="text-sm font-bold text-gray-900">
+                                            <span
+                                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                                {{ $type }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="whitespace-nowrap px-3 py-5 cursor-pointer"
+                                        onclick="toggleDetails('details-{{ $invoice->id }}')">
+                                        <div class="text-sm font-bold text-red-500">
+                                            {{ $invoice->discount > 0 ? 'Rp ' . number_format($invoice->discount, 0, ',', '.') : '-' }}
+                                        </div>
                                     </td>
                                     <td class="whitespace-nowrap px-3 py-5 cursor-pointer"
                                         onclick="toggleDetails('details-{{ $invoice->id }}')">
@@ -459,6 +494,10 @@
                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Total Nominal</p>
                                 <p class="text-xl font-black text-indigo-600">Rp
                                     {{ number_format($invoice->total_amount, 2, ',', '.') }}</p>
+                                @if ($invoice->discount > 0)
+                                    <p class="text-xs font-bold text-red-400 mt-1">Diskon: Rp
+                                        {{ number_format($invoice->discount, 0, ',', '.') }}</p>
+                                @endif
                             </div>
                         </div>
 

@@ -95,13 +95,16 @@ class InvoiceController extends Controller
             'items.*.price' => 'required|numeric|min:0',
             'items.*.purchase_price' => 'nullable|numeric|min:0',
             'items.*.unit' => 'required|string',
+            'items.*.unit' => 'required|string',
             'items.*.description' => 'nullable|string',
+            'discount' => 'nullable|numeric|min:0',
         ]);
         $invoice_number = 'INV-' . Carbon::parse($request->date)->format('Ymd') . '-' . str_pad(Invoice::max('id') + 1, 3, '0', STR_PAD_LEFT) . '-' . $request->tipe;
         $invoice = Invoice::create([
             'invoice_number' => $invoice_number,
             'date' => $request->date,
             'customer_name' => $request->customer_name,
+            'discount' => $request->input('discount', 0),
             'total_amount' => 0, // Will calculate below
         ]);
 
@@ -143,9 +146,16 @@ class InvoiceController extends Controller
             ]);
         }
 
-        $invoice->update(['total_amount' => $totalAmount]);
+        $discount = $request->input('discount', 0);
+        $totalAmount -= $discount;
 
-        return redirect()->route('invoices.index')->with('success', 'Invoice created successfully.');
+        $invoice->update([
+            'total_amount' => $totalAmount,
+            'discount' => $discount
+        ]);
+
+        $filters = $request->input('filters', []);
+        return redirect()->route('invoices.index', $filters)->with('success', 'Invoice created successfully.');
     }
 
     /**
@@ -172,6 +182,7 @@ class InvoiceController extends Controller
     public function update(Request $request, Invoice $invoice)
     {
         $request->validate([
+            'invoice_number' => 'required|string|unique:invoices,invoice_number,' . $invoice->id,
             'date' => 'required|date',
             'customer_name' => 'required|string',
             'items' => 'required|array',
@@ -181,11 +192,14 @@ class InvoiceController extends Controller
             'items.*.purchase_price' => 'nullable|numeric|min:0',
             'items.*.unit' => 'required|string',
             'items.*.description' => 'nullable|string',
+            'discount' => 'nullable|numeric|min:0',
         ]);
 
         $invoice->update([
+            'invoice_number' => $request->invoice_number,
             'date' => $request->date,
             'customer_name' => $request->customer_name,
+            'discount' => $request->input('discount', 0),
         ]);
 
         // Delete existing items
@@ -229,7 +243,13 @@ class InvoiceController extends Controller
             ]);
         }
 
-        $invoice->update(['total_amount' => $totalAmount]);
+        $discount = $request->input('discount', 0);
+        $totalAmount -= $discount;
+
+        $invoice->update([
+            'total_amount' => $totalAmount,
+            // discount already updated
+        ]);
 
         $filters = $request->input('filters', []);
         return redirect()->route('invoices.index', $filters)->with('success', 'Invoice updated successfully.');
