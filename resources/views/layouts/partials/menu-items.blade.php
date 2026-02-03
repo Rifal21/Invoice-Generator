@@ -267,4 +267,15 @@
             <span x-show="!sidebarCollapsed">Log Aktivitas</span>
         </a>
     </li>
+
+    <li>
+        <a href="{{ route('monitor.index') }}"
+            class="{{ request()->routeIs('monitor.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md p-2 text-sm font-semibold transition-all duration-200"
+            :class="sidebarCollapsed ? 'justify-center' : ''">
+            <i class="fas fa-desktop text-lg w-6 text-center text-green-500"></i>
+            <span x-show="!sidebarCollapsed">Monitor Login</span>
+            <span x-show="!sidebarCollapsed"
+                class="ml-auto inline-flex items-center rounded-md bg-green-400/10 px-1.5 py-0.5 text-[10px] font-medium text-green-400 ring-1 ring-inset ring-green-400/20 animate-pulse">LIVE</span>
+        </a>
+    </li>
 @endif

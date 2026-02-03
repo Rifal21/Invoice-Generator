@@ -113,6 +113,9 @@ Route::middleware(['auth'])->group(function () {
     // Activity Logs
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
+    // Monitor Sessions
+    Route::get('monitor', [\App\Http\Controllers\MonitorController::class, 'index'])->name('monitor.index');
+
     // Vehicle Rental Invoice Routes
     Route::get('vehicle-rentals/next-number', [VehicleRentalInvoiceController::class, 'getNextNumber'])->name('vehicle-rentals.next-number');
     Route::get('vehicle-rentals/{vehicleRental}/export-pdf', [VehicleRentalInvoiceController::class, 'exportPdf'])->name('vehicle-rentals.export-pdf');
