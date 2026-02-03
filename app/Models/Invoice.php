@@ -9,7 +9,7 @@ class Invoice extends Model
 {
     use \App\Traits\LogsActivity;
 
-    protected $fillable = ['invoice_number', 'date', 'customer_name', 'total_amount', 'whatsapp_sent_at', 'telegram_sent_at'];
+    protected $fillable = ['invoice_number', 'date', 'customer_name', 'total_amount', 'discount', 'whatsapp_sent_at', 'telegram_sent_at'];
 
     public function items()
     {

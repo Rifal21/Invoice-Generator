@@ -116,13 +116,38 @@
 
                 <!-- Totals Section -->
                 <div class="bg-gray-50 rounded-3xl p-6 md:p-8 border border-gray-100">
-                    <div class="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-                        <div class="text-center sm:text-left">
-                            <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Keseluruhan</p>
-                            <p class="text-xs text-gray-500 mt-1">Sudah termasuk semua item</p>
+                    <div class="flex flex-col space-y-4">
+                        <!-- Subtotal -->
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-bold text-gray-500 uppercase tracking-widest">Subtotal</span>
+                            <span class="text-xl font-bold text-gray-900">Rp <span id="subtotal">0</span></span>
                         </div>
-                        <div class="text-3xl font-black text-indigo-600">
-                            Rp <span id="grand-total">0</span>
+
+                        <!-- Discount -->
+                        <div class="flex justify-between items-center">
+                            <label for="discount" class="text-sm font-bold text-gray-500 uppercase tracking-widest">Diskon
+                                (Rp)</label>
+                            <div class="relative w-40 sm:w-60">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span class="text-gray-400 font-bold">Rp</span>
+                                </div>
+                                <input type="number" name="discount" id="discount" value="0"
+                                    class="block w-full rounded-xl border-2 border-gray-200 py-2 pl-10 text-right text-gray-900 font-bold focus:ring-indigo-500 focus:border-indigo-500"
+                                    min="0" step="0.01" oninput="calculateGrandTotal()">
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-200"></div>
+
+                        <!-- Grand Total -->
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Keseluruhan</p>
+                                <p class="text-xs text-gray-500 mt-1">Sudah dikurangi diskon</p>
+                            </div>
+                            <div class="text-3xl font-black text-indigo-600">
+                                Rp <span id="grand-total">0</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -546,16 +571,23 @@
         }
 
         function calculateGrandTotal() {
-            let grandTotal = 0;
+            let subtotal = 0;
             const cards = document.querySelectorAll('.item-card');
 
             cards.forEach(card => {
                 const price = parseFloat(card.querySelector('.price-input').value) || 0;
                 const quantity = parseFloat(card.querySelector('.quantity-input').value) || 0;
-                grandTotal += (price * quantity);
+                subtotal += (price * quantity);
             });
 
-            document.getElementById('grand-total').innerText = formatCurrency(grandTotal);
+            // Get discount
+            const discountInput = document.getElementById('discount');
+            let discount = parseFloat(discountInput.value) || 0;
+
+            const grandTotal = subtotal - discount;
+
+            document.getElementById('subtotal').innerText = formatCurrency(subtotal);
+            document.getElementById('grand-total').innerText = formatCurrency(grandTotal < 0 ? 0 : grandTotal);
         }
 
         $(document).ready(function() {

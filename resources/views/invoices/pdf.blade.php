@@ -350,14 +350,21 @@
                 </div>
                 <div class="totals-table-container">
                     <table class="totals-table">
+                        @php
+                            $subtotal = $invoice->items->sum('total');
+                            $discount = $invoice->discount ?? 0;
+                            // Tax is static/unused for now
+                        @endphp
                         <tr>
                             <td class="label">Sub total</td>
                             <td class="value" style="text-align: right;">
-                                Rp{{ number_format((float) $invoice->total_amount, 0, ',', '.') }}</td>
+                                Rp{{ number_format($subtotal, 0, ',', '.') }}</td>
                         </tr>
                         <tr>
                             <td class="label">Diskon</td>
-                            <td class="value" style="text-align: right;">-</td>
+                            <td class="value" style="text-align: right;">
+                                {{ $discount > 0 ? 'Rp' . number_format($discount, 0, ',', '.') : '-' }}
+                            </td>
                         </tr>
                         <tr>
                             <td class="label">Pajak</td>
