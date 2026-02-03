@@ -496,4 +496,60 @@ class AttendanceController extends Controller
         $attendance->load(['user', 'approver']);
         return view('attendance.show', compact('attendance'));
     }
+
+    public function bulkCreate()
+    {
+        $users = User::orderBy('name')->get();
+        return view('attendance.bulk', compact('users'));
+    }
+
+    public function storeBulk(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+            'check_in' => 'required',
+            'check_out' => 'nullable',
+            'status' => 'required|in:present,late,absent,sick,permit', // sick, permit added for bulk convenience
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id',
+            'correction_reason' => 'required|string|max:500',
+        ]);
+
+        $count = 0;
+        foreach ($request->user_ids as $userId) {
+            // Check if already exists
+            $existing = Attendance::where('user_id', $userId)
+                ->where('date', $request->date)
+                ->first();
+
+            if ($existing) {
+                // Determine if we should update or skip? Use update for bulk action usually
+                $existing->update([
+                    'check_in' => $request->check_in,
+                    'check_out' => $request->check_out,
+                    'status' => $request->status,
+                    'is_manual_entry' => true,
+                    'approved_by' => Auth::id(),
+                    'approved_at' => now(),
+                    'correction_reason' => $request->correction_reason . ' (Bulk Update)',
+                ]);
+                $count++;
+            } else {
+                Attendance::create([
+                    'user_id' => $userId,
+                    'date' => $request->date,
+                    'check_in' => $request->check_in,
+                    'check_out' => $request->check_out,
+                    'status' => $request->status,
+                    'is_manual_entry' => true,
+                    'approved_by' => Auth::id(),
+                    'approved_at' => now(),
+                    'correction_reason' => $request->correction_reason . ' (Bulk Create)',
+                ]);
+                $count++;
+            }
+        }
+
+        return redirect()->route('attendance.report')->with('success', "Berhasil memproses absensi untuk $count user.");
+    }
 }
