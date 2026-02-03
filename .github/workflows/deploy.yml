@@ -19,11 +19,6 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install NPM Dependencies & Build
-        run: |
-          npm install
-          npm run build
-
       - name: Install Cloudflared
         run: |
           curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
@@ -53,3 +48,8 @@ jobs:
           php artisan route:cache && \
           php artisan view:cache && \
           php artisan up"
+
+      - name: Install NPM Dependencies & Build
+        run: |
+          npm install
+          npm run build

@@ -141,6 +141,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('attendance/check-status', [AttendanceController::class, 'checkStatus'])->name('attendance.check-status');
 
         // Attendance Admin Routes
+        Route::get('attendance/bulk', [AttendanceController::class, 'bulkCreate'])->name('attendance.bulk');
+        Route::post('attendance/bulk', [AttendanceController::class, 'storeBulk'])->name('attendance.store-bulk');
         Route::get('attendance/settings', [AttendanceController::class, 'settings'])->name('attendance.settings');
         Route::post('attendance/settings', [AttendanceController::class, 'updateSettings'])->name('attendance.update-settings');
         Route::get('attendance/report', [AttendanceController::class, 'report'])->name('attendance.report');

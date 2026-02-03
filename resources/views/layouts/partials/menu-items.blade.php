@@ -235,6 +235,13 @@
                 </a>
             </li>
             <li>
+                <a href="{{ route('attendance.bulk') }}"
+                    class="{{ request()->routeIs('attendance.bulk') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                    <i class="fas fa-users-cog text-sm w-4"></i>
+                    Input Absensi Bulk
+                </a>
+            </li>
+            <li>
                 <a href="{{ route('attendance.settings') }}"
                     class="{{ request()->routeIs('attendance.settings') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
                     <i class="fas fa-cog text-sm w-4"></i>
