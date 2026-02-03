@@ -429,7 +429,7 @@
                         </tbody>
                         <tfoot class="bg-gray-50/50">
                             <tr>
-                                <td colspan="4"
+                                <td colspan="6"
                                     class="px-3 py-5 text-right text-xs font-black text-gray-400 uppercase tracking-widest">
                                     Subtotal Halaman Ini</td>
                                 <td class="px-3 py-5 text-left">
@@ -439,7 +439,7 @@
                                 <td></td>
                             </tr>
                             <tr class="bg-indigo-50/30">
-                                <td colspan="4"
+                                <td colspan="6"
                                     class="px-3 py-5 text-right text-xs font-black text-indigo-600 uppercase tracking-widest">
                                     Total Filter</td>
                                 <td class="px-3 py-5 text-left">
