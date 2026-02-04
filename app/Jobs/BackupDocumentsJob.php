@@ -71,9 +71,18 @@ class BackupDocumentsJob implements ShouldQueue
                     'message' => "Mengupload: {$doc->title}..."
                 ], now()->addMinutes(5));
 
-                $filePath = storage_path('app/public/' . $doc->file_path);
+                // Determine File Path (Check Local Secure then Public Fallback)
+                $localPath = storage_path('app/' . $doc->file_path);
+                $publicPath = storage_path('app/public/' . $doc->file_path);
 
-                if (file_exists($filePath)) {
+                $filePath = null;
+                if (file_exists($localPath)) {
+                    $filePath = $localPath;
+                } elseif (file_exists($publicPath)) {
+                    $filePath = $publicPath;
+                }
+
+                if ($filePath) {
                     // Title as filename, sanitized
                     $fileName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $doc->title) . '.pdf';
 

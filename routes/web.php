@@ -53,6 +53,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Document Library Routes
     Route::post('documents/backup', [\App\Http\Controllers\DocumentController::class, 'backup'])->name('documents.backup');
+    Route::get('documents/{document}/stream', [\App\Http\Controllers\DocumentController::class, 'stream'])->name('documents.stream');
     Route::resource('documents', \App\Http\Controllers\DocumentController::class);
 
     Route::post('invoices/scan', [ScanController::class, 'scan'])->name('invoices.scan');
