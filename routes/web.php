@@ -56,6 +56,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('documents/{document}/stream', [\App\Http\Controllers\DocumentController::class, 'stream'])->name('documents.stream');
     Route::resource('documents', \App\Http\Controllers\DocumentController::class);
 
+    // AI Data Analyst Routes
+    Route::get('/ai-insights', [\App\Http\Controllers\AiController::class, 'index'])->name('ai.index');
+    Route::post('/ai-insights/analyze', [\App\Http\Controllers\AiController::class, 'analyze'])->name('ai.analyze');
+
     Route::post('invoices/scan', [ScanController::class, 'scan'])->name('invoices.scan');
 
     // Inventory Routes

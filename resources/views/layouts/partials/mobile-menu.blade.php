@@ -19,9 +19,37 @@
         </div>
 
         <div class="px-6 pb-12 space-y-8">
-            <!-- Archive Section -->
+            <!-- Featured AI Section -->
+            <div class="relative group">
+                <div
+                    class="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-pink-500/20 rounded-[2rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity">
+                </div>
+                <a href="{{ route('ai.index') }}"
+                    class="relative flex items-center gap-5 p-5 rounded-[2rem] bg-gradient-to-br from-indigo-600 to-indigo-800 border-none shadow-xl shadow-indigo-200 overflow-hidden">
+                    <div class="absolute -right-4 -top-4 w-24 h-24 bg-white/10 rounded-full blur-2xl"></div>
+                    <div
+                        class="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-white border border-white/20">
+                        <i class="fas fa-brain text-2xl animate-pulse"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span
+                                class="px-2 py-0.5 rounded-full bg-pink-500 text-[8px] font-black text-white uppercase tracking-tighter">New
+                                / AI</span>
+                            <h4 class="text-xs font-black text-indigo-100 uppercase tracking-widest">Business Insights
+                            </h4>
+                        </div>
+                        <p class="text-[10px] font-bold text-indigo-200/80 mt-1">Analisis performa bisnis cerdas</p>
+                    </div>
+                    <div class="ml-auto w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white">
+                        <i class="fas fa-arrow-right text-xs"></i>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Archive & AI Section -->
             <div>
-                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Arsip & Legalitas
+                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Arsip & Analisis
                 </h4>
                 <div class="grid grid-cols-2 gap-3">
                     <a href="{{ route('documents.index') }}"
@@ -30,6 +58,13 @@
                             <i class="fas fa-folder-open text-lg"></i>
                         </div>
                         <span class="text-[10px] font-bold text-center text-gray-700">Dokumen Legalitas</span>
+                    </a>
+                    <a href="{{ route('ai.index') }}"
+                        class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                        <div class="w-10 h-10 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600">
+                            <i class="fas fa-brain text-lg"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-center text-gray-700">AI Data Analyst</span>
                     </a>
                 </div>
             </div>
