@@ -43,6 +43,14 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
+    // Backup Routes
+    Route::get('/backup', [\App\Http\Controllers\BackupController::class, 'index'])->name('backup.index');
+    Route::post('/backup/process', [\App\Http\Controllers\BackupController::class, 'process'])->name('backup.process');
+    Route::get('/backup/connect', [\App\Http\Controllers\BackupController::class, 'connect'])->name('backup.connect');
+    Route::get('/backup/callback', [\App\Http\Controllers\BackupController::class, 'callback'])->name('backup.callback');
+    Route::get('/backup/progress', [\App\Http\Controllers\BackupController::class, 'checkProgress'])->name('backup.progress');
+    Route::get('/backup/history', [\App\Http\Controllers\BackupController::class, 'history'])->name('backup.history');
+
     Route::post('invoices/scan', [ScanController::class, 'scan'])->name('invoices.scan');
 
     // Inventory Routes
