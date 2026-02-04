@@ -196,7 +196,10 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.status === 'success') {
-                            updateHistory(); // Update immediately to show "Start"
+                            localStorage.setItem('backup_active', 'true'); // Flag for global indicator
+                            window.dispatchEvent(new Event('storage')); // Trigger update
+
+                            updateHistory();
                             startPolling();
                         } else {
                             Swal.fire({

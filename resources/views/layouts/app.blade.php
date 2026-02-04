@@ -326,6 +326,167 @@
         fetchNotifications();
         setInterval(fetchNotifications, 10000);
     </script>
+    <!-- Global Backup Indicator -->
+    <div id="global-backup-indicator"
+        class="fixed bottom-20 right-4 z-50 hidden transition-all duration-300 transform translate-y-10 opacity-0 bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden w-[90%] sm:w-[350px]"
+        style="display: none;">
+        <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <i class="fab fa-google-drive text-white animate-pulse"></i>
+                <span class="text-xs font-bold text-white uppercase tracking-wider">Backup Proses</span>
+            </div>
+            <button onclick="minimizeBackup()"
+                class="text-white/80 hover:text-white transition-colors focus:outline-none">
+                <i class="fas fa-minus"></i>
+            </button>
+        </div>
+        <div class="p-4 bg-white" id="backup-content">
+            <div class="flex justify-between mb-2">
+                <span class="text-xs font-bold text-gray-700" id="global-status">Menyiapkan...</span>
+                <span class="text-xs font-bold text-indigo-600" id="global-perc">0%</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-2 mb-2">
+                <div class="bg-indigo-500 h-2 rounded-full transition-all duration-300" style="width: 0%"
+                    id="global-bar"></div>
+            </div>
+            <p class="text-[10px] text-gray-400 truncate font-mono" id="global-msg">Starting...</p>
+        </div>
+    </div>
+
+    <div id="global-backup-minimized"
+        class="fixed bottom-24 right-4 z-50 hidden cursor-pointer hover:scale-105 transition-transform"
+        onclick="restoreBackup()" style="display: none;">
+        <div
+            class="bg-indigo-600 text-white rounded-full p-3 shadow-xl border-2 border-white flex items-center justify-center relative">
+            <i class="fab fa-google-drive text-xl"></i>
+            <span class="absolute -top-1 -right-1 flex h-3 w-3">
+                <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+            </span>
+        </div>
+    </div>
+
+    <script>
+        // Global Backup Polling Logic
+        let backupPollInterval = null;
+        const gBackupEl = document.getElementById('global-backup-indicator');
+        const gMinimizedEl = document.getElementById('global-backup-minimized');
+        const gStatus = document.getElementById('global-status');
+        const gPerc = document.getElementById('global-perc');
+        const gBar = document.getElementById('global-bar');
+        const gMsg = document.getElementById('global-msg');
+        let isMinimized = localStorage.getItem('backup_minimized') === 'true';
+
+        function showBackupUI() {
+            if (isMinimized) {
+                gBackupEl.style.display = 'none';
+                gMinimizedEl.style.display = 'block';
+                gMinimizedEl.classList.remove('hidden');
+            } else {
+                gBackupEl.style.display = 'block';
+                gBackupEl.classList.remove('hidden', 'translate-y-10', 'opacity-0');
+                gMinimizedEl.style.display = 'none';
+            }
+        }
+
+        function hideBackupUI() {
+            gBackupEl.classList.add('translate-y-10', 'opacity-0');
+            setTimeout(() => {
+                gBackupEl.style.display = 'none';
+                gMinimizedEl.style.display = 'none';
+            }, 300);
+        }
+
+        window.minimizeBackup = function() {
+            isMinimized = true;
+            localStorage.setItem('backup_minimized', 'true');
+            showBackupUI();
+        }
+
+        window.restoreBackup = function() {
+            isMinimized = false;
+            localStorage.setItem('backup_minimized', 'false');
+            showBackupUI();
+        }
+
+        function checkGlobalBackup() {
+            const isActive = localStorage.getItem('backup_active') === 'true';
+            if (isActive && !backupPollInterval) {
+                startGlobalPolling();
+            }
+        }
+
+        function startGlobalPolling() {
+            if (backupPollInterval) return;
+
+            showBackupUI();
+
+            // Initial fetch
+            pollBackup();
+
+            backupPollInterval = setInterval(pollBackup, 2000);
+        }
+
+        function pollBackup() {
+            fetch("{{ route('backup.progress') }}")
+                .then(res => res.json())
+                .then(data => {
+                    // Update UI
+                    if (gStatus) gStatus.innerText = data.status === 'processing' ? 'Proses...' : (data.status ===
+                        'queued' ? 'Antrian' : data.status);
+                    if (gPerc) gPerc.innerText = data.percentage + '%';
+                    if (gBar) gBar.style.width = data.percentage + '%';
+                    if (gMsg) gMsg.innerText = data.message;
+
+                    // Idle check - if we think active but api says idle
+                    if (data.status === 'idle') {
+                        // Maybe finished? Check local storage age? 
+                        // Safe default: hide it.
+                        stopGlobalPolling();
+                        hideBackupUI();
+                        localStorage.setItem('backup_active', 'false');
+                        return;
+                    }
+
+                    if (data.status === 'completed') {
+                        stopGlobalPolling();
+                        if (gStatus) gStatus.innerText = 'SELESAI';
+                        if (gBar) gBar.classList.replace('bg-indigo-500', 'bg-green-500');
+
+                        setTimeout(() => {
+                            hideBackupUI();
+                            localStorage.setItem('backup_active', 'false');
+                        }, 5000);
+                    } else if (data.status === 'error') {
+                        stopGlobalPolling();
+                        if (gStatus) gStatus.innerText = 'ERROR';
+                        if (gBar) gBar.classList.replace('bg-indigo-500', 'bg-red-500');
+                        localStorage.setItem('backup_active', 'false');
+                        // Keep error visible a bit longer? or user handles via alert
+                        setTimeout(() => hideBackupUI(), 10000);
+                    }
+                })
+                .catch(err => {
+                    console.error('Global Backup Poll Error', err);
+                });
+        }
+
+        function stopGlobalPolling() {
+            clearInterval(backupPollInterval);
+            backupPollInterval = null;
+        }
+
+        // Listen for storage changes from other tabs
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'backup_active' && e.newValue === 'true') {
+                checkGlobalBackup();
+            }
+        });
+
+        // Initialize
+        checkGlobalBackup();
+    </script>
 </body>
 
 </html>
