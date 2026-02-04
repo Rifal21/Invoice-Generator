@@ -6,6 +6,7 @@ use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class DocumentController extends Controller
 {
@@ -29,8 +30,8 @@ class DocumentController extends Controller
         ]);
 
         if ($request->file('file')) {
-            // Store in LOCAL storage (secure, not accessible via public URL)
-            $path = $request->file('file')->store('documents', 'local');
+            // Store in LOCAL storage. Depending on Laravel config, this might be storage/app or storage/app/private
+            $path = $request->file('file')->store('document', 'local');
 
             Document::create([
                 'title' => $request->title,
@@ -52,34 +53,76 @@ class DocumentController extends Controller
 
     public function stream(Document $document)
     {
-        // 1. Try Local Storage (New Secure Files)
-        $path = storage_path('app/' . $document->file_path);
+        $paths = [
+            // 1. Try Local Storage (Standard storage/app/documents/...)
+            storage_path('app/' . $document->file_path),
 
-        // 2. Fallback to Public Storage (Old Files)
-        if (!file_exists($path)) {
-            $path = storage_path('app/public/' . $document->file_path);
+            // 2. Try Private Storage (Laravel 11 structure: storage/app/private/documents/...)
+            storage_path('app/private/' . $document->file_path),
+
+            // 3. Try Public Storage (Old Files: storage/app/public/documents/...)
+            storage_path('app/public/' . $document->file_path),
+
+            // 4. Try User Suggested Path (private/document singular?)
+            storage_path('app/private/document/' . basename($document->file_path)),
+        ];
+
+        $path = null;
+        foreach ($paths as $p) {
+            // Log::info("Checking Path: $p"); // Uncomment for verbose logging
+            if (file_exists($p)) {
+                $path = $p;
+                break;
+            }
         }
 
-        if (!file_exists($path)) {
+        if (!$path) {
+            Log::error("Doc {$document->id} NOT FOUND. Checked: " . implode(', ', $paths));
             abort(404, 'File dokumen tidak ditemukan di server.');
         }
 
         return response()->file($path, [
             'Content-Type' => $document->mime_type ?? 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $document->title . '.pdf"',
-            'X-Robots-Tag' => 'noindex, nofollow', // Prevent indexing
+            'X-Robots-Tag' => 'noindex, nofollow',
         ]);
     }
 
     public function destroy(Document $document)
     {
-        // Try deleting from local
+        // Manual deletion attempts since we have multiple potential paths
+        $deleted = false;
+
+        $paths = [
+            'documents' => $document->file_path, // storage/app
+            'public/' . $document->file_path, // storage/app/public
+            'private/' . $document->file_path, // storage/app/private
+            'private/document/' . basename($document->file_path) // User custom
+        ];
+
+        // Try using Storage facade for standard disks
         if (Storage::disk('local')->exists($document->file_path)) {
             Storage::disk('local')->delete($document->file_path);
-        }
-        // Try deleting from public (cleanup old files)
-        elseif (Storage::disk('public')->exists($document->file_path)) {
+            $deleted = true;
+        } elseif (Storage::disk('public')->exists($document->file_path)) {
             Storage::disk('public')->delete($document->file_path);
+            $deleted = true;
+        }
+
+        // If not deleted by Facade, try raw unlink on found path
+        if (!$deleted) {
+            // Logic similar to stream search
+            $possiblePaths = [
+                storage_path('app/' . $document->file_path),
+                storage_path('app/private/' . $document->file_path),
+                storage_path('app/private/document/' . basename($document->file_path)),
+            ];
+            foreach ($possiblePaths as $p) {
+                if (file_exists($p)) {
+                    @unlink($p);
+                    $deleted = true;
+                }
+            }
         }
 
         $document->delete();
