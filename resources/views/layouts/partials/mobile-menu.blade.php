@@ -19,6 +19,21 @@
         </div>
 
         <div class="px-6 pb-12 space-y-8">
+            <!-- Archive Section -->
+            <div>
+                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Arsip & Legalitas
+                </h4>
+                <div class="grid grid-cols-2 gap-3">
+                    <a href="{{ route('documents.index') }}"
+                        class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                        <div class="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center text-yellow-600">
+                            <i class="fas fa-folder-open text-lg"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-center text-gray-700">Dokumen Legalitas</span>
+                    </a>
+                </div>
+            </div>
+
             @if (!auth()->user()->isAdminAbsensi())
                 <!-- Master Data Section -->
                 <div>
