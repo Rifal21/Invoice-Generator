@@ -7,6 +7,15 @@
     </a>
 </li>
 
+<li>
+    <a href="{{ route('documents.index') }}"
+        class="{{ request()->routeIs('documents.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md p-2 text-sm font-semibold transition-all duration-200"
+        :class="sidebarCollapsed ? 'justify-center' : ''">
+        <i class="fas fa-folder-open text-lg w-6 text-center text-yellow-500"></i>
+        <span x-show="!sidebarCollapsed">Dokumen Legalitas</span>
+    </a>
+</li>
+
 @if (!auth()->user()->isAdminAbsensi())
     <!-- Master Data Dropdown -->
     <li>

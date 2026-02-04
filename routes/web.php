@@ -51,6 +51,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/backup/progress', [\App\Http\Controllers\BackupController::class, 'checkProgress'])->name('backup.progress');
     Route::get('/backup/history', [\App\Http\Controllers\BackupController::class, 'history'])->name('backup.history');
 
+    // Document Library Routes
+    Route::post('documents/backup', [\App\Http\Controllers\DocumentController::class, 'backup'])->name('documents.backup');
+    Route::get('documents/{document}/stream', [\App\Http\Controllers\DocumentController::class, 'stream'])->name('documents.stream');
+    Route::resource('documents', \App\Http\Controllers\DocumentController::class);
+
     Route::post('invoices/scan', [ScanController::class, 'scan'])->name('invoices.scan');
 
     // Inventory Routes
