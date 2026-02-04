@@ -71,15 +71,20 @@ class BackupDocumentsJob implements ShouldQueue
                     'message' => "Mengupload: {$doc->title}..."
                 ], now()->addMinutes(5));
 
-                // Determine File Path (Check Local Secure then Public Fallback)
-                $localPath = storage_path('app/' . $doc->file_path);
-                $publicPath = storage_path('app/public/' . $doc->file_path);
+                // Determine File Path (Check Multiple Locations)
+                $possiblePaths = [
+                    storage_path('app/' . $doc->file_path),
+                    storage_path('app/private/' . $doc->file_path),
+                    storage_path('app/public/' . $doc->file_path),
+                    storage_path('app/private/document/' . basename($doc->file_path)),
+                ];
 
                 $filePath = null;
-                if (file_exists($localPath)) {
-                    $filePath = $localPath;
-                } elseif (file_exists($publicPath)) {
-                    $filePath = $publicPath;
+                foreach ($possiblePaths as $p) {
+                    if (file_exists($p)) {
+                        $filePath = $p;
+                        break;
+                    }
                 }
 
                 if ($filePath) {
@@ -88,6 +93,8 @@ class BackupDocumentsJob implements ShouldQueue
 
                     $drive->uploadFile($filePath, $fileName, $targetFolderId);
                     $uploaded++;
+                } else {
+                    Log::warning("Backup: File not found for doc {$doc->id}: {$doc->title}");
                 }
             }
 
