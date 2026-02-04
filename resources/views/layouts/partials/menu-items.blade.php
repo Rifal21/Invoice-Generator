@@ -287,4 +287,13 @@
                 class="ml-auto inline-flex items-center rounded-md bg-green-400/10 px-1.5 py-0.5 text-[10px] font-medium text-green-400 ring-1 ring-inset ring-green-400/20 animate-pulse">LIVE</span>
         </a>
     </li>
+
+    <li>
+        <a href="{{ route('backup.index') }}"
+            class="{{ request()->routeIs('backup.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md p-2 text-sm font-semibold transition-all duration-200"
+            :class="sidebarCollapsed ? 'justify-center' : ''">
+            <i class="fab fa-google-drive text-lg w-6 text-center text-blue-500"></i>
+            <span x-show="!sidebarCollapsed">Cloud Backup</span>
+        </a>
+    </li>
 @endif
