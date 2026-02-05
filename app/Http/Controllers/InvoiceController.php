@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class InvoiceController extends Controller
 {
@@ -95,7 +96,6 @@ class InvoiceController extends Controller
             'items.*.price' => 'required|numeric|min:0',
             'items.*.purchase_price' => 'nullable|numeric|min:0',
             'items.*.unit' => 'required|string',
-            'items.*.unit' => 'required|string',
             'items.*.description' => 'nullable|string',
             'discount' => 'nullable|numeric|min:0',
         ]);
@@ -144,6 +144,14 @@ class InvoiceController extends Controller
                 'total' => $total,
                 'description' => $item['description'] ?? null,
             ]);
+
+            // Sync master product price
+            if ($product) {
+                $product->update([
+                    'price' => $item['price'],
+                    'purchase_price' => $item['purchase_price'] ?? $product->purchase_price,
+                ]);
+            }
         }
 
         $discount = $request->input('discount', 0);
@@ -241,6 +249,14 @@ class InvoiceController extends Controller
                 'total' => $total,
                 'description' => $item['description'] ?? null,
             ]);
+
+            // Sync master product price
+            if ($product) {
+                $product->update([
+                    'price' => $item['price'],
+                    'purchase_price' => $item['purchase_price'] ?? $product->purchase_price,
+                ]);
+            }
         }
 
         $discount = $request->input('discount', 0);
