@@ -21,21 +21,23 @@
         <div class="px-6 pb-12 space-y-8">
             <!-- User Section -->
             <div>
-                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Profil & Barcode
+                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Profil & Keamanan
                 </h4>
-                <div class="grid grid-cols-1 gap-3">
+                <div class="grid grid-cols-2 gap-3">
                     <a href="{{ route('users.my-barcode') }}"
-                        class="flex items-center gap-4 p-4 rounded-3xl bg-indigo-600 border border-indigo-500 shadow-lg shadow-indigo-200">
-                        <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
-                            <i class="fas fa-qrcode text-xl"></i>
+                        class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-indigo-600 border border-indigo-500 shadow-lg shadow-indigo-200">
+                        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white">
+                            <i class="fas fa-qrcode text-lg"></i>
                         </div>
-                        <div>
-                            <span class="text-xs font-black text-white block">Barcode Saya</span>
-                            <span class="text-[9px] font-bold text-indigo-100 uppercase tracking-widest">Identitas
-                                Digital</span>
-                        </div>
-                        <i class="fas fa-chevron-right ml-auto text-white/50 text-xs"></i>
+                        <span class="text-[10px] font-black text-white text-center">Barcode Saya</span>
                     </a>
+                    {{-- <a href="{{ route('users.profile') }}"
+                        class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+                            <i class="fas fa-user-gear text-lg"></i>
+                        </div>
+                        <span class="text-[10px] font-bold text-center text-gray-700">Profil Saya</span>
+                    </a> --}}
                 </div>
             </div>
 
