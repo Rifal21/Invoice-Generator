@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
@@ -144,6 +145,9 @@ class ProductController extends Controller
 
         $product->update($data);
 
+        // Sync with existing invoices
+        $this->syncWithInvoices($product);
+
         return redirect()->route('products.index', $request->query())->with('success', 'Product updated successfully.');
     }
 
@@ -189,6 +193,11 @@ class ProductController extends Controller
 
         $product->update($data);
 
+        // Sync with existing invoices if price or purchase_price changed
+        if (array_key_exists('price', $data) || array_key_exists('purchase_price', $data)) {
+            $this->syncWithInvoices($product);
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Data updated successfully',
@@ -196,6 +205,38 @@ class ProductController extends Controller
             'supplier_name' => $product->supplier ? $product->supplier->name : '-',
             'product' => $product
         ]);
+    }
+
+    private function syncWithInvoices(Product $product)
+    {
+        // 1. Update all invoice items for this product
+        $items = \App\Models\InvoiceItem::where('product_id', $product->id)->get();
+
+        if ($items->isEmpty()) {
+            return;
+        }
+
+        $affectedInvoiceIds = [];
+
+        foreach ($items as $item) {
+            $item->price = $product->price;
+            $item->purchase_price = $product->purchase_price;
+            $item->total = $item->price * $item->quantity;
+            $item->save();
+
+            $affectedInvoiceIds[] = $item->invoice_id;
+        }
+
+        // 2. Recalculate totals for all affected invoices
+        $affectedInvoiceIds = array_unique($affectedInvoiceIds);
+        foreach ($affectedInvoiceIds as $invoiceId) {
+            $invoice = \App\Models\Invoice::with('items')->find($invoiceId);
+            if ($invoice) {
+                $subtotal = $invoice->items->sum('total');
+                $invoice->total_amount = $subtotal - ($invoice->discount ?? 0);
+                $invoice->save();
+            }
+        }
     }
 
     public function deleteImage(Product $product)
