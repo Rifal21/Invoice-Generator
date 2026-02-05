@@ -43,6 +43,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/my-barcode', [\App\Http\Controllers\UserController::class, 'myBarcode'])->name('users.my-barcode');
+    Route::get('/profile', [\App\Http\Controllers\UserController::class, 'profile'])->name('users.profile');
+    Route::post('/profile', [\App\Http\Controllers\UserController::class, 'updateProfile'])->name('users.update-profile');
+    Route::get('/change-password', [\App\Http\Controllers\UserController::class, 'changePassword'])->name('users.change-password');
+    Route::post('/change-password', [\App\Http\Controllers\UserController::class, 'updatePassword'])->name('users.update-password');
     Route::get('qr-code/user/{code}', [UserController::class, 'generateQR'])->name('users.qr');
 
     // Backup Routes

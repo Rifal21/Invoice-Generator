@@ -27,6 +27,69 @@ class UserController extends Controller
         return view('users.my-barcode', compact('user'));
     }
 
+    public function changePassword()
+    {
+        return view('users.profile');
+    }
+
+    public function profile()
+    {
+        $user = auth()->user();
+        return view('users.profile', compact('user'));
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = auth()->user();
+        /** @var \App\Models\User $user */
+
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+        ];
+
+        if ($request->filled('password')) {
+            $rules['current_password'] = ['required', 'current_password'];
+            $rules['password'] = ['required', 'string', 'min:8', 'confirmed'];
+        }
+
+        $request->validate($rules, [
+            'current_password.current_password' => 'Password saat ini tidak cocok.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'password.min' => 'Password baru minimal 8 karakter.',
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return redirect()->back()->with('success', 'Profil berhasil diperbarui.');
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => ['required', 'current_password'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ], [
+            'current_password.current_password' => 'Password saat ini tidak cocok.',
+            'password.confirmed' => 'Konfirmasi password baru tidak cocok.',
+            'password.min' => 'Password baru minimal 8 karakter.',
+        ]);
+
+        $user = auth()->user();
+        $user->password = Hash::make($request->password);
+        /** @var \App\Models\User $user */
+        $user->save();
+
+        return redirect()->back()->with('success', 'Password berhasil diperbarui.');
+    }
+
     public function index()
     {
         $users = User::latest()->get();

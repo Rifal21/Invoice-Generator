@@ -16,6 +16,15 @@
     </a>
 </li>
 
+{{-- <li>
+    <a href="{{ route('users.profile') }}"
+        class="{{ request()->routeIs('users.profile') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md p-2 text-sm font-semibold transition-all duration-200"
+        :class="sidebarCollapsed ? 'justify-center' : ''">
+        <i class="fas fa-user-gear text-lg w-6 text-center text-amber-400"></i>
+        <span x-show="!sidebarCollapsed">Profil Saya</span>
+    </a>
+</li> --}}
+
 <li>
     <a href="{{ route('ai.index') }}"
         class="{{ request()->routeIs('ai.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md p-2 text-sm font-semibold transition-all duration-200"

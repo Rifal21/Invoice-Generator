@@ -56,10 +56,11 @@
             <div class="mt-auto border-t border-white/10 pt-4 transition-all duration-300"
                 :class="sidebarCollapsed ? 'px-2' : 'px-4'">
                 <!-- User Info Card -->
-                <div class="flex items-center gap-3 rounded-2xl bg-white/5 mb-3 transition-all duration-300"
+                <a href="{{ route('users.profile') }}"
+                    class="flex items-center gap-3 rounded-2xl bg-white/5 mb-3 transition-all duration-300 hover:bg-white/10 group cursor-pointer"
                     :class="sidebarCollapsed ? 'px-0 py-2 justify-center' : 'px-2 py-3'">
                     <div
-                        class="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black shadow-lg flex-shrink-0">
+                        class="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black shadow-lg flex-shrink-0 group-hover:bg-indigo-500 transition-colors">
                         {{ substr(auth()->user()->name, 0, 1) }}
                     </div>
                     <div class="flex-1 min-w-0 overflow-hidden transition-all duration-300" x-show="!sidebarCollapsed"
@@ -69,11 +70,12 @@
                         x-transition:leave="transition ease-in duration-150"
                         x-transition:leave-start="opacity-100 transform scale-100"
                         x-transition:leave-end="opacity-0 transform scale-95">
-                        <p class="text-sm font-black text-white truncate">{{ auth()->user()->name }}</p>
-                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                        <p class="text-sm font-black text-white truncate group-hover:text-indigo-300 transition-colors">
+                            {{ auth()->user()->name }}</p>
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest group-hover:text-gray-300">
                             {{ auth()->user()->role }}</p>
                     </div>
-                </div>
+                </a>
 
                 <!-- Logout Button -->
                 <form action="{{ route('logout') }}" method="POST">
