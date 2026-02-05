@@ -139,7 +139,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('activity-logs', [ActivityLogController::class, 'index'])->name('activity-logs.index');
 
     // Monitor Sessions
-    Route::get('monitor', [\App\Http\Controllers\MonitorController::class, 'index'])->name('monitor.index');
+    Route::middleware(['role:super_admin'])->group(function () {
+        Route::get('monitor', [\App\Http\Controllers\MonitorController::class, 'index'])->name('monitor.index');
+        Route::post('monitor/logout/{id}', [\App\Http\Controllers\MonitorController::class, 'forceLogout'])->name('monitor.logout');
+    });
 
     // Vehicle Rental Invoice Routes
     Route::get('vehicle-rentals/next-number', [VehicleRentalInvoiceController::class, 'getNextNumber'])->name('vehicle-rentals.next-number');

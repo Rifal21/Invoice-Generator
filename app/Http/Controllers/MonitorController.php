@@ -13,12 +13,13 @@ class MonitorController extends Controller
         $sessions = DB::table('sessions')
             ->whereNotNull('user_id')
             ->join('users', 'sessions.user_id', '=', 'users.id')
-            ->select('sessions.*', 'users.name as user_name', 'users.email')
+            ->select('sessions.id as session_id', 'sessions.*', 'users.name as user_name', 'users.email')
             ->orderBy('sessions.last_activity', 'desc')
             ->get();
 
         $activeUsers = $sessions->map(function ($session) {
             return [
+                'id' => $session->session_id,
                 'name' => $session->user_name,
                 'email' => $session->email,
                 'ip_address' => $session->ip_address,
@@ -29,6 +30,12 @@ class MonitorController extends Controller
         });
 
         return view('monitor.index', compact('activeUsers'));
+    }
+
+    public function forceLogout($id)
+    {
+        DB::table('sessions')->where('id', $id)->delete();
+        return redirect()->back()->with('success', 'User berhasil dipaksa keluar.');
     }
 
     private function parseUserAgent($userAgent)

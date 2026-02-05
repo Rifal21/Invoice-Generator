@@ -89,6 +89,21 @@
                                     <p class="text-xs font-bold text-gray-800">{{ $user['last_activity'] }}</p>
                                 </div>
                             </div>
+
+                            <!-- Logout Button -->
+                            @if (!$user['is_current_device'])
+                                <div class="mt-4 border-t border-gray-100 pt-4">
+                                    <form action="{{ route('monitor.logout', $user['id']) }}" method="POST"
+                                        onsubmit="return confirm('Apakah Anda yakin ingin mengeluarkan user ini?')">
+                                        @csrf
+                                        <button type="submit"
+                                            class="w-full inline-flex items-center justify-center px-4 py-3 border border-transparent text-xs font-black rounded-2xl text-red-600 bg-red-50 hover:bg-red-100 transition-all uppercase tracking-widest active:scale-95">
+                                            <i class="fas fa-sign-out-alt mr-2"></i>
+                                            Paksa Keluar
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </div>
