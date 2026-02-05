@@ -106,7 +106,7 @@
                         <button onclick="downloadAsPNG('{{ $user->unique_code }}')"
                             class="flex-1 flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 px-6 rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-200">
                             <i class="fas fa-file-image opacity-70"></i>
-                            <span class="text-sm tracking-wide">DOWNLOAD PNG</span>
+                            <span class="text-sm tracking-wide">DOWNLOAD QR</span>
                         </button>
                     </div>
                 </div>
