@@ -103,12 +103,11 @@
                             <i class="fas fa-print opacity-70"></i>
                             <span class="text-sm tracking-wide">CETAK</span>
                         </button>
-                        <a href="{{ route('users.qr', $user->unique_code) }}"
-                            download="barcode-{{ $user->unique_code }}.png"
+                        <button onclick="downloadAsPNG('{{ $user->unique_code }}')"
                             class="flex-1 flex items-center justify-center gap-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 px-6 rounded-2xl transition-all active:scale-95 shadow-lg shadow-indigo-200">
-                            <i class="fas fa-download opacity-70"></i>
+                            <i class="fas fa-file-image opacity-70"></i>
                             <span class="text-sm tracking-wide">DOWNLOAD PNG</span>
-                        </a>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -123,49 +122,82 @@
         </div>
     </div>
 
-    <style>
-        /* Prevent content being cut off on very small phones */
-        @media (max-height: 700px) {
-            .min-h-\[calc\(100vh-4rem\)\] {
-                min-height: auto;
-                padding-top: 2rem;
-                padding-bottom: 2rem;
-            }
+    <script>
+        function downloadAsPNG(uniqueCode) {
+            const img = document.querySelector('img[alt="QR Code"]');
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const tempImg = new Image();
+
+            // Selesaikan masalah CORS jika ada
+            tempImg.crossOrigin = "anonymous";
+
+            tempImg.onload = function() {
+                // Set resolusi tinggi (2x lipat ukuran asli)
+                const scale = 2;
+                canvas.width = tempImg.width * scale;
+                canvas.height = tempImg.height * scale;
+
+                // Isi background putih agar tidak transparan saat jadi PNG
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Gambar QR Code ke canvas
+                ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+
+                // Download hasil konversi
+                const link = document.createElement('a');
+                link.download = `barcode-${uniqueCode}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            };
+
+            // Masukkan src gambar (SVG) ke image temporary
+            tempImg.src = img.src;
         }
+    </script>
+    /* Prevent content being cut off on very small phones */
+    @media (max-height: 700px) {
+    .min-h-\[calc\(100vh-4rem\)\] {
+    min-height: auto;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    }
+    }
 
-        @media print {
-            body * {
-                visibility: hidden !important;
-            }
+    @media print {
+    body * {
+    visibility: hidden !important;
+    }
 
-            .bg-white.border.border-slate-200,
-            .bg-white.border.border-slate-200 * {
-                visibility: visible !important;
-            }
+    .bg-white.border.border-slate-200,
+    .bg-white.border.border-slate-200 * {
+    visibility: visible !important;
+    }
 
-            .bg-white.border.border-slate-200 {
-                position: fixed !important;
-                left: 50% !important;
-                top: 50% !important;
-                transform: translate(-50%, -50%) !important;
-                width: 90% !important;
-                max-width: none !important;
-                box-shadow: none !important;
-                border: 2px solid #000 !important;
-            }
+    .bg-white.border.border-slate-200 {
+    position: fixed !important;
+    left: 50% !important;
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90% !important;
+    max-width: none !important;
+    box-shadow: none !important;
+    border: 2px solid #000 !important;
+    }
 
-            button,
-            a[download],
-            .sm\:block.absolute,
-            .mt-8.text-center {
-                display: none !important;
-            }
+    button,
+    a[download],
+    .sm\:block.absolute,
+    .mt-8.text-center {
+    display: none !important;
+    }
 
-            /* Extra print styling to ensure QR is clear */
-            img {
-                max-width: 100% !important;
-                print-color-adjust: exact;
-            }
-        }
+    /* Extra print styling to ensure QR is clear */
+    img {
+    max-width: 100% !important;
+    print-color-adjust: exact;
+    }
+    }
     </style>
 @endsection
