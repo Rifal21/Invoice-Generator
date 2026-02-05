@@ -14,10 +14,18 @@ class UserController extends Controller
      */
     public function generateQR(Request $request, $code)
     {
-        $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(300)
+        $qrCode = \SimpleSoftwareIO\QrCode\Facades\QrCode::format('png')
+            ->size(300)
+            ->margin(1)
             ->generate($code);
 
-        return response($qrCode)->header('Content-Type', 'image/svg+xml');
+        return response($qrCode)->header('Content-Type', 'image/png');
+    }
+
+    public function myBarcode()
+    {
+        $user = auth()->user();
+        return view('users.my-barcode', compact('user'));
     }
 
     public function index()

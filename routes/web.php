@@ -42,6 +42,8 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/my-barcode', [\App\Http\Controllers\UserController::class, 'myBarcode'])->name('users.my-barcode');
+    Route::get('qr-code/user/{code}', [UserController::class, 'generateQR'])->name('users.qr');
 
     // Backup Routes
     Route::get('/backup', [\App\Http\Controllers\BackupController::class, 'index'])->name('backup.index');
@@ -187,7 +189,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Admin Only
     Route::middleware(['role:super_admin,ketua'])->group(function () {
-        Route::get('qr-code/user/{code}', [UserController::class, 'generateQR'])->name('users.qr');
         Route::resource('users', UserController::class);
     });
 });
