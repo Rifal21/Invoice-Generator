@@ -198,25 +198,21 @@
 
             try {
                 const response = await fetch(
-                    `{{ route('attendance.report') }}?user_id=${userId}&date=${startDate}&start_date=${startDate}&end_date=${endDate}`
+                    `{{ route('attendance.present-dates') }}?user_id=${userId}&start_date=${startDate}&end_date=${endDate}`
                     );
-                // Note: The current report route doesn't return JSON easily, let's use the count route instead to see if they were present
-                // Or better, let's just assume we want the list of dates.
-                // For simplicity, I'll use a mocked approach or fetch from the specific count/status if available.
-                // Re-using the count logic but just to get the "presence" status is tricky without a dedicated API.
-                // Let's create a more specific one or just use manual selection while auto-checking based on standard business logic.
+                const data = await response.json();
 
-                // I'll use the report route with special header if it supports JSON, but it looks like it's for Blade.
-                // I previously added attendance.count which returns a count.
-                // Let's create a more specific one or just use manual selection while auto-checking based on standard business logic.
-
-                // For now, let's generate the checkboxes first.
-                generateDateCheckboxes();
-                statusEl.innerText = 'Data siap';
-                statusEl.className = 'text-[10px] font-black text-emerald-500 uppercase tracking-widest';
+                if (data.success) {
+                    attendanceDates = data.dates; // dates is an array of "YYYY-MM-DD"
+                    generateDateCheckboxes();
+                    statusEl.innerText = 'Data siap (Berdasarkan Absensi)';
+                    statusEl.className = 'text-[10px] font-black text-emerald-500 uppercase tracking-widest';
+                }
             } catch (error) {
+                console.error('Fetch error:', error);
                 statusEl.innerText = 'Gagal memuat absensi';
                 statusEl.className = 'text-[10px] font-black text-red-500 uppercase tracking-widest';
+                generateDateCheckboxes(); // Fallback to manual
             }
         }
 
@@ -246,8 +242,15 @@
                 const dayNum = current.getDay();
                 const dayName = daysNames[dayNum];
 
-                // Default rule: Exclude Friday (5) and Saturday (6)
-                const isChecked = (dayNum !== 5 && dayNum !== 6);
+                // If we have real attendance data, check if this date is in the list
+                let isChecked = false;
+                if (attendanceDates.length > 0) {
+                    isChecked = attendanceDates.includes(dateStr);
+                } else {
+                    // Fallback to default rule: Exclude Sunday (0) and Saturday (6) or whatever common rule
+                    // Let's stick to the previous rule or just uncheck all if no data
+                    isChecked = (dayNum !== 0 && dayNum !== 6);
+                }
 
                 const div = document.createElement('div');
                 div.className = 'relative group';

@@ -180,6 +180,7 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('attendance/{attendance}', [AttendanceController::class, 'update'])->name('attendance.update');
         Route::delete('attendance/{attendance}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
         Route::get('attendance/count', [AttendanceController::class, 'getAttendanceCount'])->name('attendance.count');
+        Route::get('attendance/present-dates', [AttendanceController::class, 'getPresentDates'])->name('attendance.present-dates');
     });
 
     // Admin & Ketua only (Financials & Salaries)

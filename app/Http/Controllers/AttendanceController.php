@@ -169,7 +169,7 @@ class AttendanceController extends Controller
                 ], 422);
             }
 
-            $status = $now->gt(Carbon::parse($settings->check_in_time)->addMinutes(15)) ? 'present' : 'present';
+            $status = $now->gt(Carbon::parse($settings->check_in_time)->addMinutes(15)) ? 'late' : 'present';
 
             // Handle photo upload
             $photoPath = null;
@@ -408,11 +408,31 @@ class AttendanceController extends Controller
 
         $count = Attendance::where('user_id', $request->user_id)
             ->whereBetween('date', [$request->start_date, $request->end_date])
+            ->whereIn('status', ['present', 'late'])
             ->count();
 
         return response()->json([
             'success' => true,
             'count' => $count,
+        ]);
+    }
+
+    public function getPresentDates(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date',
+        ]);
+
+        $dates = Attendance::where('user_id', $request->user_id)
+            ->whereBetween('date', [$request->start_date, $request->end_date])
+            ->whereIn('status', ['present', 'late'])
+            ->pluck('date');
+
+        return response()->json([
+            'success' => true,
+            'dates' => $dates,
         ]);
     }
 

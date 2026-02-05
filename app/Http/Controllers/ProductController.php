@@ -131,9 +131,19 @@ class ProductController extends Controller
                 $type = strtolower($type[1]); // jpg, png, gif
                 $image_data = base64_decode($image_data);
                 $image_name = 'product_' . time() . '.' . $type;
+                // Delete old image
+                if ($product->image) {
+                    \Storage::disk('public')->delete($product->image);
+                }
+
                 \Storage::disk('public')->put('products/' . $image_name, $image_data);
                 $data['image'] = 'products/' . $image_name;
             } elseif ($request->hasFile('image')) {
+                // Delete old image
+                if ($product->image) {
+                    \Storage::disk('public')->delete($product->image);
+                }
+
                 $file = $request->file('image');
                 $path = $file->store('products', 'public');
                 $data['image'] = $path;
@@ -156,6 +166,9 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        if ($product->image) {
+            \Storage::disk('public')->delete($product->image);
+        }
         $product->delete();
 
         return redirect()->back()->with('success', 'Product deleted successfully.');

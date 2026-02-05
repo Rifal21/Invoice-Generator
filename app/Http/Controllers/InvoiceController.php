@@ -700,8 +700,8 @@ class InvoiceController extends Controller
             'invoice_ids.*' => 'exists:invoices,id'
         ]);
 
-        $whapiToken = 'QYBkexNHUc5ALtBa7KIyelEHAQWioYPP';
-        $whapiUrl = 'https://gate.whapi.cloud/messages';
+        $whapiToken = env('WHAPI_TOKEN', 'QYBkexNHUc5ALtBa7KIyelEHAQWioYPP');
+        $whapiUrl = env('WHAPI_URL', 'https://gate.whapi.cloud/messages');
 
         $invoices = Invoice::with(['items.product'])->whereIn('id', $request->invoice_ids)->get();
         $successCount = 0;
