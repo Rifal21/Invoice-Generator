@@ -19,6 +19,26 @@
         </div>
 
         <div class="px-6 pb-12 space-y-8">
+            <!-- User Section -->
+            <div>
+                <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Profil & Barcode
+                </h4>
+                <div class="grid grid-cols-1 gap-3">
+                    <a href="{{ route('users.my-barcode') }}"
+                        class="flex items-center gap-4 p-4 rounded-3xl bg-indigo-600 border border-indigo-500 shadow-lg shadow-indigo-200">
+                        <div class="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center text-white">
+                            <i class="fas fa-qrcode text-xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-black text-white block">Barcode Saya</span>
+                            <span class="text-[9px] font-bold text-indigo-100 uppercase tracking-widest">Identitas
+                                Digital</span>
+                        </div>
+                        <i class="fas fa-chevron-right ml-auto text-white/50 text-xs"></i>
+                    </a>
+                </div>
+            </div>
+
             <!-- Featured AI Section -->
             <div class="relative group">
                 <div

@@ -156,48 +156,49 @@
             tempImg.src = img.src;
         }
     </script>
-    /* Prevent content being cut off on very small phones */
-    @media (max-height: 700px) {
-    .min-h-\[calc\(100vh-4rem\)\] {
-    min-height: auto;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
-    }
-    }
+    <style>
+        /* Prevent content being cut off on very small phones */
+        @media (max-height: 700px) {
+            .min-h-\[calc\(100vh-4rem\)\] {
+                min-height: auto;
+                padding-top: 2rem;
+                padding-bottom: 2rem;
+            }
+        }
 
-    @media print {
-    body * {
-    visibility: hidden !important;
-    }
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
 
-    .bg-white.border.border-slate-200,
-    .bg-white.border.border-slate-200 * {
-    visibility: visible !important;
-    }
+            .bg-white.border.border-slate-200,
+            .bg-white.border.border-slate-200 * {
+                visibility: visible !important;
+            }
 
-    .bg-white.border.border-slate-200 {
-    position: fixed !important;
-    left: 50% !important;
-    top: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 90% !important;
-    max-width: none !important;
-    box-shadow: none !important;
-    border: 2px solid #000 !important;
-    }
+            .bg-white.border.border-slate-200 {
+                position: fixed !important;
+                left: 50% !important;
+                top: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 90% !important;
+                max-width: none !important;
+                box-shadow: none !important;
+                border: 2px solid #000 !important;
+            }
 
-    button,
-    a[download],
-    .sm\:block.absolute,
-    .mt-8.text-center {
-    display: none !important;
-    }
+            button,
+            a[download],
+            .sm\:block.absolute,
+            .mt-8.text-center {
+                display: none !important;
+            }
 
-    /* Extra print styling to ensure QR is clear */
-    img {
-    max-width: 100% !important;
-    print-color-adjust: exact;
-    }
-    }
+            /* Extra print styling to ensure QR is clear */
+            img {
+                max-width: 100% !important;
+                print-color-adjust: exact;
+            }
+        }
     </style>
 @endsection
