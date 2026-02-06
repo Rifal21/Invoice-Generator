@@ -11,11 +11,20 @@ class Backup extends Model
 
     protected $fillable = [
         'user_id',
+        'type',
+        'start_date',
+        'end_date',
         'period_month',
+        'period_week',
         'period_year',
         'status',
         'total_invoices',
         'details'
+    ];
+
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     public function user()

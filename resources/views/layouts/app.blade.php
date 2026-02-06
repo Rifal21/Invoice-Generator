@@ -417,7 +417,7 @@
             }
         }
 
-        function startGlobalPolling() {
+        window.startGlobalPolling = function() {
             if (backupPollInterval) return;
 
             showBackupUI();

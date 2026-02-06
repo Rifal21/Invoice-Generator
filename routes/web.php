@@ -55,6 +55,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/backup/connect', [\App\Http\Controllers\BackupController::class, 'connect'])->name('backup.connect');
     Route::get('/backup/callback', [\App\Http\Controllers\BackupController::class, 'callback'])->name('backup.callback');
     Route::get('/backup/progress', [\App\Http\Controllers\BackupController::class, 'checkProgress'])->name('backup.progress');
+    Route::get('/backup/database', [\App\Http\Controllers\BackupController::class, 'downloadDatabase'])->name('backup.database');
     Route::get('/backup/history', [\App\Http\Controllers\BackupController::class, 'history'])->name('backup.history');
 
     // Document Library Routes
