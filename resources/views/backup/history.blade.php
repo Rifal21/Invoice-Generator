@@ -4,7 +4,17 @@
             {{ $backup->created_at->format('d/m/Y H:i') }}
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-gray-900">
-            {{ \Carbon\Carbon::createFromDate($backup->period_year, $backup->period_month, 1)->format('F Y') }}
+            @if ($backup->type === 'database')
+                Full Database (SQL/Excel)
+            @elseif ($backup->type === 'products')
+                Data Produk (Excel)
+            @elseif ($backup->type === 'weekly' && $backup->start_date && $backup->end_date)
+                {{ $backup->start_date->format('d/m/Y') }} - {{ $backup->end_date->format('d/m/Y') }}
+            @elseif ($backup->type === 'weekly')
+                Minggu {{ $backup->period_week }}, {{ $backup->period_year }}
+            @else
+                {{ \Carbon\Carbon::createFromDate($backup->period_year, $backup->period_month, 1)->format('F Y') }}
+            @endif
         </td>
         <td class="px-6 py-4 whitespace-nowrap text-xs">
             @if ($backup->status == 'completed')
