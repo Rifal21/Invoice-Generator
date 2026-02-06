@@ -149,9 +149,11 @@
                                             @endif
                                         </div>
                                         <div class="min-w-0">
-                                            <div class="text-sm font-black text-gray-900 leading-tight mb-1 truncate">
+                                            <div
+                                                class="text-sm font-black text-gray-900 leading-tight mb-1 truncate product-name-display">
                                                 {{ $product->name }}</div>
-                                            <div class="text-[11px] text-gray-400 line-clamp-1 italic">
+                                            <div
+                                                class="text-[11px] text-gray-400 line-clamp-1 italic product-description-display">
                                                 {{ $product->description ?: 'Beri deskripsi untuk produk ini...' }}</div>
                                         </div>
                                     </div>
@@ -159,11 +161,11 @@
                                 <td class="whitespace-nowrap px-3 py-5">
                                     <div class="flex flex-col gap-1.5">
                                         <span
-                                            class="inline-flex w-fit px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-600 uppercase tracking-wider border border-indigo-100">
+                                            class="inline-flex w-fit px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-600 uppercase tracking-wider border border-indigo-100 category-name-display">
                                             {{ $product->category->name }}
                                         </span>
                                         <span
-                                            class="inline-flex w-fit px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-gray-50 text-gray-500 uppercase tracking-wider border border-gray-100">
+                                            class="inline-flex w-fit px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-gray-50 text-gray-500 uppercase tracking-wider border border-gray-100 supplier-name-display">
                                             {{ $product->supplier ? $product->supplier->name : 'UMUM' }}
                                         </span>
                                     </div>
@@ -171,11 +173,15 @@
                                 <td class="whitespace-nowrap px-3 py-5">
                                     <div class="flex flex-col">
                                         <div class="text-sm font-black text-indigo-600">Rp
-                                            {{ number_format($product->price, 0, ',', '.') }}<span
-                                                class="text-[10px] text-gray-400 font-medium ml-1">/{{ $product->unit }}</span>
+                                            <span
+                                                class="product-price-display">{{ number_format($product->price, 0, ',', '.') }}</span>
+                                            <span
+                                                class="text-[10px] text-gray-400 font-medium ml-1 product-unit-display">/{{ $product->unit }}</span>
                                         </div>
                                         <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">
-                                            HPP: Rp {{ number_format($product->purchase_price, 0, ',', '.') }}</div>
+                                            HPP: Rp <span
+                                                class="product-purchase-price-display">{{ number_format($product->purchase_price, 0, ',', '.') }}</span>
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap py-5 pl-3 pr-8 text-right w-32">
@@ -230,21 +236,24 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-start mb-1">
-                                <h3 class="text-sm font-bold text-gray-900 leading-tight truncate pr-2">
+                                <h3
+                                    class="text-sm font-bold text-gray-900 leading-tight truncate pr-2 mobile-product-name">
                                     {{ $product->name }}</h3>
                                 <span
                                     class="text-[10px] font-bold text-gray-300 whitespace-nowrap">#{{ $loop->iteration + ($products->currentPage() - 1) * $products->perPage() }}</span>
                             </div>
                             <div class="flex flex-wrap gap-1.5 mb-2">
                                 <span
-                                    class="text-[9px] font-black bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded uppercase tracking-wider">{{ $product->category->name }}</span>
+                                    class="text-[9px] font-black bg-indigo-50 text-indigo-600 px-1.5 py-0.5 rounded uppercase tracking-wider mobile-category-name">{{ $product->category->name }}</span>
                                 <span
-                                    class="text-[9px] font-black bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded uppercase tracking-wider">{{ $product->supplier ? $product->supplier->name : 'UMUM' }}</span>
+                                    class="text-[9px] font-black bg-gray-50 text-gray-400 px-1.5 py-0.5 rounded uppercase tracking-wider mobile-supplier-name">{{ $product->supplier ? $product->supplier->name : 'UMUM' }}</span>
                             </div>
                             <div class="flex items-baseline gap-2">
                                 <span class="text-sm font-black text-indigo-600">Rp
-                                    {{ number_format($product->price, 0, ',', '.') }}</span>
-                                <span class="text-[10px] text-gray-400">/{{ $product->unit }}</span>
+                                    <span
+                                        class="mobile-product-price">{{ number_format($product->price, 0, ',', '.') }}</span></span>
+                                <span class="text-[10px] text-gray-400">/<span
+                                        class="mobile-product-unit">{{ $product->unit }}</span></span>
                             </div>
                         </div>
                         <div class="flex flex-col gap-2">
@@ -784,6 +793,11 @@
                     })
                 });
 
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Update failed');
+                }
+
                 const data = await response.json();
 
                 if (data.success) {
@@ -791,101 +805,89 @@
                         toast: true,
                         position: 'top-end',
                         showConfirmButton: false,
-                        timer: 3000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.addEventListener('mouseenter', Swal.stopTimer)
-                            toast.addEventListener('mouseleave', Swal.resumeTimer)
-                        }
+                        timer: 2000,
+                        timerProgressBar: true
                     });
 
                     Toast.fire({
                         icon: 'success',
-                        title: 'Updated successfully'
+                        title: 'Berhasil diperbarui'
                     });
-
-
-                    // Update UI elements dynamically
-                    const updateElement = (selector, text) => {
-                        const els = document.querySelectorAll(selector);
-                        els.forEach(el => el.innerText = text);
-                    };
 
                     const formatRupiah = (num) => {
                         return new Intl.NumberFormat('id-ID').format(num);
                     };
 
-                    // Desktop Row
+                    // Update Desktop Table Row
                     const row = document.querySelector(`tr[data-product-id="${id}"]`);
                     if (row) {
-                        if (field === 'name') row.querySelector('td:nth-child(3) span').innerText = value;
-                        if (field === 'category_id') row.querySelector('.category-select').value = value;
-                        if (field === 'supplier_id') row.querySelector('.supplier-select').value = value;
-                        if (field === 'purchase_price') row.querySelector('td:nth-child(6)').innerText = 'Rp ' +
-                            formatRupiah(value);
-                        if (field === 'price') row.querySelector('td:nth-child(7)').innerText = 'Rp ' + formatRupiah(
-                            value);
-                        if (field === 'unit') row.querySelector('td:nth-child(8)').innerText = value;
-                        if (field === 'stock') row.querySelector('td:nth-child(9)').innerText = parseFloat(value);
-                        if (field === 'description') row.querySelector('td:nth-child(10)').innerText = value.length >
-                            30 ? value.substring(0, 30) + '...' : value;
-                    }
-
-                    // Mobile Card
-                    // Find card by checkbox value
-                    const mobileCheckbox = document.querySelector(`.product-card-mobile input[value="${id}"]`);
-                    if (mobileCheckbox) {
-                        const card = mobileCheckbox.closest('.product-card-mobile');
-                        if (card) {
-                            if (field === 'name') {
-                                const nameEl = card.querySelector('h3');
-                                if (nameEl) nameEl.innerText = value;
-                            }
-                            if (field === 'price') {
-                                // Price is in "Rp X / Unit" block
-                                // Structure: .bg-gray-50 span:nth-child(1) (Rp X), span:nth-child(2) (/ Unit)
-                                const priceEl = card.querySelector('.bg-gray-50 span:first-child');
-                                if (priceEl) priceEl.innerText = 'Rp ' + formatRupiah(value);
-                            }
-                            if (field === 'unit') {
-                                // Update price suffix and stock suffix
-                                const priceUnitEl = card.querySelector('.bg-gray-50 span:nth-child(2)');
-                                if (priceUnitEl) priceUnitEl.innerText = '/ ' + value;
-                            }
-                            if (field === 'stock') {
-                                // Stock badge: "Stok: X"
-                                // Structure: second div in flex items-center
-                                // It has class text-green-600 or text-red-600.
-                                // Let's use flexible selector or just query selector with unique enough classes key
-                                const stockEl = card.querySelectorAll('.flex.flex-wrap.items-center.gap-3 div')[1];
-                                if (stockEl) stockEl.innerText = 'Stok: ' + parseFloat(value);
-                            }
-                            if (field === 'description') {
-                                const descEl = card.querySelector('p.text-xs.italic');
-                                if (descEl) descEl.innerText = '"' + (value.length > 60 ? value.substring(0, 60) +
-                                    '...' : value) + '"';
-                                else if (value) {
-                                    // If desc was empty before, element might not exist or be empty. Implementation details vary.
-                                    // For now ignore create new element case for simplicity unless critical.
-                                }
-                            }
-                            if (field === 'category_id') {
-                                const catBadge = card.querySelector('.text-indigo-700'); // Fragile?
-                                if (catBadge && data.category_name) catBadge.innerText = data.category_name;
-                            }
-                            if (field === 'supplier_id') {
-                                const supBadge = card.querySelector('.text-green-700');
-                                if (supBadge && data.supplier_name) supBadge.innerText = data.supplier_name;
-                            }
+                        if (field === 'name') {
+                            const el = row.querySelector('.product-name-display');
+                            if (el) el.innerText = value;
+                        }
+                        if (field === 'description') {
+                            const el = row.querySelector('.product-description-display');
+                            if (el) el.innerText = value || 'Beri deskripsi untuk produk ini...';
+                        }
+                        if (field === 'category_id') {
+                            const el = row.querySelector('.category-name-display');
+                            if (el) el.innerText = data.category_name;
+                        }
+                        if (field === 'supplier_id') {
+                            const el = row.querySelector('.supplier-name-display');
+                            if (el) el.innerText = data.supplier_name;
+                        }
+                        if (field === 'price') {
+                            const el = row.querySelector('.product-price-display');
+                            if (el) el.innerText = formatRupiah(value);
+                        }
+                        if (field === 'purchase_price') {
+                            const el = row.querySelector('.product-purchase-price-display');
+                            if (el) el.innerText = formatRupiah(value);
+                        }
+                        if (field === 'unit') {
+                            const el = row.querySelector('.product-unit-display');
+                            if (el) el.innerText = '/' + value;
                         }
                     }
 
-                } else {
-                    throw new Error('Update failed');
+                    // Update Mobile Card
+                    const mobileCard = document.querySelector(`.product-card-mobile input[value="${id}"]`)?.closest(
+                        '.product-card-mobile');
+                    if (mobileCard) {
+                        if (field === 'name') {
+                            const el = mobileCard.querySelector('.mobile-product-name');
+                            if (el) el.innerText = value;
+                        }
+                        if (field === 'category_id') {
+                            const el = mobileCard.querySelector('.mobile-category-name');
+                            if (el) el.innerText = data.category_name;
+                        }
+                        if (field === 'supplier_id') {
+                            const el = mobileCard.querySelector('.mobile-supplier-name');
+                            if (el) el.innerText = data.supplier_name;
+                        }
+                        if (field === 'price') {
+                            const el = mobileCard.querySelector('.mobile-product-price');
+                            if (el) el.innerText = formatRupiah(value);
+                        }
+                        if (field === 'unit') {
+                            const el = mobileCard.querySelector('.mobile-product-unit');
+                            if (el) el.innerText = value;
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Update failed:', error);
-                Swal.fire('Error', 'Gagal update data: ' + error.message, 'error');
+                Swal.fire({
+                    title: 'Update Gagal',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonColor: '#4f46e5',
+                    customClass: {
+                        popup: 'rounded-3xl'
+                    }
+                });
             }
         }
 
