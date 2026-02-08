@@ -57,7 +57,7 @@
 </head>
 
 <body class="h-full">
-    <div x-data="{ sidebarOpen: false, mobileMenuOpen: false, sidebarCollapsed: false }" class="min-h-full">
+    <div x-data="{ sidebarOpen: false, mobileMenuOpen: false, sidebarCollapsed: false }" class="min-h-full overflow-x-hidden">
         @include('layouts.partials.bottom-nav')
         @include('layouts.partials.mobile-menu')
 

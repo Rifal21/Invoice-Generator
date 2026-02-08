@@ -474,6 +474,7 @@ class InvoiceController extends Controller
                     "Laporan detail terlampir di bawah ini 👇";
 
                 // 5. Kirim Invoice PDF
+                /** @var \Illuminate\Http\Client\Response $response1 */
                 $response1 = Http::attach('document', $invoiceContent, $invoiceFilename)
                     ->post("https://api.telegram.org/bot{$token}/sendDocument", [
                         'chat_id' => $chatId,
@@ -548,6 +549,7 @@ class InvoiceController extends Controller
                     "💰 *Total:* *Rp " . number_format($invoice->total_amount, 0, ',', '.') . "*\n\n" .
                     "Terima kasih telah berlangganan!";
 
+                /** @var \Illuminate\Http\Client\Response $response */
                 $response = Http::attach('document', $invoiceContent, $invoiceFilename)
                     ->post("https://api.telegram.org/bot{$token}/sendDocument", [
                         'chat_id' => $customer->telegram_chat_id,
@@ -633,8 +635,9 @@ class InvoiceController extends Controller
                 $imagePath = public_path('invoice-files/' . $imageName);
                 $imageBase64 = null;
 
-                if (class_exists('Imagick')) {
+                if (class_exists('\Imagick')) {
                     try {
+                        /** @var \Imagick $imagick */
                         $imagick = new \Imagick();
                         $imagick->setResolution(150, 150);
                         $imagick->readImage($pdfPath . '[0]');
@@ -675,6 +678,7 @@ class InvoiceController extends Controller
                 ];
                 $endpoint = "{$apiUrl}/api/sendText";
 
+                /** @var \Illuminate\Http\Client\Response $response */
                 $response = Http::withHeaders([
                     'X-Api-Key' => $apiKey,
                     'Content-Type' => 'application/json'
@@ -750,6 +754,7 @@ class InvoiceController extends Controller
                     "Terima kasih atas kunjungan Anda! 🙏";
 
                 // Kirim Dokumen via Whapi
+                /** @var \Illuminate\Http\Client\Response $response */
                 $response = Http::withHeaders([
                     'Authorization' => "Bearer {$whapiToken}",
                     'Content-Type' => 'application/json'

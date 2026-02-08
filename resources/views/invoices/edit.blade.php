@@ -1,235 +1,300 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-            <div class="min-w-0 flex-1">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 md:py-12 overflow-x-hidden">
+        <!-- Header Section with Premium Touch -->
+        <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between mb-10 gap-6">
+            <div class="space-y-2">
                 <nav class="flex mb-4" aria-label="Breadcrumb">
-                    <ol class="flex items-center space-x-2">
+                    <ol class="flex items-center space-x-2 text-xs font-black uppercase tracking-[0.2em]">
                         <li><a href="{{ route('invoices.index', request()->query()) }}"
-                                class="text-xs md:text-sm font-bold text-gray-400 hover:text-indigo-600">Invoice</a></li>
-                        <li><svg class="h-5 w-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                    clip-rule="evenodd" />
-                            </svg></li>
-                        <li class="text-xs md:text-sm font-bold text-indigo-600">Edit</li>
+                                class="text-gray-400 hover:text-indigo-600 transition-colors">Invoice</a></li>
+                        <li class="text-gray-300">/</li>
+                        <li class="text-indigo-600">Edit</li>
                     </ol>
                 </nav>
-                <div class="flex items-center gap-4">
-                    <h2 class="text-2xl md:text-3xl font-extrabold leading-7 text-gray-900 sm:truncate sm:tracking-tight">
-                        Edit Invoice</h2>
+                <div class="flex flex-wrap items-center gap-4">
+                    <h2 class="text-4xl md:text-5xl font-black text-gray-900 tracking-tight">
+                        Edit <span
+                            class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-indigo-800">Invoice</span>
+                    </h2>
                     <span id="invoice_number_display"
-                        class="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-bold bg-indigo-100 text-indigo-800">
+                        class="inline-flex items-center px-6 py-2 rounded-full text-sm font-black bg-indigo-100 text-indigo-600 shadow-sm border border-indigo-200">
                         {{ $invoice->invoice_number }}
                     </span>
                 </div>
-                <p class="mt-2 text-sm text-gray-500">Perbarui data invoice Anda.</p>
+                <p class="text-lg text-gray-500 font-medium">Perbarui rincian transaksi dengan presisi.</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4">
+                {{-- Optional: Add specific edit actions here --}}
             </div>
         </div>
 
-        <div class="bg-white shadow-2xl rounded-3xl overflow-hidden border-2 border-gray-100">
-            <form action="{{ route('invoices.update', $invoice) }}" method="POST"
-                class="p-5 sm:p-10 space-y-8 md:space-y-10">
-                @csrf
-                @method('PUT')
+        <div class="relative">
+            <!-- Decorative Elements -->
+            <div class="absolute -top-10 -right-10 w-64 h-64 bg-indigo-100 rounded-full blur-3xl opacity-50 -z-10"></div>
+            <div class="absolute -bottom-10 -left-10 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-50 -z-10"></div>
 
-                <!-- Hidden Invoice Number (Must be inside form) -->
-                <input type="hidden" name="invoice_number" id="invoice_number"
-                    value="{{ old('invoice_number', $invoice->invoice_number) }}">
+            <div
+                class="bg-white/80 backdrop-blur-xl shadow-[0_40px_100px_rgba(0,0,0,0.05)] rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-white/20">
+                <form action="{{ route('invoices.update', $invoice) }}" method="POST"
+                    class="p-4 sm:p-12 space-y-8 md:space-y-12">
+                    @csrf
+                    @method('PUT')
 
-                {{-- Preserve Filters --}}
-                @foreach (request()->query() as $key => $value)
-                    @if (is_array($value))
-                        @foreach ($value as $k => $v)
-                            <input type="hidden" name="filters[{{ $key }}][{{ $k }}]"
-                                value="{{ $v }}">
-                        @endforeach
-                    @else
-                        <input type="hidden" name="filters[{{ $key }}]" value="{{ $value }}">
-                    @endif
-                @endforeach
+                    <!-- Hidden Invoice Number (Must be inside form) -->
+                    <input type="hidden" name="invoice_number" id="invoice_number"
+                        value="{{ old('invoice_number', $invoice->invoice_number) }}">
 
-                <!-- Invoice Details Section -->
-                <div class="grid grid-cols-1 gap-y-6 gap-x-6 md:grid-cols-3 border-b border-gray-100 pb-8 md:pb-10">
-                    <div>
-                        <label for="date" class="block text-sm font-bold text-gray-700 mb-2">Tanggal Invoice</label>
-                        <div class="relative">
-                            <input type="date" name="date" id="date" value="{{ old('date', $invoice->date) }}"
-                                required
-                                class="block w-full rounded-2xl border-2 border-gray-200 py-3 px-3 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
-                        </div>
-                    </div>
-
-                    <div>
-                        <label for="tipe" class="block text-sm font-bold text-gray-700 mb-2">Tipe Invoice</label>
-                        <select name="tipe" id="tipe" required
-                            class="block w-full rounded-2xl border-2 border-gray-200 py-3 px-3 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
-                            <option value="">Pilih Tipe</option>
-                            <option value="BSH"
-                                {{ old('tipe', str_contains($invoice->invoice_number, '-BSH') ? 'BSH' : '') == 'BSH' ? 'selected' : '' }}>
-                                Basahan (BSH)</option>
-                            <option value="KR"
-                                {{ old('tipe', str_contains($invoice->invoice_number, '-KR') && !str_contains($invoice->invoice_number, '-KRBSBM') ? 'KR' : '') == 'KR' ? 'selected' : '' }}>
-                                Keringan (KR)</option>
-                            <option value="KRBSBM"
-                                {{ old('tipe', str_contains($invoice->invoice_number, '-KRBSBM') ? 'KRBSBM' : '') == 'KRBSBM' ? 'selected' : '' }}>
-                                Keringan Bumil Busui (KRBSBM)</option>
-                            <option value="OPR"
-                                {{ old('tipe', str_contains($invoice->invoice_number, '-OPR') ? 'OPR' : '') == 'OPR' ? 'selected' : '' }}>
-                                Operasional (OPR)</option>
-                            <option value="LMN"
-                                {{ old('tipe', str_contains($invoice->invoice_number, '-LMN') ? 'LMN' : '') == 'LMN' ? 'selected' : '' }}>
-                                Lain-lain (LMN)</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label for="customer_name" class="block text-sm font-bold text-gray-700 mb-2">Nama Pelanggan</label>
-                        <select name="customer_name" id="customer_name" required
-                            class="block w-full rounded-2xl border-2 border-gray-200 py-3 px-3 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200">
-                            <option value="">Pilih Pelanggan</option>
-                            @foreach ($customers as $customer)
-                                <option value="{{ $customer->name }}"
-                                    {{ old('customer_name', $invoice->customer_name) == $customer->name ? 'selected' : '' }}>
-                                    {{ $customer->name }} {{ $customer->phone ? ' - ' . $customer->phone : '' }}
-                                </option>
+                    {{-- Preserve Filters --}}
+                    @foreach (request()->query() as $key => $value)
+                        @if (is_array($value))
+                            @foreach ($value as $k => $v)
+                                <input type="hidden" name="filters[{{ $key }}][{{ $k }}]"
+                                    value="{{ $v }}">
                             @endforeach
-                        </select>
-                    </div>
-                </div>
+                        @else
+                            <input type="hidden" name="filters[{{ $key }}]" value="{{ $value }}">
+                        @endif
+                    @endforeach
 
-                <!-- Items Section -->
-                <div>
+                    <!-- Invoice Details Section -->
                     <div
-                        class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 pb-2 border-b-2 border-gray-50 gap-2">
-                        <h3 class="text-xl font-bold text-gray-900">Item Invoice</h3>
-                        <span class="text-xs font-medium text-gray-400 uppercase tracking-widest">Ubah produk atau
-                            layanan</span>
-                    </div>
-
-                    <!-- Desktop Header (Visible only on medium screens and up) -->
-                    <div class="hidden md:grid grid-cols-12 gap-6 mb-2 px-6">
-                        <div class="col-span-12 md:col-span-4 text-xs font-black text-gray-400 uppercase tracking-widest">
-                            Produk / Layanan</div>
-                        <div class="col-span-6 md:col-span-2 text-xs font-black text-gray-400 uppercase tracking-widest">
-                            HPP</div>
-                        <div class="col-span-6 md:col-span-2 text-xs font-black text-gray-400 uppercase tracking-widest">
-                            Harga Jual</div>
-                        <div class="col-span-6 md:col-span-2 text-xs font-black text-gray-400 uppercase tracking-widest">
-                            Jumlah</div>
-                        <div class="col-span-12 md:col-span-2 text-xs font-black text-gray-400 uppercase tracking-widest">
-                            Subtotal</div>
-                    </div>
-
-                    <div id="items-container" class="space-y-4">
-                        <!-- Items will be added here as cards -->
-                    </div>
-
-                    <button type="button" onclick="addItem()"
-                        class="mt-8 inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 border border-transparent text-base font-bold rounded-2xl text-white bg-indigo-600 shadow-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:-translate-y-1">
-                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Tambah Item Baru
-                    </button>
-                </div>
-
-                <!-- Totals Section -->
-                <div class="bg-gray-50 rounded-3xl p-6 md:p-8 border border-gray-100">
-                    <div class="flex flex-col space-y-4">
-                        <!-- Subtotal -->
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm font-bold text-gray-500 uppercase tracking-widest">Subtotal</span>
-                            <span class="text-xl font-bold text-gray-900">Rp <span id="subtotal">0</span></span>
-                        </div>
-
-                        <!-- Discount -->
-                        <div class="flex justify-between items-center">
-                            <label for="discount" class="text-sm font-bold text-gray-500 uppercase tracking-widest">Diskon
-                                (Rp)</label>
-                            <div class="relative w-40 sm:w-60">
-                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <span class="text-gray-400 font-bold">Rp</span>
+                        class="grid grid-cols-1 gap-5 md:gap-8 md:grid-cols-3 bg-gray-50/50 p-5 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-gray-100">
+                        <div>
+                            <label for="date"
+                                class="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-2">Tanggal
+                                Invoice</label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                    <i
+                                        class="fas fa-calendar-alt text-indigo-400 group-focus-within:text-indigo-600 transition-colors"></i>
                                 </div>
-                                <input type="number" name="discount" id="discount"
-                                    value="{{ old('discount', $invoice->discount) }}"
-                                    class="block w-full rounded-xl border-2 border-gray-200 py-2 pl-10 text-right text-gray-900 font-bold focus:ring-indigo-500 focus:border-indigo-500"
-                                    min="0" step="0.01" oninput="calculateGrandTotal()">
+                                <input type="date" name="date" id="date"
+                                    value="{{ old('date', $invoice->date) }}" required
+                                    class="block w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-gray-900 font-bold shadow-sm ring-1 ring-gray-200 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all duration-300">
                             </div>
                         </div>
 
-                        <div class="border-t border-gray-200"></div>
-
-                        <!-- Grand Total -->
-                        <div class="flex justify-between items-center">
-                            <div>
-                                <p class="text-sm font-bold text-gray-400 uppercase tracking-widest">Total Keseluruhan
-                                </p>
-                                <p class="text-xs text-gray-500 mt-1">Sudah dikurangi diskon</p>
+                        <div>
+                            <label for="tipe"
+                                class="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-2">Tipe
+                                Invoice</label>
+                            <div class="relative group">
+                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                    <i
+                                        class="fas fa-tags text-indigo-400 group-focus-within:text-indigo-600 transition-colors"></i>
+                                </div>
+                                <select name="tipe" id="tipe" required
+                                    class="block w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-gray-900 font-bold shadow-sm ring-1 ring-gray-200 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all duration-300 appearance-none">
+                                    <option value="">Pilih Tipe</option>
+                                    <option value="BSH"
+                                        {{ old('tipe', str_contains($invoice->invoice_number, '-BSH') ? 'BSH' : '') == 'BSH' ? 'selected' : '' }}>
+                                        Basahan (BSH)</option>
+                                    <option value="KR"
+                                        {{ old('tipe', str_contains($invoice->invoice_number, '-KR') && !str_contains($invoice->invoice_number, '-KRBSBM') ? 'KR' : '') == 'KR' ? 'selected' : '' }}>
+                                        Keringan (KR)</option>
+                                    <option value="KRBSBM"
+                                        {{ old('tipe', str_contains($invoice->invoice_number, '-KRBSBM') ? 'KRBSBM' : '') == 'KRBSBM' ? 'selected' : '' }}>
+                                        Keringan Bumil Busui (KRBSBM)</option>
+                                    <option value="OPR"
+                                        {{ old('tipe', str_contains($invoice->invoice_number, '-OPR') ? 'OPR' : '') == 'OPR' ? 'selected' : '' }}>
+                                        Operasional (OPR)</option>
+                                    <option value="LMN"
+                                        {{ old('tipe', str_contains($invoice->invoice_number, '-LMN') ? 'LMN' : '') == 'LMN' ? 'selected' : '' }}>
+                                        Lain-lain (LMN)</option>
+                                </select>
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none z-10">
+                                    <i class="fas fa-chevron-down text-gray-400"></i>
+                                </div>
                             </div>
-                            <div class="text-3xl font-black text-indigo-600">
-                                Rp <span id="grand-total">0</span>
+                        </div>
+
+                        <div>
+                            <label for="customer_name"
+                                class="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-2">Nama
+                                Pelanggan</label>
+                            <div class="relative group">
+                                <select name="customer_name" id="customer_name" required
+                                    class="customer-select-input block w-full">
+                                    <option value="">Pilih Pelanggan</option>
+                                    @foreach ($customers as $customer)
+                                        <option value="{{ $customer->name }}"
+                                            {{ old('customer_name', $invoice->customer_name) == $customer->name ? 'selected' : '' }}>
+                                            {{ $customer->name }} {{ $customer->phone ? ' - ' . $customer->phone : '' }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Form Actions -->
-                <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-4 pt-6">
-                    <a href="{{ route('invoices.index', request()->query()) }}"
-                        class="w-full sm:w-auto text-center px-6 py-3 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors duration-200">
-                        Batal
-                    </a>
-                    <button type="submit"
-                        class="w-full sm:w-auto px-10 py-4 border border-transparent text-lg font-black rounded-2xl text-white bg-indigo-600 shadow-xl hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200 transform hover:scale-105">
-                        Perbarui Invoice
-                    </button>
-                </div>
-            </form>
+                    <!-- Items Section -->
+                    <div class="space-y-8">
+                        <div class="flex flex-col sm:flex-row justify-between items-end gap-4">
+                            <div class="space-y-1">
+                                <h3 class="text-2xl font-black text-gray-900 tracking-tight">Item Invoice</h3>
+                                <p class="text-sm text-gray-500 font-medium">Ubah produk atau layanan yang tercatat.</p>
+                            </div>
+                            <div class="hidden lg:grid grid-cols-12 gap-6 w-full max-w-[calc(100%-300px)]">
+                                <div
+                                    class="col-span-12 lg:col-span-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                    Produk / Layanan</div>
+                                <div
+                                    class="col-span-6 lg:col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">
+                                    HPP (Modal)</div>
+                                <div
+                                    class="col-span-6 lg:col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">
+                                    Harga Jual</div>
+                                <div
+                                    class="col-span-6 lg:col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">
+                                    Jumlah & Satuan</div>
+                                <div
+                                    class="col-span-6 lg:col-span-2 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">
+                                    Subtotal</div>
+                            </div>
+                        </div>
+
+                        <div id="items-container" class="space-y-6">
+                            <!-- Items will be added here as cards -->
+                        </div>
+
+                        <button type="button" onclick="addItem()"
+                            class="group mt-4 inline-flex items-center justify-center w-full md:w-auto px-6 md:px-10 py-4 md:py-5 bg-white border-2 border-dashed border-indigo-200 rounded-[1.5rem] md:rounded-[2rem] text-base md:text-lg font-black text-indigo-600 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all duration-300">
+                            <div
+                                class="mr-3 p-1 rounded-full bg-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-all">
+                                <svg class="h-5 w-5 md:h-6 md:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                            </div>
+                            Tambah Item Baru
+                        </button>
+                    </div>
+
+                    <!-- Totals Section -->
+                    <div class="flex justify-end">
+                        <div
+                            class="w-full lg:w-3/5 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-[2rem] md:rounded-[3rem] p-5 md:p-10 space-y-4 md:space-y-6 border border-indigo-100/50">
+                            <!-- Subtotal -->
+                            <div class="flex justify-between items-center px-4">
+                                <span class="text-xs font-black text-gray-400 uppercase tracking-[0.2em]">Subtotal</span>
+                                <span class="text-xl md:text-2xl font-black text-gray-900">Rp <span
+                                        id="subtotal">0</span></span>
+                            </div>
+
+                            <!-- Discount -->
+                            <div
+                                class="flex justify-between items-center bg-white p-6 rounded-[2rem] shadow-sm ring-1 ring-indigo-500/10">
+                                <label for="discount"
+                                    class="text-xs font-black text-indigo-600 uppercase tracking-[0.2em]">Diskon Khusus
+                                    (Rp)</label>
+                                <div class="relative w-48">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <span class="text-indigo-300 font-black">Rp</span>
+                                    </div>
+                                    <input type="number" name="discount" id="discount"
+                                        value="{{ old('discount', $invoice->discount) }}"
+                                        class="block w-full rounded-xl border-none bg-indigo-50/50 py-3 pl-12 pr-4 text-right text-indigo-900 font-extrabold focus:ring-4 focus:ring-indigo-500/20 transition-all"
+                                        min="0" step="0.01" oninput="calculateGrandTotal()">
+                                </div>
+                            </div>
+
+                            <div class="border-t border-indigo-200/50 pt-6">
+                                <!-- Grand Total -->
+                                <div class="flex justify-between items-center px-4">
+                                    <div class="space-y-1">
+                                        <p class="text-xs font-black text-indigo-600 uppercase tracking-[0.2em]">Total
+                                            Akhir</p>
+                                        <p class="text-[10px] text-gray-400 font-bold italic">Sudah termasuk diskon</p>
+                                    </div>
+                                    <div class="text-4xl sm:text-5xl font-black text-indigo-600 tracking-tight">
+                                        Rp <span id="grand-total">0</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div
+                        class="flex flex-col-reverse sm:flex-row items-center justify-end gap-6 pt-10 border-t border-gray-100">
+                        <a href="{{ route('invoices.index', request()->query()) }}"
+                            class="w-full md:w-auto text-center px-8 md:px-10 py-4 md:py-5 text-base md:text-lg font-black text-gray-400 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-[1.5rem] md:rounded-[2rem] transition-all duration-300">
+                            Batal
+                        </a>
+                        <button type="submit"
+                            class="w-full md:w-auto px-12 md:px-16 py-4 md:py-5 text-lg md:text-xl font-black text-white bg-indigo-600 rounded-[1.5rem] md:rounded-[2rem] shadow-[0_20px_50px_rgba(79,70,229,0.3)] hover:bg-indigo-700 hover:shadow-[0_20px_50px_rgba(79,70,229,0.4)] transition-all duration-300 transform hover:scale-105 active:scale-95">
+                            Perbarui Invoice
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
     <style>
         .select2-container--default .select2-selection--single {
-            border-radius: 1rem;
-            border: 2px solid #e5e7eb;
-            height: 52px;
-            display: flex;
-            align-items: center;
-            padding-left: 8px;
-            transition: all 0.2s;
+            border-radius: 1.25rem !important;
+            border: 1px solid #e5e7eb !important;
+            height: 60px !important;
+            display: flex !important;
+            align-items: center !important;
+            padding-left: 12px !important;
+            transition: all 0.3s !important;
+            background-color: white !important;
+            font-weight: 700 !important;
         }
 
         .select2-container--default.select2-container--focus .select2-selection--single {
-            border-color: #6366f1;
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            border-color: transparent !important;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+            ring: 1px solid #6366f1 !important;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__rendered {
-            line-height: 50px;
-            color: #111827;
+            line-height: 58px !important;
+            color: #111827 !important;
+            font-size: 0.875rem !important;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 48px;
+            height: 58px !important;
         }
 
         .item-card {
-            animation: slideIn 0.3s ease-out;
+            animation: slideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateY(20px);
+                transform: translateY(30px) scale(0.98);
             }
 
             to {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateY(0) scale(1);
             }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c7d2fe;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #818cf8;
         }
     </style>
 
@@ -238,9 +303,9 @@
         const products = @json($products);
         const existingItems = @json(old('items', $invoice->items));
 
-        // Format Currency Helper
+        // Format number to Indonesian Currency without decimals
         function formatCurrency(num) {
-            if (num === '' || num === null || num === undefined) return '';
+            if (num === '' || num === null || num === undefined) return '0';
             return new Intl.NumberFormat('id-ID', {
                 minimumFractionDigits: 0,
                 maximumFractionDigits: 0
@@ -251,7 +316,7 @@
             const container = document.getElementById('items-container');
             const itemDiv = document.createElement('div');
             itemDiv.className =
-                "item-card bg-white p-4 md:p-6 rounded-3xl border-2 border-gray-100 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all duration-200 relative group";
+                "item-card bg-white p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.03)] hover:border-indigo-200 transition-all duration-300 relative group mb-4 md:mb-6";
 
             let productOptions = '<option value="">Pilih Produk</option>';
             let isCustomProduct = existingItem && existingItem.product_id && !products.find(p => p.id == existingItem
@@ -277,91 +342,91 @@
             const purchase_price = existingItem ? parseFloat(existingItem.purchase_price) : 0;
             const unit = existingItem ? existingItem.unit : '';
 
-            // Calc Total
+            // Calculate Total
             const total = price * quantity;
-            // Format Display
-            const displayTotal = (price > 0 || existingItem) ? formatCurrency(total) : '';
-
+            const displayTotal = formatCurrency(total);
             const description = existingItem ? (existingItem.description || '') : '';
-            const unitReadOnly = '';
-            const unitClass = '';
 
             itemDiv.innerHTML = `
                 <button type="button" onclick="removeItem(this)" 
-                    class="absolute -top-3 -right-3 bg-red-50 text-red-500 p-2 rounded-full shadow-sm hover:bg-red-500 hover:text-white transition-all duration-200 focus:outline-none z-10">
+                    class="absolute -top-3 -right-3 bg-white text-red-500 p-3 rounded-full shadow-lg border border-red-50 hover:bg-red-500 hover:text-white transition-all duration-300 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
 
-                <div class="grid grid-cols-12 gap-4 md:gap-6">
+                <div class="grid grid-cols-12 gap-x-3 gap-y-5 md:gap-6 items-center">
                     <!-- Product Selection -->
-                    <div class="col-span-12 md:col-span-4">
-                        <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Produk / Layanan</label>
+                    <div class="col-span-12 lg:col-span-4">
+                        <label class="block lg:hidden text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Produk / Layanan</label>
                         <select id="${selectId}" name="items[${itemIndex}][product_id]" class="product-select block w-full" required>
                             ${productOptions}
                         </select>
                     </div>
 
                     <!-- Purchase Price (HPP) -->
-                    <div class="col-span-6 md:col-span-2">
-                        <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">HPP</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-400 text-xs font-bold">Rp</span>
+                    <div class="col-span-6 lg:col-span-2">
+                        <label class="block lg:hidden text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 text-center">HPP (Modal)</label>
+                        <div class="relative group/input">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-indigo-300 text-xs font-black">Rp</span>
                             </div>
                             <input type="number" name="items[${itemIndex}][purchase_price]" value="${purchase_price || ''}"
-                                class="purchase-price-input block w-full rounded-xl border-2 border-gray-100 py-2.5 pl-8 text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 text-sm font-bold bg-gray-50/50" 
-                                step="0.01">
+                                class="purchase-price-input block w-full rounded-xl md:rounded-2xl border-none bg-gray-50/50 py-3 md:py-4 pl-10 pr-4 text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all duration-300 text-sm font-bold text-center" 
+                                step="any">
                         </div>
                     </div>
 
                     <!-- Selling Price -->
-                    <div class="col-span-6 md:col-span-2">
-                        <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Harga Jual</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-400 text-xs font-bold">Rp</span>
+                    <div class="col-span-6 lg:col-span-2">
+                        <label class="block lg:hidden text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 text-center">Harga Jual</label>
+                        <div class="relative group/input">
+                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                <span class="text-indigo-300 text-xs font-black">Rp</span>
                             </div>
                             <input type="number" name="items[${itemIndex}][price]" value="${price || ''}"
-                                class="price-input block w-full rounded-xl border-2 border-gray-200 py-2.5 pl-8 text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 text-sm font-bold" 
-                                step="0.01" onchange="updateTotal(this)">
+                                class="price-input block w-full rounded-xl md:rounded-2xl border-none bg-gray-50/50 py-3 md:py-4 pl-10 pr-4 text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all duration-300 text-sm font-bold text-center" 
+                                step="any" onchange="updateTotal(this)">
                         </div>
                     </div>
 
                     <!-- Quantity & Unit -->
-                    <div class="col-span-6 md:col-span-2">
-                        <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Jumlah</label>
-                        <div class="flex items-center gap-2">
+                    <div class="col-span-7 lg:col-span-2">
+                        <label class="block lg:hidden text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 text-center">Jumlah & Satuan</label>
+                        <div class="flex items-center gap-1 md:gap-2 bg-gray-50/80 p-1 md:p-1.5 rounded-xl md:rounded-2xl">
                             <input type="number" name="items[${itemIndex}][quantity]" value="${quantity}"
-                                class="quantity-input block w-full rounded-xl border-2 border-gray-200 py-2.5 text-center text-gray-900 focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 text-sm font-bold" 
+                                class="quantity-input block w-full bg-white rounded-lg md:rounded-xl border-none py-2 text-center text-gray-900 focus:outline-none text-sm font-black" 
                                 min="0.01" step="any" onchange="updateTotal(this)" required>
                             <input type="text" name="items[${itemIndex}][unit]" value="${unit}"
-                                class="unit-input block w-16 rounded-xl border-2 border-gray-200 py-2.5 text-center text-xs font-extrabold text-indigo-600 ${unitClass}" 
-                                placeholder="Stn">
+                                class="unit-input block w-14 md:w-20 rounded-lg md:rounded-xl border-none bg-indigo-600/10 py-2 text-center text-[10px] font-black text-indigo-600" 
+                                placeholder="STN">
                         </div>
                     </div>
 
                     <!-- Subtotal -->
-                    <div class="col-span-6 md:col-span-2">
-                        <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Subtotal</label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span class="text-gray-400 text-xs font-bold">Rp</span>
+                    <div class="col-span-5 lg:col-span-2 text-right">
+                        <label class="block lg:hidden text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Subtotal</label>
+                        <div class="flex flex-col justify-center h-full">
+                            <span class="hidden md:block text-[10px] font-black text-indigo-400 uppercase tracking-widest leading-none">Subtotal</span>
+                            <div class="flex items-center justify-end gap-1">
+                                <span class="text-xs font-bold text-gray-400">Rp</span>
+                                <input type="text" value="${displayTotal}"
+                                    class="total-input w-full bg-transparent border-none p-0 text-right text-base md:text-lg font-black text-gray-900 focus:ring-0 cursor-default" 
+                                    readonly>
                             </div>
-                            <!-- CHANGED TO TEXT INPUT -->
-                            <input type="text" value="${displayTotal}"
-                                class="total-input block w-full rounded-xl border-transparent py-2.5 pl-8 text-gray-900 font-black bg-indigo-50 transition-all duration-200 text-sm cursor-default" 
-                                readonly>
                         </div>
                     </div>
 
                     <!-- Description (Full width) -->
-                    <div class="col-span-12">
-                        <label class="block md:hidden text-xs font-black text-gray-400 uppercase tracking-widest mb-2">Keterangan (Opsional)</label>
-                        <textarea name="items[${itemIndex}][description]" rows="1" 
-                            class="block w-full rounded-xl border-2 border-indigo-100 py-2.5 px-3 text-gray-900 shadow-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all duration-200 bg-indigo-50/30 text-sm"
-                            placeholder="tambah keterangan disini...">${description}</textarea>
+                    <div class="col-span-12 pt-4 border-t border-gray-50 mt-1 md:mt-2">
+                        <div class="flex items-start gap-3">
+                            <div class="p-2 rounded-lg bg-gray-50 text-gray-400">
+                                <i class="fas fa-edit text-[10px]"></i>
+                            </div>
+                            <textarea name="items[${itemIndex}][description]" rows="1" 
+                                class="block w-full bg-transparent border-none p-0 text-xs md:text-sm text-gray-500 font-medium placeholder-gray-300 focus:ring-0"
+                                placeholder="Klik untuk tambah catatan item...">${description}</textarea>
+                        </div>
                     </div>
                 </div>
             `;
@@ -370,7 +435,7 @@
 
             // Initialize Select2
             $(`#${selectId}`).select2({
-                placeholder: "Cari atau ketik produk...",
+                placeholder: "Cari produk...",
                 allowClear: true,
                 tags: true,
                 width: '100%',
@@ -394,21 +459,15 @@
 
                 if (data.newTag) {
                     priceInput.value = '';
-                    priceInput.readOnly = false;
-                    priceInput.classList.remove('bg-gray-50');
                     card.querySelector('.purchase-price-input').value = '';
                     unitInput.value = '';
-                    unitInput.readOnly = false;
-                    unitInput.classList.remove('bg-gray-50');
-                    unitInput.placeholder = 'Satuan';
+                    unitInput.placeholder = 'STN';
                 } else {
                     const selectedOption = this.options[this.selectedIndex];
                     priceInput.value = selectedOption.getAttribute('data-price');
                     card.querySelector('.purchase-price-input').value = selectedOption.getAttribute(
                         'data-purchase-price');
                     unitInput.value = selectedOption.getAttribute('data-unit');
-                    unitInput.readOnly = false;
-                    unitInput.classList.remove('bg-gray-50');
                 }
                 updateTotal(this);
             });
@@ -417,7 +476,7 @@
                 const card = this.closest('.item-card');
                 card.querySelector('.price-input').value = '';
                 card.querySelector('.unit-input').value = '';
-                card.querySelector('.total-input').value = '';
+                card.querySelector('.total-input').value = '0';
                 calculateGrandTotal();
             });
 
@@ -429,7 +488,7 @@
             const price = parseFloat(card.querySelector('.price-input').value) || 0;
             const quantity = parseFloat(card.querySelector('.quantity-input').value) || 0;
             const total = price * quantity;
-            // Format to Currency
+
             card.querySelector('.total-input').value = formatCurrency(total);
             calculateGrandTotal();
         }
@@ -449,23 +508,16 @@
 
         function calculateGrandTotal() {
             let subtotal = 0;
-            document.querySelectorAll('.item-card').forEach(card => {
+            const cards = document.querySelectorAll('.item-card');
+
+            cards.forEach(card => {
                 const price = parseFloat(card.querySelector('.price-input').value) || 0;
                 const quantity = parseFloat(card.querySelector('.quantity-input').value) || 0;
                 subtotal += (price * quantity);
             });
 
-            // Get discount
             const discountInput = document.getElementById('discount');
             let discount = parseFloat(discountInput.value) || 0;
-
-            // Ensure discount isn't greater than subtotal
-            if (discount > subtotal) {
-                // discount = subtotal; 
-                // discountInput.value = subtotal;
-                // Optional: clamp logic or layout warning
-            }
-
             const grandTotal = subtotal - discount;
 
             document.getElementById('subtotal').innerText = formatCurrency(subtotal);
@@ -497,29 +549,21 @@
             const typeSelect = document.getElementById('tipe');
 
             function updateInvoiceNumber() {
-                const currentDate = dateInput.value; // YYYY-MM-DD
+                const currentDate = dateInput.value;
                 const currentType = typeSelect.value;
                 let currentNumber = invoiceInput.value;
 
                 if (!currentDate || !currentNumber) return;
 
                 let parts = currentNumber.split('-');
-
-                // Standard Format expectation: INV-DATE-SEQ-TYPE (4 parts) or INV-DATE-SEQ (3 parts)
-                // We ensure we have at least 3 parts (Prefix, Date, Seq) to proceed safely
                 if (parts.length < 3) return;
 
-                // 1. Update Date Part (Index 1)
-                // Use string split to avoid timezone issues with Date object
-                const dateComponents = currentDate.split('-'); // [YYYY, MM, DD]
+                const dateComponents = currentDate.split('-');
                 if (dateComponents.length === 3) {
                     parts[1] = dateComponents.join('');
                 }
 
-                // 2. Update Type Part (If exists)
                 if (currentType) {
-                    // Only replace the last part if we have 4 or more parts (assuming the last one is the type)
-                    // This preserves the Sequence Number which is usually at Index 2
                     if (parts.length >= 4) {
                         parts[parts.length - 1] = currentType;
                     }

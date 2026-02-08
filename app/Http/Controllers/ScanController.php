@@ -31,85 +31,90 @@ class ScanController extends Controller
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
                 $mimeType = $file->getMimeType();
-                Log::info('Scanning file: ' . $file->getClientOriginalName() . ' (' . $mimeType . ')');
+                Log::info('--- AI SCAN START ---');
+                Log::info('File: ' . $file->getClientOriginalName() . ' Type: ' . $mimeType);
 
                 if ($file->extension() === 'pdf' || $mimeType === 'application/pdf') {
                     $parser = new Parser();
                     $pdf = $parser->parseFile($file->getPathname());
                     $extractedText = $pdf->getText();
-                    Log::info('Extracted PDF text length: ' . strlen($extractedText));
+                    // Clean up text: remove multiple spaces and newlines
+                    $extractedText = preg_replace('/\s+/', ' ', $extractedText);
+                    Log::info('Extracted Text Samples: ' . substr($extractedText, 0, 100));
                 } elseif (str_starts_with($mimeType, 'image/')) {
                     $imageData = base64_encode(file_get_contents($file->getPathname()));
+                    Log::info('Image processed as Base64');
                 }
             } elseif ($request->filled('text_input')) {
                 $extractedText = $request->text_input;
-                Log::info('Processing raw text input length: ' . strlen($extractedText));
+                Log::info('Manual Text Input received');
             }
 
-            // Try Gemini first (Supports Text & Images)
+            // 1. Try Gemini (Primary - Best for both text and images)
             $geminiKey = env('GEMINI_API_KEY');
             if ($geminiKey) {
+                Log::info('Attempting parsing with Gemini...');
                 $response = $this->parseWithGemini($extractedText, $imageData, $mimeType, $geminiKey);
                 $result = json_decode($response->getContent());
+
                 if ($result && isset($result->success) && $result->success) {
+                    Log::info('Gemini Success');
                     return $response;
                 }
-                $errorMsg = $result->message ?? 'Unknown error';
-                Log::warning('Gemini parsing failed, trying fallback if available: ' . $errorMsg);
+                Log::warning('Gemini Failed: ' . ($result->message ?? 'No message'));
             }
 
-            // Fallback to Groq (Text Only for now, unless we switch to vision model)
-            // Groq fallback only works if we have extracted text (PDF/Text Input).
+            // 2. Fallback to Groq (Secondary - Fast text parsing)
             if ($extractedText) {
                 $groqKey = env('GROQ_API_KEY');
                 if ($groqKey) {
+                    Log::info('Attempting fallback with Groq...');
                     return $this->parseWithGroq($extractedText, $groqKey);
                 }
-            } elseif ($imageData) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gagal memproses gambar dengan Gemini, dan Groq (fallback) hanya mendukung teks.',
-                ], 500);
             }
 
             return response()->json([
                 'success' => false,
-                'message' => 'API Key tidak ditemukan atau kuota habis.',
-                'raw_text' => $extractedText
-            ]);
+                'message' => 'Layanan AI tidak tersedia (API Key missing or quota exceeded).',
+            ], 500);
         } catch (\Exception $e) {
-            Log::error('Scan Error: ' . $e->getMessage());
+            Log::error('Scan Fatal Error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal memproses data: ' . $e->getMessage(),
             ], 500);
         }
     }
-
     private function parseWithGemini($text, $imageData, $mimeType, $apiKey)
     {
-        $prompt = "Ekstrak data dari input berikut (bisa berupa teks pesanan, invoice, atau gambar) ke dalam format JSON.
-        Identifikasi item, jumlah, harga (jika ada), dan satuannya.
+        $prompt = "You are a professional accounting assistant. Extract data from the provided input (text or image) into a precise JSON format.
         
-        Format JSON harus memiliki struktur:
+        RULES:
+        1. Extract: date, customer_name, and items list.
+        2. For each item, extract: product_name, quantity (numeric), price (unit price), and unit (kg, pcs, etc.).
+        3. If data is missing:
+           - date: Use today's date (" . date('Y-m-d') . ") if not found.
+           - customer_name: Leave as null or empty string if not found.
+           - price: Use 0 if not stated.
+           - unit: Use 'pcs' as default if not clear.
+        4. Normalize units to standard abbreviations: kg, btr, pcs, ltr, box, pack, ikat, sachet.
+        5. Clean product names (remove numbering like '1.', '2.', etc.).
+        
+        JSON STRUCTURE:
         {
-            \"date\": \"YYYY-MM-DD (masukkan tanggal hari ini jika tidak ada tanggal spesifik di input)\",
-            \"customer_name\": \"string (nama pelanggan/pemesan jika ada, kosongkan jika tidak ada)\",
+            \"date\": \"YYYY-MM-DD\",
+            \"customer_name\": \"string\",
             \"items\": [
                 {
-                    \"product_name\": \"string (nama produk)\",
-                    \"quantity\": number (hanya angka),
-                    \"price\": number (harga satuan jika ada, 0 jika tidak ada),
-                    \"unit\": \"string (kg, pcs, pack, btr, dll)\"
+                    \"product_name\": \"string\",
+                    \"quantity\": number,
+                    \"price\": number,
+                    \"unit\": \"string\"
                 }
             ]
         }
         
-        Penting:
-        - Jika input berupa daftar seperti '1. beras 150 kg', ekstrak 'beras' sebagai product_name, 150 sebagai quantity, 'kg' sebagai unit.
-        - Identifikasi satuan (unit) sesuai standar umum (kg, pcs, pack, btr, ikat, btl, ltr, dst) jika memungkinkan.
-        - Abaikan penomoran baris.
-        ";
+        Input data follows below.";
 
         if ($text) {
             $prompt .= "\n\nTeks Input:\n" . $text;
@@ -130,6 +135,7 @@ class ScanController extends Controller
         $contents[] = ['parts' => $parts];
 
         try {
+            /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
                 'contents' => $contents,
                 'generationConfig' => [
@@ -197,6 +203,7 @@ class ScanController extends Controller
         " . $text;
 
         try {
+            /** @var \Illuminate\Http\Client\Response $response */
             $response = Http::withToken($apiKey)->post("https://api.groq.com/openai/v1/chat/completions", [
                 'model' => 'llama-3.3-70b-versatile',
                 'messages' => [
