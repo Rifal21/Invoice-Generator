@@ -85,6 +85,8 @@ Route::middleware(['auth'])->group(function () {
 
     Route::resource('customers', CustomerController::class);
     Route::resource('suppliers', SupplierController::class);
+    Route::get('supplier-notas/{supplier_nota}/download', [\App\Http\Controllers\SupplierNotaController::class, 'download'])->name('supplier-notas.download');
+    Route::resource('supplier-notas', \App\Http\Controllers\SupplierNotaController::class);
     Route::resource('categories', CategoryController::class);
     Route::patch('products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
     Route::post('products/bulk-delete', [ProductController::class, 'bulkDestroy'])->name('products.bulk-delete');

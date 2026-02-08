@@ -118,6 +118,13 @@
                             </div>
                             <span class="text-[10px] font-bold text-center text-gray-700">Supplier</span>
                         </a>
+                        <a href="{{ route('supplier-notas.index') }}"
+                            class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
+                            <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
+                                <i class="fas fa-file-invoice-dollar text-lg"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-center text-gray-700">Nota Supplier</span>
+                        </a>
                         <a href="{{ route('products.index') }}"
                             class="flex flex-col items-center gap-2 p-4 rounded-3xl bg-white border border-gray-100 shadow-sm hover:bg-gray-50 transition-colors">
                             <div class="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-600">
