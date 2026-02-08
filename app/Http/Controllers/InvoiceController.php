@@ -68,7 +68,16 @@ class InvoiceController extends Controller
         // Total on current page
         $totalAmountPage = $invoices->sum('total_amount');
 
-        return view('invoices.index', compact('invoices', 'customers', 'totalAmountFiltered', 'totalAmountPage'));
+        // Stats for Dashboard Feel
+        $stats = [
+            'total_count' => Invoice::count(),
+            'total_amount' => Invoice::sum('total_amount'),
+            'today_count' => Invoice::whereDate('created_at', today())->count(),
+            'total_amount_filtered' => $totalAmountFiltered,
+            'total_amount_page' => $totalAmountPage,
+        ];
+
+        return view('invoices.index', compact('invoices', 'customers', 'stats'));
     }
 
     /**
