@@ -82,27 +82,28 @@
                 </div>
             </div>
 
-            <!-- Top Products -->
+            <!-- Top Customers -->
             <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6">
-                <h3 class="text-lg font-black text-gray-900 mb-6">Top 5 Produk Bulan Ini</h3>
+                <h3 class="text-lg font-black text-gray-900 mb-6">Top 5 Pelanggan Bulan Ini</h3>
                 <div class="space-y-4">
-                    @forelse($topProducts as $index => $product)
+                    @forelse($topCustomers as $index => $customer)
                         <div class="flex items-center gap-4">
                             <div
                                 class="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-sm">
                                 #{{ $index + 1 }}
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-bold text-gray-900 truncate">{{ $product->product_name }}</p>
-                                <p class="text-xs text-gray-500">{{ number_format($product->total_qty) }} Terjual</p>
+                                <p class="text-sm font-bold text-gray-900 truncate">{{ $customer->customer_name }}</p>
+                                <p class="text-xs text-gray-500">{{ number_format($customer->total_invoices) }} Transaksi
+                                </p>
                             </div>
                             <div class="text-right">
-                                <p class="text-xs font-black text-green-600">Rp
-                                    {{ number_format($product->total_revenue, 0, ',', '.') }}</p>
+                                <p class="text-xs font-black text-indigo-600">Rp
+                                    {{ number_format($customer->total_spend, 0, ',', '.') }}</p>
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-8 text-gray-400 text-sm">Belum ada data penjualan.</div>
+                        <div class="text-center py-8 text-gray-400 text-sm">Belum ada data transaksi.</div>
                     @endforelse
                 </div>
             </div>

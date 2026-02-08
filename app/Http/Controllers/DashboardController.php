@@ -42,12 +42,11 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // 4. Top 5 Produk Terlaris Bulan Ini
-        $topProducts = InvoiceItem::join('invoices', 'invoice_items.invoice_id', '=', 'invoices.id')
-            ->whereBetween('invoices.date', [$startOfMonth, $endOfMonth])
-            ->select('product_name', DB::raw('SUM(quantity) as total_qty'), DB::raw('SUM(invoice_items.total) as total_revenue'))
-            ->groupBy('product_name')
-            ->orderByDesc('total_qty')
+        // 4. Top 5 Pelanggan Berdasarkan Pembelanjaan Bulan Ini
+        $topCustomers = Invoice::whereBetween('date', [$startOfMonth, $endOfMonth])
+            ->select('customer_name', DB::raw('COUNT(*) as total_invoices'), DB::raw('SUM(total_amount) as total_spend'))
+            ->groupBy('customer_name')
+            ->orderByDesc('total_spend')
             ->limit(5)
             ->get();
 
@@ -62,7 +61,7 @@ class DashboardController extends Controller
             'chartLabels',
             'chartData',
             'lowStockProducts',
-            'topProducts',
+            'topCustomers',
             'recentInvoices'
         ));
     }
