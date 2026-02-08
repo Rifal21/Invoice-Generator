@@ -171,8 +171,9 @@
 
                                 <button type="submit" id="btn-submit"
                                     class="w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent rounded-2xl shadow-sm text-sm font-black text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all hover:scale-[1.02]">
-                                    <i class="fab fa-google-drive text-lg"></i>
-                                    MULAI UPLOAD KE GOOGLE DRIVE
+                                    <i id="btn-spinner" class="fas fa-spinner fa-spin hidden"></i>
+                                    <i id="btn-icon" class="fab fa-google-drive text-lg"></i>
+                                    <span id="btn-text">MULAI UPLOAD KE GOOGLE DRIVE</span>
                                 </button>
                             </form>
                         </div>
@@ -274,6 +275,9 @@
                         container.classList.remove('hidden');
                         btn.disabled = true;
                         btn.classList.add('opacity-50', 'cursor-not-allowed');
+                        document.getElementById('btn-spinner').classList.remove('hidden');
+                        document.getElementById('btn-icon').classList.add('hidden');
+                        document.getElementById('btn-text').innerText = 'MEMPROSES...';
                         pBar.style.width = '0%';
                         pPerc.innerText = '0%';
                         pMsg.innerText = 'Memulai proses...';
@@ -367,6 +371,9 @@
                         function resetBtn() {
                             btn.disabled = false;
                             btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                            document.getElementById('btn-spinner').classList.add('hidden');
+                            document.getElementById('btn-icon').classList.remove('hidden');
+                            document.getElementById('btn-text').innerText = 'MULAI UPLOAD KE GOOGLE DRIVE';
                         }
                     });
                 });

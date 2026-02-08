@@ -332,7 +332,7 @@
         style="display: none;">
         <div class="bg-indigo-600 px-4 py-3 flex justify-between items-center">
             <div class="flex items-center gap-2">
-                <i class="fab fa-google-drive text-white animate-pulse"></i>
+                <i id="global-backup-icon" class="fab fa-google-drive text-white animate-pulse"></i>
                 <span class="text-xs font-bold text-white uppercase tracking-wider">Backup Proses</span>
             </div>
             <button onclick="minimizeBackup()"
@@ -376,6 +376,7 @@
         const gPerc = document.getElementById('global-perc');
         const gBar = document.getElementById('global-bar');
         const gMsg = document.getElementById('global-msg');
+        const gIcon = document.getElementById('global-backup-icon');
         let isMinimized = localStorage.getItem('backup_minimized') === 'true';
 
         function showBackupUI() {
@@ -453,6 +454,7 @@
                         stopGlobalPolling();
                         if (gStatus) gStatus.innerText = 'SELESAI';
                         if (gBar) gBar.classList.replace('bg-indigo-500', 'bg-green-500');
+                        if (gIcon) gIcon.classList.remove('animate-pulse');
 
                         setTimeout(() => {
                             hideBackupUI();
@@ -462,6 +464,7 @@
                         stopGlobalPolling();
                         if (gStatus) gStatus.innerText = 'ERROR';
                         if (gBar) gBar.classList.replace('bg-indigo-500', 'bg-red-500');
+                        if (gIcon) gIcon.classList.remove('animate-pulse');
                         localStorage.setItem('backup_active', 'false');
                         // Keep error visible a bit longer? or user handles via alert
                         setTimeout(() => hideBackupUI(), 10000);

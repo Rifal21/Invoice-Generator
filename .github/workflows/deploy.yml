@@ -51,4 +51,6 @@ jobs:
           [ -s ~/.nvm/nvm.sh ] && . ~/.nvm/nvm.sh && \
           npm install && \
           npm run build && \
-          php artisan up"
+          php artisan up && \
+          php artisan queue:restart && \
+          sudo supervisorctl restart all"
