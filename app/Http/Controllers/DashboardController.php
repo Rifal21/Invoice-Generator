@@ -11,13 +11,16 @@ use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Ringkasan Hari Ini
-        $today = Carbon::today();
-        $startOfMonth = Carbon::now()->startOfMonth();
-        $endOfMonth = Carbon::now()->endOfMonth();
+        // 1. Filter Bulan & Tahun
+        $selectedMonth = $request->get('month', Carbon::now()->format('Y-m'));
+        $dateObj = Carbon::createFromFormat('Y-m', $selectedMonth);
+        $startOfMonth = $dateObj->copy()->startOfMonth();
+        $endOfMonth = $dateObj->copy()->endOfMonth();
 
+        // Ringkasan
+        $today = Carbon::today();
         $todayRevenue = Invoice::whereDate('date', $today)->sum('total_amount');
         $monthRevenue = Invoice::whereBetween('date', [$startOfMonth, $endOfMonth])->sum('total_amount');
         $todayInvoices = Invoice::whereDate('date', $today)->count();
@@ -62,7 +65,8 @@ class DashboardController extends Controller
             'chartData',
             'lowStockProducts',
             'topCustomers',
-            'recentInvoices'
+            'recentInvoices',
+            'selectedMonth'
         ));
     }
 }

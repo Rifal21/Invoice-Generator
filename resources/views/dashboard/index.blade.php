@@ -5,9 +5,22 @@
 @section('content')
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-black text-gray-900 tracking-tight">Dashboard Eksekutif</h1>
-            <p class="mt-2 text-sm text-gray-500">Ringkasan performa bisnis Koperasi JR hari ini.</p>
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-6">
+            <div>
+                <h1 class="text-3xl font-black text-gray-900 tracking-tight">Dashboard Eksekutif</h1>
+                <p class="mt-2 text-sm text-gray-500">Ringkasan performa periode
+                    {{ Carbon\Carbon::parse($selectedMonth)->format('F Y') }}.</p>
+            </div>
+            <div class="flex shrink-0">
+                <form action="{{ route('dashboard') }}" method="GET" id="monthFilterForm" class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <i class="fas fa-calendar-alt text-indigo-500"></i>
+                    </div>
+                    <input type="month" name="month" value="{{ $selectedMonth }}"
+                        onchange="document.getElementById('monthFilterForm').submit()"
+                        class="block w-full md:w-auto pl-11 pr-10 py-3 text-sm font-bold border-none bg-white rounded-2xl shadow-sm ring-1 ring-gray-200 focus:ring-2 focus:ring-indigo-500 transition-all duration-300">
+                </form>
+            </div>
         </div>
 
         <!-- Stats Grid -->
@@ -28,16 +41,17 @@
                 </div>
             </div>
 
-            <!-- Card 2: Omzet Bulan Ini -->
+            <!-- Card 2: Omzet Bulan Terpilih -->
             <div class="bg-white rounded-3xl p-6 shadow-lg border border-gray-100 relative overflow-hidden group">
                 <div class="absolute right-4 top-4 bg-emerald-100 rounded-xl p-3 text-emerald-600">
                     <i class="fas fa-chart-line text-xl"></i>
                 </div>
                 <div>
-                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Omzet Bulan Ini</p>
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Omzet
+                        {{ Carbon\Carbon::parse($selectedMonth)->format('F') }}</p>
                     <h3 class="text-2xl font-black text-gray-900">Rp {{ number_format($monthRevenue, 0, ',', '.') }}</h3>
                     <p class="text-xs text-emerald-600 mt-2 font-bold flex items-center gap-1">
-                        <i class="fas fa-calendar-check"></i> {{ Carbon\Carbon::now()->format('F Y') }}
+                        <i class="fas fa-calendar-check"></i> {{ Carbon\Carbon::parse($selectedMonth)->format('F Y') }}
                     </p>
                 </div>
             </div>
@@ -84,7 +98,8 @@
 
             <!-- Top Customers -->
             <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6">
-                <h3 class="text-lg font-black text-gray-900 mb-6">Top 5 Pelanggan Bulan Ini</h3>
+                <h3 class="text-lg font-black text-gray-900 mb-6">Top 5 Pelanggan:
+                    {{ Carbon\Carbon::parse($selectedMonth)->format('F') }}</h3>
                 <div class="space-y-4">
                     @forelse($topCustomers as $index => $customer)
                         <div class="flex items-center gap-4">
