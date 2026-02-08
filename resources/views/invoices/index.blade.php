@@ -5,6 +5,18 @@
 @push('scripts')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <style>
+        .statsSwiper {
+            width: 100%;
+            padding: 10px 0 35px !important;
+        }
+
+        @media (max-width: 639px) {
+            .statsSwiper .swiper-slide {
+                width: 100% !important;
+            }
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -79,37 +91,43 @@
         </div>
 
         <!-- Mobile View (Swiper Cards Effect) -->
-        <div class="sm:hidden mb-10 px-4">
-            <div class="swiper statsSwiper !overflow-visible">
+        <div class="sm:hidden mb-10 overflow-hidden">
+            <div class="swiper statsSwiper">
                 <div class="swiper-wrapper">
                     <!-- Total Invoice Card -->
-                    <div class="swiper-slide !h-auto">
+                    <div class="swiper-slide">
                         <div
-                            class="h-full bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[2.5rem] p-8 text-white relative overflow-hidden">
+                            class="h-64 bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-[2.5rem] p-8 text-white relative overflow-hidden flex flex-col justify-center">
                             <div class="absolute right-0 top-0 opacity-10 transform translate-x-4 -translate-y-4">
-                                <i class="fas fa-file-invoice text-[10rem]"></i>
+                                <i class="fas fa-file-invoice text-[8rem]"></i>
                             </div>
                             <div class="relative z-10 text-left">
-                                <p class="text-xs font-black text-indigo-100 uppercase tracking-[0.2em] mb-2">Total Invoice
-                                </p>
-                                <h3 class="text-4xl font-black">{{ number_format($stats['total_count']) }} <span
-                                        class="text-lg font-medium">Data</span></h3>
+                                <p class="text-[10px] font-black text-indigo-200 uppercase tracking-[0.2em] mb-2">Total
+                                    Invoice</p>
+                                <h3 class="text-4xl font-black leading-none">{{ number_format($stats['total_count']) }}
+                                    <span class="text-sm font-medium">Data</span>
+                                </h3>
                                 <div
-                                    class="mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 text-[10px] font-bold">
-                                    <i class="fas fa-database"></i> Database Real-time
+                                    class="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/20 text-[9px] font-black uppercase">
+                                    <i class="fas fa-database text-indigo-200"></i> Database Live
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Total Omzet Card -->
-                    <div class="swiper-slide !h-auto">
-                        <div class="h-full bg-white rounded-[2.5rem] p-8 border border-gray-100 relative overflow-hidden">
+                    <div class="swiper-slide">
+                        <div
+                            class="h-64 bg-white rounded-[2.5rem] p-8 border border-gray-100 relative overflow-hidden flex flex-col justify-center shadow-sm">
                             <div class="text-left">
-                                <p class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Omzet</p>
-                                <h3 class="text-3xl font-black text-gray-900">Rp
-                                    {{ number_format($stats['total_amount'], 0, ',', '.') }}</h3>
-                                <p class="text-xs text-emerald-600 mt-4 font-bold flex items-center gap-1">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Total Omzet
+                                </p>
+                                <div class="space-y-1">
+                                    <span class="text-xs font-black text-emerald-600 block">Rupiah</span>
+                                    <h3 class="text-2xl font-black text-gray-900 leading-tight">Rp
+                                        {{ number_format($stats['total_amount'], 0, ',', '.') }}</h3>
+                                </div>
+                                <p class="text-[10px] text-emerald-600 mt-6 font-bold flex items-center gap-1">
                                     <i class="fas fa-chart-line"></i> Akumulasi Penjualan
                                 </p>
                             </div>
@@ -117,20 +135,24 @@
                     </div>
 
                     <!-- Today's Invoice Card -->
-                    <div class="swiper-slide !h-auto">
-                        <div class="h-full bg-white rounded-[2.5rem] p-8 border border-gray-100 relative overflow-hidden">
+                    <div class="swiper-slide">
+                        <div
+                            class="h-64 bg-white rounded-[2.5rem] p-8 border border-gray-100 relative overflow-hidden flex flex-col justify-center shadow-sm">
                             <div class="text-left">
-                                <p class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Invoice Hari Ini
-                                </p>
-                                <h3 class="text-3xl font-black text-gray-900">{{ number_format($stats['today_count']) }}
-                                    <span class="text-lg font-medium text-gray-400">Order</span></h3>
-                                <p class="text-xs text-amber-600 mt-4 font-bold flex items-center gap-1">
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Invoice Hari
+                                    Ini</p>
+                                <h3 class="text-4xl font-black text-gray-900 leading-none">
+                                    {{ number_format($stats['today_count']) }} <span
+                                        class="text-sm font-medium text-gray-400">Order</span></h3>
+                                <p class="text-[10px] text-amber-600 mt-6 font-bold flex items-center gap-1">
                                     <i class="fas fa-history"></i> {{ now()->format('d F Y') }}
                                 </p>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- Pagination -->
+                <div class="swiper-pagination"></div>
             </div>
         </div>
 
@@ -1119,25 +1141,24 @@
             }
         }
 
-        // Initialize Swiper for Stats on Mobile (Phone only)
+        // Initialize Swiper for Stats on Mobile
         document.addEventListener('DOMContentLoaded', function() {
-            if (window.innerWidth < 640) {
-                const swiper = new Swiper('.statsSwiper', {
-                    effect: 'cards',
-                    cardsEffect: {
-                        slideShadows: false,
-                        rotate: true,
-                        perSlideRotate: 2,
-                        perSlideOffset: 8,
-                    },
-                    grabCursor: true,
-                    loop: true,
-                    autoplay: {
-                        delay: 3000,
-                        disableOnInteraction: false,
-                    },
-                });
-            }
+            const swiper = new Swiper('.statsSwiper', {
+                slidesPerView: 1,
+                spaceBetween: 20,
+                grabCursor: true,
+                loop: true,
+                autoplay: {
+                    delay: 3500,
+                    disableOnInteraction: false,
+                },
+                pagination: {
+                    el: '.swiper-pagination',
+                    clickable: true,
+                },
+                observer: true,
+                observeParents: true,
+            });
         });
     </script>
 @endsection
