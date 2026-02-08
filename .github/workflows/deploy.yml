@@ -53,4 +53,4 @@ jobs:
           npm run build && \
           php artisan up && \
           php artisan queue:restart && \
-          sudo supervisorctl restart all"
+          supervisorctl restart all"
