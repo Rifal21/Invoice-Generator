@@ -78,6 +78,13 @@
                 </a>
             </li>
             <li>
+                <a href="{{ route('supplier-notas.index') }}"
+                    class="{{ request()->routeIs('supplier-notas.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                    <i class="fas fa-file-invoice-dollar text-sm w-4"></i>
+                    Nota Supplier
+                </a>
+            </li>
+            <li>
                 <a href="{{ route('products.index') }}"
                     class="{{ request()->routeIs('products.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
                     <i class="fas fa-boxes text-sm w-4"></i>

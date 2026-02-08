@@ -1,6 +1,6 @@
 @php
     $currentRouteGroup = '';
-    if (request()->routeIs('categories.*', 'customers.*', 'suppliers.*', 'products.*')) {
+    if (request()->routeIs('categories.*', 'customers.*', 'suppliers.*', 'products.*', 'supplier-notas.*')) {
         $currentRouteGroup = 'master';
     } elseif (
         request()->routeIs(
