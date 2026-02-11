@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 md:py-12 overflow-x-hidden">
+    <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 md:py-12">
         <!-- Header Section with Premium Touch -->
         <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between mb-10 gap-6">
             <div class="space-y-2">
@@ -37,7 +37,7 @@
             <div class="absolute -bottom-10 -left-10 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-50 -z-10"></div>
 
             <div
-                class="bg-white/80 backdrop-blur-xl shadow-[0_40px_100px_rgba(0,0,0,0.05)] rounded-[2rem] md:rounded-[3rem] overflow-hidden border border-white/20">
+                class="bg-white/80 backdrop-blur-xl shadow-[0_40px_100px_rgba(0,0,0,0.05)] rounded-[2rem] md:rounded-[3rem] border border-white/20">
                 <form action="{{ route('invoices.update', $invoice) }}" method="POST"
                     class="p-4 sm:p-12 space-y-8 md:space-y-12">
                     @csrf
@@ -160,7 +160,7 @@
                             <!-- Items will be added here as cards -->
                         </div>
 
-                        <button type="button" onclick="addItem()"
+                        <button type="button" onclick="addItem(null, true)"
                             class="group mt-4 inline-flex items-center justify-center w-full md:w-auto px-6 md:px-10 py-4 md:py-5 bg-white border-2 border-dashed border-indigo-200 rounded-[1.5rem] md:rounded-[2rem] text-base md:text-lg font-black text-indigo-600 hover:border-indigo-500 hover:bg-indigo-50/50 transition-all duration-300">
                             <div
                                 class="mr-3 p-1 rounded-full bg-indigo-100 group-hover:bg-indigo-600 group-hover:text-white transition-all">
@@ -312,7 +312,7 @@
             }).format(num);
         }
 
-        function addItem(existingItem = null) {
+        function addItem(existingItem = null, shouldFocus = false) {
             const container = document.getElementById('items-container');
             const itemDiv = document.createElement('div');
             itemDiv.className =
@@ -349,7 +349,7 @@
 
             itemDiv.innerHTML = `
                 <button type="button" onclick="removeItem(this)" 
-                    class="absolute -top-3 -right-3 bg-white text-red-500 p-3 rounded-full shadow-lg border border-red-50 hover:bg-red-500 hover:text-white transition-all duration-300 focus:outline-none z-10 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0">
+                    class="absolute -top-3 -right-3 bg-white text-red-500 p-3 rounded-full shadow-lg border border-red-50 hover:bg-red-500 hover:text-white transition-all duration-300 focus:outline-none z-10">
                     <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
@@ -449,6 +449,12 @@
                     }
                 }
             });
+
+            if (shouldFocus) {
+                setTimeout(() => {
+                    $(`#${selectId}`).select2('open');
+                }, 100);
+            }
 
             // Handle Select2 events
             $(`#${selectId}`).on('select2:select', function(e) {

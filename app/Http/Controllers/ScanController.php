@@ -136,7 +136,8 @@ class ScanController extends Controller
 
         try {
             /** @var \Illuminate\Http\Client\Response $response */
-            $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
+            $model = "gemini-2.5-flash"; // Use stable 1.5-flash model
+            $response = Http::post("https://generativelanguage.googleapis.com/v1beta/models/{$model}:generateContent?key={$apiKey}", [
                 'contents' => $contents,
                 'generationConfig' => [
                     'response_mime_type' => 'application/json',
@@ -146,11 +147,13 @@ class ScanController extends Controller
             if ($response->successful()) {
                 $result = $response->json();
                 $jsonText = null;
+                // ... (rest of the logic remains similar but we can just return here to keep the chunk focused)
                 if (is_array($result) && isset($result['candidates'][0]['content']['parts'][0]['text'])) {
                     $jsonText = (string) $result['candidates'][0]['content']['parts'][0]['text'];
                 }
 
                 if (!$jsonText) {
+                    Log::error('Gemini Empty Response: ' . json_encode($result));
                     return response()->json([
                         'success' => false,
                         'message' => 'Format respon AI tidak sesuai atau kosong.',
@@ -165,14 +168,16 @@ class ScanController extends Controller
                 ]);
             }
 
-            $errorMessage = 'Gagal menghubungi Gemini API';
-            if ($response instanceof \Illuminate\Http\Client\Response) {
-                $errorMessage .= ': ' . ($response->body() ?: 'Unknown error');
-            }
+            // Capture detailed error
+            $statusCode = $response->status();
+            $errorBody = $response->json();
+            $errorMessage = $errorBody['error']['message'] ?? $response->body();
+
+            Log::error("Gemini API Error ({$statusCode}): " . json_encode($errorBody));
 
             return response()->json([
                 'success' => false,
-                'message' => $errorMessage,
+                'message' => "Gagal menghubungi Gemini AI ({$statusCode}): " . $errorMessage,
             ], 500);
         } catch (\Exception $e) {
             return response()->json([
