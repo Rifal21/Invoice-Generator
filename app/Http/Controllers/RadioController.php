@@ -3,30 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\SongRequest;
-use App\Models\RadioMessage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class RadioController extends Controller
 {
+    private $azuraBaseUrl = 'https://radio.fkstudio.my.id/api';
+    private $stationShortCode = 'radio_fkstudio';
+
     public function index()
     {
+        // Restriction kept as per original file, though it might be worth removing for a real app
         if (auth()->user()->name !== 'Rifal Kurniawan') {
             abort(403, 'Hanya Rifal yang boleh mengakses radio ini!');
         }
 
-        $current = SongRequest::where('status', 'playing')->first();
-
-        if (!$current) {
-            $current = SongRequest::where('status', 'pending')->orderBy('created_at', 'asc')->first();
-            if ($current) {
-                $current->update(['status' => 'playing', 'started_at' => now()]);
-            }
-        }
-
-        return view('radio.index', compact('current'));
+        return view('radio.index');
     }
 
     public function search(Request $request)
@@ -36,41 +29,26 @@ class RadioController extends Controller
         $query = $request->get('q');
         if (!$query) return response()->json([]);
 
-        $apiKey = config('services.youtube.api_key');
-
-        if (!$apiKey) {
-            return response()->json([
-                [
-                    'id' => 'dQw4w9WgXcQ',
-                    'title' => '[DEMO] Rick Astley - Never Gonna Give You Up',
-                    'thumbnail' => 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg'
-                ]
-            ]);
-        }
-
         try {
-            $response = Http::get("https://www.googleapis.com/youtube/v3/search", [
-                'part' => 'snippet',
-                'q' => $query,
-                'type' => 'video',
-                'maxResults' => 10,
-                'key' => $apiKey,
+            $response = Http::timeout(5)->get("{$this->azuraBaseUrl}/station/{$this->stationShortCode}/requests", [
+                'search' => $query
             ]);
 
             if ($response->successful()) {
-                $items = collect($response->json()['items'] ?? [])
-                    ->filter(fn($item) => isset($item['id']['videoId']))
+                $items = collect($response->json())
                     ->map(function ($item) {
                         return [
-                            'id' => $item['id']['videoId'],
-                            'title' => $item['snippet']['title'],
-                            'thumbnail' => $item['snippet']['thumbnails']['default']['url'] ?? '',
+                            'id' => $item['request_id'], // Map request_id to id
+                            'title' => $item['song']['text'] ?? ($item['song']['title'] . ' - ' . $item['song']['artist']),
+                            'artist' => $item['song']['artist'] ?? '',
+                            'thumbnail' => $item['song']['art'] ?? '',
+                            'url' => $item['request_url'] ?? ''
                         ];
                     })->values();
                 return response()->json($items);
             }
         } catch (\Exception $e) {
-            Log::error("YouTube API Error: " . $e->getMessage());
+            Log::error("AzuraCast Search Error: " . $e->getMessage());
         }
 
         return response()->json([], 500);
@@ -81,58 +59,76 @@ class RadioController extends Controller
         if (auth()->user()->name !== 'Rifal Kurniawan') abort(403);
 
         $request->validate([
-            'video_id' => 'required',
-            'title' => 'required',
-            'thumbnail' => 'nullable'
+            'video_id' => 'required', // This will now hold the request_id
         ]);
 
-        SongRequest::create([
-            'video_id' => $request->video_id,
-            'title' => $request->title,
-            'thumbnail' => $request->thumbnail,
-            'requested_by' => auth()->user()->name,
-            'status' => 'pending'
-        ]);
+        try {
+            $requestId = $request->video_id;
+            $response = Http::timeout(5)->post("{$this->azuraBaseUrl}/station/{$this->stationShortCode}/request/{$requestId}");
 
-        return response()->json(['message' => 'Lagu berhasil ditambahkan ke antrean!']);
+            if ($response->successful()) {
+                // Log locally just for record
+                SongRequest::create([
+                    'video_id' => $requestId,
+                    'title' => $request->title ?? 'Unknown Song',
+                    'thumbnail' => $request->thumbnail,
+                    'requested_by' => auth()->user()->name,
+                    'status' => 'pending'
+                ]);
+
+                return response()->json(['message' => 'Lagu berhasil direquest ke Radio FKStudio!']);
+            } else {
+                // Get actual error message from API
+                $errorMsg = $response->json()['message'] ?? 'Gagal request lagu. Mungkin sudah direquest atau ada batasan waktu.';
+                return response()->json(['message' => $errorMsg], 400);
+            }
+        } catch (\Exception $e) {
+            Log::error("AzuraCast Request Error: " . $e->getMessage());
+            return response()->json(['message' => 'Terjadi kesalahan koneksi ke server radio.'], 500);
+        }
     }
 
     public function getCurrentStatus()
     {
         if (auth()->user()->name !== 'Rifal Kurniawan') abort(403);
 
-        $current = SongRequest::where('status', 'playing')->first();
+        try {
+            $response = Http::timeout(3)->get("{$this->azuraBaseUrl}/nowplaying/{$this->stationShortCode}");
 
-        // If nothing playing, check if there's any pending
-        if (!$current) {
-            $next = SongRequest::where('status', 'pending')->orderBy('created_at', 'asc')->first();
-            if ($next) {
-                $next->update([
-                    'status' => 'playing',
-                    'started_at' => now()
+            if ($response->successful()) {
+                $data = $response->json();
+
+                $nowPlaying = [
+                    'title' => $data['now_playing']['song']['title'] ?? 'Unknown Title',
+                    'artist' => $data['now_playing']['song']['artist'] ?? 'Unknown Artist',
+                    'text' => $data['now_playing']['song']['text'] ?? '',
+                    'art' => $data['now_playing']['song']['art'] ?? '',
+                    'started_at' => $data['now_playing']['played_at'] ?? 0,
+                    'duration' => $data['now_playing']['duration'] ?? 0,
+                    'is_live' => $data['live']['is_live'] ?? false,
+                    'listeners' => $data['listeners']['current'] ?? 0
+                ];
+
+                return response()->json([
+                    'current' => $nowPlaying,
+                    // Queue data isn't easily mapped from "next_playing" singular, but we can pass it if needed
+                    // For now, let's just pass empty queue or simulate it
+                    'queue' => []
                 ]);
-                $current = $next;
             }
+        } catch (\Exception $e) {
+            Log::error("AzuraCast Status Error" . $e->getMessage());
         }
 
-        // Get queue
-        $queue = SongRequest::where('status', 'pending')->orderBy('created_at', 'asc')->get();
-
         return response()->json([
-            'current' => $current,
-            'queue' => $queue,
-            'server_time' => now()->toIso8601String()
+            'current' => null,
+            'queue' => []
         ]);
     }
 
     public function skipCurrent()
     {
-        if (auth()->user()->name !== 'Rifal Kurniawan') abort(403);
-
-        $current = SongRequest::where('status', 'playing')->first();
-        if ($current) {
-            $current->update(['status' => 'completed']);
-        }
-        return response()->json(['status' => 'success']);
+        // Not supported in public API usually
+        return response()->json(['status' => 'error', 'message' => 'Skip tidak tersedia di live radio.']);
     }
 }
