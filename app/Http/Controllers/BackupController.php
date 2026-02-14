@@ -25,19 +25,22 @@ class BackupController extends Controller
             ->limit(10)
             ->get();
 
-        return view('backup.index', compact('isConnected', 'backups'));
+        $customers = \App\Models\Customer::orderBy('name')->get();
+
+        return view('backup.index', compact('isConnected', 'backups', 'customers'));
     }
 
     public function process(Request $request)
     {
         try {
             $request->validate([
-                'type' => 'required|in:monthly,weekly,database,products',
+                'type' => 'required|in:monthly,weekly,database,products,custom',
                 'month' => 'required_if:type,monthly|nullable|integer|min:1|max:12',
                 'year' => 'required_if:type,monthly,weekly|nullable|integer|min:2000|max:' . (date('Y') + 1),
                 'week' => 'nullable|integer|min:1|max:53',
-                'start_date' => 'required_if:type,weekly|nullable|date',
-                'end_date' => 'required_if:type,weekly|nullable|date|after_or_equal:start_date',
+                'start_date' => 'required_if:type,weekly,custom|nullable|date',
+                'end_date' => 'required_if:type,weekly,custom|nullable|date|after_or_equal:start_date',
+                'customer_id' => 'nullable|exists:customers,id',
             ]);
 
             $type = $request->type;
@@ -46,6 +49,7 @@ class BackupController extends Controller
             $week = $request->week;
             $startDate = $request->start_date;
             $endDate = $request->end_date;
+            $customerId = $request->customer_id;
             $userId = auth()->id();
 
             // Check credentials existence
@@ -67,7 +71,7 @@ class BackupController extends Controller
             ]);
 
             // Dispatch Job
-            \App\Jobs\ProcessGoogleDriveBackup::dispatch($month, $year, $userId, $backup->id, $type, $week, $startDate, $endDate);
+            \App\Jobs\ProcessGoogleDriveBackup::dispatch($month, $year, $userId, $backup->id, $type, $week, $startDate, $endDate, $customerId);
 
             // Log Activity
             $periodDesc = "Manual Backup";
