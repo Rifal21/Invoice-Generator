@@ -16,6 +16,9 @@
     <link rel="manifest" href="{{ asset('/manifest.json') }}">
 
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
+    <!-- Turbo Drive & Alpine Adapter -->
+    <script src="https://unpkg.com/@hotwired/turbo@7.3.0/dist/turbo.es2017-umd.js"></script>
+    <script src="https://unpkg.com/alpine-turbo-drive-adapter@2.0.0/dist/alpine-turbo-drive-adapter.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- jQuery -->
@@ -79,6 +82,89 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-x-4 lg:gap-x-6">
+
+                        <!-- GLOBAL RADIO PLAYER -->
+                        @if (!request()->routeIs('radio.index'))
+                            <div id="global-radio-player-container" data-turbo-permanent x-data="globalRadio()"
+                                x-init="initPlayer()" class="relative flex items-center z-50">
+                                <!-- Expanded Player (Slides out to the left) -->
+                                <div x-show="expanded" x-transition:enter="transition ease-out duration-300 transform"
+                                    x-transition:enter-start="opacity-0 translate-x-8 scale-95"
+                                    x-transition:enter-end="opacity-100 translate-x-0 scale-100"
+                                    x-transition:leave="transition ease-in duration-200 transform"
+                                    x-transition:leave-start="opacity-100 translate-x-0 scale-100"
+                                    x-transition:leave-end="opacity-0 translate-x-8 scale-95"
+                                    class="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-3 bg-white/90 backdrop-blur-md border border-indigo-100 shadow-xl rounded-full pl-4 pr-2 py-1.5 h-10 w-[280px] overflow-hidden">
+
+                                    <!-- Equalizer Animation -->
+                                    <div class="flex items-end gap-[1px] h-4 w-6 shrink-0" x-show="isPlaying">
+                                        <div class="w-1 bg-indigo-500 animate-music-bar h-2"></div>
+                                        <div class="w-1 bg-indigo-500 animate-music-bar h-4"
+                                            style="animation-delay: 0.1s">
+                                        </div>
+                                        <div class="w-1 bg-indigo-500 animate-music-bar h-3"
+                                            style="animation-delay: 0.2s">
+                                        </div>
+                                        <div class="w-1 bg-indigo-500 animate-music-bar h-1"
+                                            style="animation-delay: 0.3s">
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-center h-4 w-6 shrink-0" x-show="!isPlaying">
+                                        <div class="w-4 h-4 rounded-full border-2 border-gray-300"></div>
+                                    </div>
+
+                                    <!-- Info Text -->
+                                    <div class="flex-grow min-w-0 flex flex-col justify-center h-full">
+                                        <span
+                                            class="text-[10px] uppercase font-black text-indigo-500 leading-none">Global
+                                            Radio</span>
+                                        <div class="overflow-hidden relative w-full h-4">
+                                            <div
+                                                class="whitespace-nowrap absolute animate-marquee text-xs font-bold text-gray-700">
+                                                <span x-text="currentSong || 'Radio Koperasi JR - Live Stream'"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Controls -->
+                                    <button @click="togglePlay()"
+                                        class="w-7 h-7 flex items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shrink-0 shadow-md">
+                                        <i class="fas"
+                                            :class="isPlaying ? 'fa-pause text-[10px]' : 'fa-play text-[10px] ml-0.5'"></i>
+                                    </button>
+
+                                    <button @click="expanded = false"
+                                        class="w-6 h-6 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors shrink-0">
+                                        <i class="fas fa-times text-xs"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Trigger Button -->
+                                <button @click="expanded = !expanded"
+                                    class="relative p-2 rounded-full hover:bg-gray-100 transition-all duration-300 group"
+                                    :class="{ 'bg-indigo-50 text-indigo-600': expanded, 'text-gray-400': !expanded }">
+                                    <i class="fas fa-broadcast-tower text-xl transition-colors"
+                                        :class="{
+                                            'text-indigo-600 animate-pulse': isPlaying,
+                                            'group-hover:text-indigo-500': !
+                                                isPlaying
+                                        }"></i>
+
+                                    <!-- Status Dot -->
+                                    <span class="absolute top-2 right-2 flex h-2.5 w-2.5" x-show="isPlaying">
+                                        <span
+                                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                    </span>
+                                </button>
+
+                                <audio x-ref="audioPlayer" preload="none" class="hidden">
+                                    <source src="https://radio.fkstudio.my.id/listen/radio_fkstudio/radio.mp3"
+                                        type="audio/mpeg">
+                                </audio>
+                            </div>
+                        @endif
+
                         <!-- Notification Dropdown -->
                         <div class="relative" x-data="{ open: false }">
                             <button @click="open = !open" type="button"
@@ -490,6 +576,97 @@
         // Initialize
         checkGlobalBackup();
     </script>
+    <script>
+        function globalRadio() {
+            return {
+                expanded: false,
+                isPlaying: false,
+                currentSong: 'Memuat Info...',
+                pollInterval: null,
+
+                initPlayer() {
+                    const audio = this.$refs.audioPlayer;
+
+                    // Restore state logic could go here if using SPA/Pjax
+                    // For now, simple init
+
+                    audio.addEventListener('play', () => {
+                        this.isPlaying = true;
+                        this.startPolling();
+                    });
+
+                    audio.addEventListener('pause', () => {
+                        this.isPlaying = false;
+                        this.stopPolling();
+                    });
+
+                    // Initial Poll
+                    this.fetchMeta();
+                },
+
+                togglePlay() {
+                    const audio = this.$refs.audioPlayer;
+                    if (audio.paused) {
+                        const playPromise = audio.play();
+                        if (playPromise !== undefined) {
+                            playPromise.then(_ => {
+                                // Play started
+                            }).catch(error => {
+                                console.log("Playback prevented:", error);
+                                // Show user hint?
+                            });
+                        }
+                    } else {
+                        audio.pause();
+                    }
+                },
+
+                startPolling() {
+                    if (this.pollInterval) clearInterval(this.pollInterval);
+                    this.fetchMeta();
+                    this.pollInterval = setInterval(() => {
+                        this.fetchMeta();
+                    }, 10000);
+                },
+
+                stopPolling() {
+                    if (this.pollInterval) clearInterval(this.pollInterval);
+                    this.pollInterval = null;
+                },
+
+                async fetchMeta() {
+                    try {
+                        const response = await fetch('{{ route('radio.status') }}');
+                        const data = await response.json();
+                        if (data.current) {
+                            this.currentSong = data.current.text || (data.current.artist + ' - ' + data.current.title);
+                        }
+                    } catch (e) {
+                        // silent error
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @keyframes marquee {
+            0% {
+                transform: translateX(100%);
+            }
+
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .animate-marquee {
+            display: inline-block;
+            white-space: nowrap;
+            animation: marquee 15s linear infinite;
+            padding-left: 100%;
+        }
+    </style>
 </body>
 
 </html>

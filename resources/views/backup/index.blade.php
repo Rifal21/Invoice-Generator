@@ -269,161 +269,189 @@
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
             <script>
-                document.addEventListener('DOMContentLoaded', function() {
-                    // Force Reset Button State on Load
-                    const btnSubmit = document.getElementById('btn-submit');
-                    if (btnSubmit) {
-                        btnSubmit.disabled = false;
-                        btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
-                        const s = document.getElementById('btn-spinner');
-                        if (s) s.classList.add('hidden');
-                        const i = document.getElementById('btn-icon');
-                        if (i) i.classList.remove('hidden');
-                        const t = document.getElementById('btn-text');
-                        if (t) t.innerText = 'MULAI UPLOAD KE GOOGLE DRIVE';
-                    }
+                (function() {
+                    const initBackupPage = function() {
+                        // Force Reset Button State
+                        const btnSubmit = document.getElementById('btn-submit');
+                        if (btnSubmit) {
+                            btnSubmit.disabled = false;
+                            btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+                            const s = document.getElementById('btn-spinner');
+                            if (s) s.classList.add('hidden');
+                            const i = document.getElementById('btn-icon');
+                            if (i) i.classList.remove('hidden');
+                            const t = document.getElementById('btn-text');
+                            if (t) t.innerText = 'MULAI UPLOAD KE GOOGLE DRIVE';
+                        }
 
-                    const formObj = document.getElementById('backup-form');
-                    if (!formObj) return;
+                        const formObj = document.getElementById('backup-form');
+                        if (!formObj) return;
 
-                    function updateHistory() {
-                        fetch("{{ route('backup.history') }}")
-                            .then(res => res.text())
-                            .then(html => {
-                                document.getElementById('backup-history-body').innerHTML = html;
-                            })
-                            .catch(e => console.error(e));
-                    }
+                        // Remove existing listener to avoid duplicates if any (though body replacement usually clears them)
+                        const newForm = formObj.cloneNode(true);
+                        formObj.parentNode.replaceChild(newForm, formObj);
 
-                    // Auto update every 5 sec if just viewing
-                    // setInterval(updateHistory, 5000); 
+                        // Re-select after clone
+                        const activeForm = document.getElementById('backup-form');
 
-                    formObj.addEventListener('submit', function(e) {
-                        e.preventDefault();
+                        // Initialize Select2
+                        if ($('.select2').length > 0) {
+                            // Destroy previous instance if any to prevent memory leaks/duplication
+                            if ($('.select2').data('select2')) {
+                                $('.select2').select2('destroy');
+                            }
+                            $('.select2').select2({
+                                width: '100%',
+                                placeholder: "-- Pilih Pelanggan (Optional) --",
+                                allowClear: true
+                            });
+                        }
 
-                        const form = this;
-                        const btn = document.getElementById('btn-submit');
-                        const container = document.getElementById('progress-container');
-                        const pBar = document.getElementById('progress-bar');
-                        const pText = document.getElementById('progress-text');
-                        const pPerc = document.getElementById('progress-percentage');
-                        const pMsg = document.getElementById('progress-message');
+                        function updateHistory() {
+                            fetch("{{ route('backup.history') }}")
+                                .then(res => res.text())
+                                .then(html => {
+                                    const body = document.getElementById('backup-history-body');
+                                    if (body) body.innerHTML = html;
+                                })
+                                .catch(e => console.error(e));
+                        }
 
-                        // Reset UI
-                        container.classList.remove('hidden');
-                        btn.disabled = true;
-                        btn.classList.add('opacity-50', 'cursor-not-allowed');
-                        document.getElementById('btn-spinner').classList.remove('hidden');
-                        document.getElementById('btn-icon').classList.add('hidden');
-                        document.getElementById('btn-text').innerText = 'MEMPROSES...';
-                        pBar.style.width = '0%';
-                        pPerc.innerText = '0%';
-                        pMsg.innerText = 'Memulai proses...';
+                        // Attach Submit Listener
+                        activeForm.addEventListener('submit', function(e) {
+                            e.preventDefault();
 
-                        const formData = new FormData(form);
+                            const form = this;
+                            const btn = document.getElementById('btn-submit');
+                            const container = document.getElementById('progress-container');
+                            const pBar = document.getElementById('progress-bar');
+                            const pText = document.getElementById('progress-text');
+                            const pPerc = document.getElementById('progress-percentage');
+                            const pMsg = document.getElementById('progress-message');
 
-                        // Start Process
-                        fetch(form.action, {
-                                method: 'POST',
-                                headers: {
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                                },
-                                body: formData
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                if (data.status === 'success') {
-                                    localStorage.setItem('backup_active', 'true'); // Flag for global indicator
-                                    window.dispatchEvent(new Event('storage')); // Trigger update
+                            // Reset UI
+                            container.classList.remove('hidden');
+                            btn.disabled = true;
+                            btn.classList.add('opacity-50', 'cursor-not-allowed');
+                            document.getElementById('btn-spinner').classList.remove('hidden');
+                            document.getElementById('btn-icon').classList.add('hidden');
+                            document.getElementById('btn-text').innerText = 'MEMPROSES...';
+                            pBar.style.width = '0%';
+                            pPerc.innerText = '0%';
+                            pMsg.innerText = 'Memulai proses...';
 
-                                    updateHistory();
-                                    startPolling();
-                                } else {
+                            const formData = new FormData(form);
+
+                            // Start Process
+                            fetch(form.action, {
+                                    method: 'POST',
+                                    headers: {
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                        'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
+                                    },
+                                    body: formData
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.status === 'success') {
+                                        localStorage.setItem('backup_active', 'true');
+                                        window.dispatchEvent(new Event('storage'));
+
+                                        updateHistory();
+                                        startPolling();
+                                    } else {
+                                        Swal.fire({
+                                            icon: 'error',
+                                            title: 'Gagal Memulai',
+                                            text: data.message || 'Unknown error'
+                                        });
+                                        resetBtn();
+                                    }
+                                })
+                                .catch(err => {
                                     Swal.fire({
                                         icon: 'error',
-                                        title: 'Gagal Memulai',
-                                        text: data.message || 'Unknown error'
+                                        title: 'Error System',
+                                        text: 'Gagal mengirim form: ' + err
                                     });
                                     resetBtn();
-                                }
-                            })
-                            .catch(err => {
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Error System',
-                                    text: 'Gagal mengirim form: ' + err
                                 });
-                                resetBtn();
-                            });
 
-                        function startPolling() {
-                            const interval = setInterval(() => {
-                                // Parallel Fetch: History & Status
-                                updateHistory();
+                            function startPolling() {
+                                const interval = setInterval(() => {
+                                    updateHistory();
 
-                                fetch("{{ route('backup.progress') }}")
-                                    .then(res => res.json())
-                                    .then(progress => {
-                                        // Update UI
-                                        pBar.style.width = progress.percentage + '%';
-                                        pPerc.innerText = progress.percentage + '%';
-                                        pMsg.innerText = progress.message;
+                                    fetch("{{ route('backup.progress') }}")
+                                        .then(res => res.json())
+                                        .then(progress => {
+                                            if (!document.getElementById('progress-bar')) {
+                                                clearInterval(interval);
+                                                return; // Page changed
+                                            }
 
-                                        if (progress.status === 'completed') {
+                                            pBar.style.width = progress.percentage + '%';
+                                            pPerc.innerText = progress.percentage + '%';
+                                            pMsg.innerText = progress.message;
+
+                                            if (progress.status === 'completed') {
+                                                clearInterval(interval);
+                                                updateHistory();
+                                                pMsg.innerText = 'SELESAI! ' + progress.message;
+                                                pBar.classList.replace('bg-indigo-600', 'bg-green-500');
+
+                                                Swal.fire({
+                                                    icon: 'success',
+                                                    title: 'Backup Selesai!',
+                                                    text: progress.message,
+                                                    confirmButtonColor: '#4F46E5',
+                                                    confirmButtonText: 'Mantap!'
+                                                });
+                                                resetBtn();
+                                            } else if (progress.status === 'error') {
+                                                clearInterval(interval);
+                                                updateHistory();
+                                                pMsg.innerText = 'ERROR: ' + progress.message;
+                                                pBar.classList.replace('bg-indigo-600', 'bg-red-500');
+
+                                                Swal.fire({
+                                                    icon: 'error',
+                                                    title: 'Terjadi Kesalahan',
+                                                    text: progress.message
+                                                });
+                                                resetBtn();
+                                            }
+                                        })
+                                        .catch(err => {
+                                            console.error('Polling error', err);
                                             clearInterval(interval);
-                                            updateHistory(); // Final Update
-                                            pMsg.innerText = 'SELESAI! ' + progress.message;
-                                            pBar.classList.replace('bg-indigo-600', 'bg-green-500');
+                                        });
+                                }, 2000);
+                            }
 
-                                            Swal.fire({
-                                                icon: 'success',
-                                                title: 'Backup Selesai!',
-                                                text: progress.message,
-                                                confirmButtonColor: '#4F46E5',
-                                                confirmButtonText: 'Mantap!'
-                                            });
-
-                                            resetBtn();
-                                        } else if (progress.status === 'error') {
-                                            clearInterval(interval);
-                                            updateHistory(); // Final Update
-                                            pMsg.innerText = 'ERROR: ' + progress.message;
-                                            pBar.classList.replace('bg-indigo-600', 'bg-red-500');
-
-                                            Swal.fire({
-                                                icon: 'error',
-                                                title: 'Terjadi Kesalahan',
-                                                text: progress.message
-                                            });
-
-                                            resetBtn();
-                                        }
-                                    })
-                                    .catch(err => {
-                                        console.error('Polling error', err);
-                                    });
-                            }, 2000); // Check every 2s for less load since we do double fetch
-                        }
-
-                        function resetBtn() {
-                            btn.disabled = false;
-                            btn.classList.remove('opacity-50', 'cursor-not-allowed');
-                            document.getElementById('btn-spinner').classList.add('hidden');
-                            document.getElementById('btn-icon').classList.remove('hidden');
-                            document.getElementById('btn-text').innerText = 'MULAI UPLOAD KE GOOGLE DRIVE';
-                        }
-                    });
-
-                    // Initialize Select2
-                    if ($('.select2').length > 0) {
-                        $('.select2').select2({
-                            width: '100%',
-                            placeholder: "-- Pilih Pelanggan (Optional) --",
-                            allowClear: true
+                            function resetBtn() {
+                                if (!btn) return;
+                                btn.disabled = false;
+                                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                                document.getElementById('btn-spinner').classList.add('hidden');
+                                document.getElementById('btn-icon').classList.remove('hidden');
+                                document.getElementById('btn-text').innerText = 'MULAI UPLOAD KE GOOGLE DRIVE';
+                            }
                         });
+                    };
+
+                    // Run on load and after Turbo navigation
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', initBackupPage);
+                    } else {
+                        initBackupPage();
                     }
-                });
+
+                    // Specific Turbo listener for re-visits if body script re-execution isn't enough (it usually is for inline scripts, but safety first)
+                    // document.addEventListener('turbo:load', initBackupPage); 
+                    // Note: If the script is in the body, Turbo executes it. If we add a listener here, it might run twice. 
+                    // Ideally, the IIFE + readyState check is sufficient for body scripts.
+
+                })();
             </script>
 
             <style>
