@@ -24,24 +24,30 @@
                                 @csrf
                                 <div class="mb-6">
                                     <label class="block text-xs font-bold text-gray-700 mb-2 uppercase">Jenis Backup</label>
-                                    <div class="grid grid-cols-3 gap-2">
+                                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                                         <button type="button" @click="type = 'monthly'"
                                             :class="type === 'monthly' ? 'bg-indigo-600 text-white' :
                                                 'bg-gray-100 text-gray-600'"
                                             class="py-2 px-2 rounded-xl text-[10px] font-black transition-all">
-                                            BULANAN (PDF)
+                                            BULANAN
                                         </button>
                                         <button type="button" @click="type = 'weekly'"
                                             :class="type === 'weekly' ? 'bg-indigo-600 text-white' :
                                                 'bg-gray-100 text-gray-600'"
                                             class="py-2 px-2 rounded-xl text-[10px] font-black transition-all">
-                                            MINGGUAN (PDF)
+                                            MINGGUAN
+                                        </button>
+                                        <button type="button" @click="type = 'custom'"
+                                            :class="type === 'custom' ? 'bg-indigo-600 text-white' :
+                                                'bg-gray-100 text-gray-600'"
+                                            class="py-2 px-2 rounded-xl text-[10px] font-black transition-all">
+                                            CUSTOM / PELANGGAN
                                         </button>
                                         <button type="button" @click="type = 'database'"
                                             :class="type === 'database' ? 'bg-indigo-600 text-white' :
                                                 'bg-gray-100 text-gray-600'"
                                             class="py-2 px-2 rounded-xl text-[10px] font-black transition-all">
-                                            DATABASE (SQL/EXCEL)
+                                            DATABASE
                                         </button>
                                     </div>
                                     <input type="hidden" name="type" :value="type">
@@ -50,7 +56,8 @@
                                 <div class="mb-6">
                                     <!-- Database Info -->
                                     <div x-show="type === 'database'"
-                                        class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4">
+                                        class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-4"
+                                        style="display: none;">
                                         <p class="text-xs text-blue-800 leading-relaxed font-medium">
                                             <i class="fas fa-info-circle mr-1"></i>
                                             Backup ini akan mengupload <strong>seluruh data website</strong> ke Google Drive
@@ -92,13 +99,14 @@
                                     </div>
 
                                     <!-- Weekly / Custom Range Inputs -->
-                                    <div x-show="type === 'weekly'" class="grid grid-cols-2 gap-4">
+                                    <div x-show="type === 'weekly' || type === 'custom'" class="grid grid-cols-2 gap-4"
+                                        style="display: none;">
                                         <div>
                                             <label for="start_date"
                                                 class="block text-xs font-bold text-gray-700 mb-2 uppercase">Tanggal
                                                 Mulai</label>
                                             <input type="date" id="start_date" name="start_date"
-                                                value="{{ date('Y-m-d', strtotime('last monday')) }}"
+                                                value="{{ date('Y-m-d', strtotime('last Monday')) }}"
                                                 class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 bg-gray-50 font-bold">
                                         </div>
                                         <div>
@@ -108,6 +116,21 @@
                                             <input type="date" id="end_date" name="end_date" value="{{ date('Y-m-d') }}"
                                                 class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm py-3 px-4 bg-gray-50 font-bold">
                                         </div>
+                                    </div>
+
+                                    <!-- Customer Select (Only for Custom) -->
+                                    <div x-show="type === 'custom'" class="mt-4" style="display: none;">
+                                        <label for="customer_id"
+                                            class="block text-xs font-bold text-gray-700 mb-2 uppercase">Filter Pelanggan
+                                            (Opsional)</label>
+                                        <select id="customer_id" name="customer_id" class="select2 block w-full">
+                                            <option value="">-- Semua Pelanggan --</option>
+                                            @foreach ($customers as $customer)
+                                                <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                            @endforeach
+                                        </select>
+                                        <p class="text-[10px] text-gray-400 mt-1">Biarkan kosong untuk membackup semua
+                                            pelanggan dalam rentang tanggal.</p>
                                     </div>
                                 </div>
 
@@ -153,11 +176,13 @@
                                         <div class="bg-indigo-600 h-2.5 rounded-full transition-all duration-300"
                                             style="width: 0%" id="progress-bar"></div>
                                     </div>
-                                    <p class="text-xs text-gray-500 mt-2 font-mono" id="progress-message">Menyiapkan...</p>
+                                    <p class="text-xs text-gray-500 mt-2 font-mono" id="progress-message">Menyiapkan...
+                                    </p>
                                 </div>
 
                                 <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
-                                    <h4 class="text-sm font-bold text-blue-900 mb-2"><i class="fas fa-info-circle mr-1"></i>
+                                    <h4 class="text-sm font-bold text-blue-900 mb-2"><i
+                                            class="fas fa-info-circle mr-1"></i>
                                         Cara
                                         Kerja:</h4>
                                     <ul class="text-xs text-blue-800 space-y-1 list-disc list-inside">
@@ -245,6 +270,19 @@
 
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
+                    // Force Reset Button State on Load
+                    const btnSubmit = document.getElementById('btn-submit');
+                    if (btnSubmit) {
+                        btnSubmit.disabled = false;
+                        btnSubmit.classList.remove('opacity-50', 'cursor-not-allowed');
+                        const s = document.getElementById('btn-spinner');
+                        if (s) s.classList.add('hidden');
+                        const i = document.getElementById('btn-icon');
+                        if (i) i.classList.remove('hidden');
+                        const t = document.getElementById('btn-text');
+                        if (t) t.innerText = 'MULAI UPLOAD KE GOOGLE DRIVE';
+                    }
+
                     const formObj = document.getElementById('backup-form');
                     if (!formObj) return;
 
@@ -376,6 +414,56 @@
                             document.getElementById('btn-text').innerText = 'MULAI UPLOAD KE GOOGLE DRIVE';
                         }
                     });
+
+                    // Initialize Select2
+                    if ($('.select2').length > 0) {
+                        $('.select2').select2({
+                            width: '100%',
+                            placeholder: "-- Pilih Pelanggan (Optional) --",
+                            allowClear: true
+                        });
+                    }
                 });
             </script>
+
+            <style>
+                /* Custom Select2 Styling to match Tailwind 'rounded-xl' and 'py-3' */
+                .select2-container .select2-selection--single {
+                    height: 50px !important;
+                    /* Match py-3 input height */
+                    border-radius: 0.75rem !important;
+                    /* rounded-xl */
+                    border-color: #d1d5db !important;
+                    /* gray-300 */
+                    display: flex !important;
+                    align-items: center !important;
+                    background-color: #f9fafb !important;
+                    /* gray-50 */
+                }
+
+                .select2-container--default .select2-selection--single .select2-selection__rendered {
+                    line-height: normal !important;
+                    padding-left: 1rem !important;
+                    /* pl-4 */
+                    color: #111827 !important;
+                    /* gray-900 */
+                    font-weight: 700 !important;
+                    /* font-bold */
+                    font-size: 0.875rem !important;
+                    /* text-sm */
+                    width: 100%;
+                }
+
+                .select2-container--default .select2-selection--single .select2-selection__arrow {
+                    height: 48px !important;
+                    right: 10px !important;
+                }
+
+                .select2-dropdown {
+                    border-radius: 0.75rem !important;
+                    border-color: #d1d5db !important;
+                    overflow: hidden;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+                }
+            </style>
         @endsection

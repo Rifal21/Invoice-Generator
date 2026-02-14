@@ -26,10 +26,11 @@ class ProcessGoogleDriveBackup implements ShouldQueue
     protected $endDate;
     protected $userId;
     protected $backupId;
+    protected $customerId;
 
     public $timeout = 7200; // 2 hours
 
-    public function __construct($month, $year, $userId, $backupId = null, $type = 'monthly', $week = null, $startDate = null, $endDate = null)
+    public function __construct($month, $year, $userId, $backupId = null, $type = 'monthly', $week = null, $startDate = null, $endDate = null, $customerId = null)
     {
         $this->month = $month;
         $this->year = $year;
@@ -39,6 +40,7 @@ class ProcessGoogleDriveBackup implements ShouldQueue
         $this->week = $week;
         $this->startDate = $startDate;
         $this->endDate = $endDate;
+        $this->customerId = $customerId;
     }
 
     public function handle()
@@ -67,6 +69,12 @@ class ProcessGoogleDriveBackup implements ShouldQueue
                 $startDate = Carbon::parse($this->startDate)->startOfDay();
                 $endDate = Carbon::parse($this->endDate)->endOfDay();
                 $periodFolderName = "Custom ({$startDate->format('d M')} - {$endDate->format('d M Y')})";
+
+                if ($this->customerId) {
+                    $customer = \App\Models\Customer::find($this->customerId);
+                    $cName = $customer ? $customer->name : 'Unknown';
+                    $periodFolderName = "Backup {$cName} ({$startDate->format('d M')} - {$endDate->format('d M Y')})";
+                }
             } elseif ($this->type === 'weekly') {
                 $startDate = Carbon::now()->setISODate($this->year, $this->week)->startOfWeek();
                 $endDate = Carbon::now()->setISODate($this->year, $this->week)->endOfWeek();
@@ -86,10 +94,19 @@ class ProcessGoogleDriveBackup implements ShouldQueue
 
             if ($this->type !== 'database' && $this->type !== 'products') {
                 // Fetch Invoices only for invoice-related backups
-                $invoices = Invoice::with(['items.product'])
-                    ->whereBetween('date', [$startDate, $endDate])
-                    ->get();
+                $query = Invoice::with(['items.product'])
+                    ->whereBetween('date', [$startDate, $endDate]);
 
+                if ($this->customerId) {
+                    // Fix: Invoice table uses 'customer_name' (string) not 'customer_id' (int relationship)
+                    // So we must fetch the customer name first
+                    $customerObj = \App\Models\Customer::find($this->customerId);
+                    if ($customerObj) {
+                        $query->where('customer_name', $customerObj->name);
+                    }
+                }
+
+                $invoices = $query->get();
                 $total = $invoices->count();
 
                 if ($total === 0) {
@@ -109,8 +126,8 @@ class ProcessGoogleDriveBackup implements ShouldQueue
             $rootBackupFolderId = $driveService->createFolder('Koperasi JR Backups');
 
             if ($this->type === 'database') {
+                // ... (Database logic unchanged) ...
                 $dbFolderId = $driveService->createFolder('Database Backups', $rootBackupFolderId);
-                // Use a proper name for database backup folder instead of the generic period name
                 $folderName = "Full Backup - " . Carbon::now()->format('d M Y (H.i)');
                 $periodFolderId = $driveService->createFolder($folderName, $dbFolderId);
 
@@ -119,7 +136,7 @@ class ProcessGoogleDriveBackup implements ShouldQueue
                 // 1. SQL Dump
                 $dbConfig = config('database.connections.mysql');
                 $sqlFileName = 'db_full_' . date('Y-m-d_H-i-s') . '.sql';
-                $sqlPath = storage_path('app/' . $sqlFileName); // Outside 'private' is fine for manual cleanup
+                $sqlPath = storage_path('app/' . $sqlFileName);
 
                 $command = sprintf(
                     'mysqldump --user=%s --password=%s --host=%s --no-tablespaces %s > %s',
@@ -144,47 +161,31 @@ class ProcessGoogleDriveBackup implements ShouldQueue
 
                 // 2. Excel Export
                 $excelFileName = 'db_full_' . date('Y-m-d_H-i-s') . '.xlsx';
-
-                Log::info("Starting Excel Database Export...");
                 \Maatwebsite\Excel\Facades\Excel::store(new \App\Exports\DatabaseExport, $excelFileName, 'local');
-
-                // Get absolute path from disk configuration
                 $excelPath = \Illuminate\Support\Facades\Storage::disk('local')->path($excelFileName);
 
                 if (file_exists($excelPath)) {
-                    Log::info("Excel Database Export Success at {$excelPath}, uploading to Drive...");
                     $driveService->uploadFile($excelPath, $excelFileName, $periodFolderId);
-                    // Cleanup from disk
                     \Illuminate\Support\Facades\Storage::disk('local')->delete($excelFileName);
-                } else {
-                    Log::error("Excel Database Export Failed: File not found at " . $excelPath);
                 }
 
                 $count = 1;
                 $totalGroups = 1;
             } elseif ($this->type === 'products') {
+                // ... (Products logic unchanged) ...
                 $productFolderId = $driveService->createFolder('Product Backups', $rootBackupFolderId);
                 $folderName = "Products - " . Carbon::now()->format('d M Y (H.i)');
                 $periodFolderId = $driveService->createFolder($folderName, $productFolderId);
 
                 Cache::put($cacheKey, ['status' => 'processing', 'percentage' => 50, 'message' => 'Mengekspor Data Produk ke Excel...'], 3600);
 
-                // Excel Export for Products
                 $excelFileName = 'products_backup_' . date('Y-m-d_H-i-s') . '.xlsx';
-
-                Log::info("Starting Excel Products Export...");
                 \Maatwebsite\Excel\Facades\Excel::store(new \App\Exports\ProductExport('internal'), $excelFileName, 'local');
-
-                // Get absolute path from disk configuration
                 $excelPath = \Illuminate\Support\Facades\Storage::disk('local')->path($excelFileName);
 
                 if (file_exists($excelPath)) {
-                    Log::info("Excel Products Export Success at {$excelPath}, uploading to Drive...");
                     $driveService->uploadFile($excelPath, $excelFileName, $periodFolderId);
-                    // Cleanup from disk
                     \Illuminate\Support\Facades\Storage::disk('local')->delete($excelFileName);
-                } else {
-                    Log::error("Excel Products Export Failed: File not found at " . $excelPath);
                 }
 
                 $count = 1;
@@ -323,7 +324,7 @@ class ProcessGoogleDriveBackup implements ShouldQueue
                 'action' => 'backup_drive_job',
                 'model_type' => 'Backup',
                 'model_id' => $backup ? $backup->id : 0,
-                'description' => "Backup Complete: {$startDate->format('F Y')}",
+                'description' => "Backup Complete: {$periodFolderName}",
                 'ip_address' => '127.0.0.1',
                 'user_agent' => 'QueueWorker',
             ]);
