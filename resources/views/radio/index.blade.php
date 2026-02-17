@@ -38,6 +38,17 @@
                             </div>
                         </div>
 
+                        <!-- Station Selector -->
+                        <div class="absolute top-6 right-6 z-30">
+                            <select id="station-select" onchange="changeStation(this.value)"
+                                class="bg-black/30 text-white border border-white/20 rounded-full px-4 py-2 text-sm font-bold focus:ring-2 focus:ring-indigo-500 backdrop-blur-md outline-none cursor-pointer hover:bg-black/50 transition-colors appearance-none pr-8">
+                                <option value="fkstudio" class="text-gray-900 bg-white">Radio FKStudio</option>
+                                <option value="alhastream" class="text-gray-900 bg-white">Inayah Radio</option>
+                            </select>
+                            <i
+                                class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-white/70 text-xs pointer-events-none"></i>
+                        </div>
+
                         <!-- Radio Icon/Logo -->
                         <div
                             class="z-10 bg-white/10 backdrop-blur-md p-8 rounded-full shadow-2xl border border-white/20 animate-pulse-slow">
@@ -215,8 +226,13 @@
 @push('scripts')
     <script>
         let isStarted = false;
+        let currentStation = 'fkstudio';
         const audioPlayer = document.getElementById('audio-player');
-        // Handle volume if needed
+
+        const stations = {
+            'fkstudio': 'https://radio.fkstudio.my.id/listen/radio_fkstudio/radio.mp3',
+            'alhastream': 'https://s3.alhastream.com/listen/station_38/radio'
+        };
 
         function startRadio() {
             const overlay = document.getElementById('play-overlay');
@@ -228,65 +244,108 @@
             if (audioPlayer) {
                 audioPlayer.play().then(() => {
                     isStarted = true;
-                    syncRadio(); // Initial sync after starting
+                    // Ensure metadata is fetched immediately
+                    syncRadio();
                 }).catch(e => {
                     console.error("Playback failed", e);
                 });
             }
         }
 
+        function changeStation(station) {
+            currentStation = station;
+
+            // Remove overlay if it exists (user interaction counts as starting)
+            const overlay = document.getElementById('play-overlay');
+            if (overlay && !overlay.style.display && overlay.style.display !== 'none') {
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 500);
+            }
+
+            if (audioPlayer) {
+                audioPlayer.src = stations[station];
+                audioPlayer.load();
+                audioPlayer.play().then(() => {
+                    isStarted = true;
+                    syncRadio();
+                }).catch(e => console.error("Playback failed on switch", e));
+            }
+        }
+
         function refreshStream() {
             if (audioPlayer) {
                 // Reload src to reconnect live stream
-                const currentSrc = audioPlayer.querySelector('source').src;
-                audioPlayer.src = currentSrc;
+                audioPlayer.src = stations[currentStation];
                 audioPlayer.load();
                 if (isStarted) audioPlayer.play();
             }
         }
 
         // Sync Radio State
+        // Sync Radio State
         async function syncRadio() {
-            if (!isStarted) return;
+            // Uncomment to require start before sync, but for UI updates we might want it always
+            // if (!isStarted) return; 
+
             try {
-                const response = await fetch('{{ route('radio.status') }}');
-                const data = await response.json();
+                let data = {
+                    current: null
+                };
 
-                // updateQueue(data.queue); // Queue data might be empty now, handle gracefully
+                if (currentStation === 'fkstudio') {
+                    const response = await fetch('{{ route('radio.status') }}');
+                    const resData = await response.json();
+                    data.current = resData.current;
+                } else {
+                    // Alhastream
+                    const response = await fetch('https://s3.alhastream.com/api/nowplaying/station_38');
+                    const resData = await response.json();
+                    if (resData.now_playing && resData.now_playing.song) {
+                        data.current = {
+                            text: resData.now_playing.song.text,
+                            title: resData.now_playing.song.title,
+                            artist: resData.now_playing.song.artist,
+                            art: resData.now_playing.song.art,
+                            listeners: resData.listeners.current
+                        };
+                    }
+                }
 
-                const noMusicOverlay = document.getElementById(
-                    'no-music-overlay'
-                ); // This element is not in the provided HTML, assuming it's meant for future use or another part.
+                const noMusicOverlay = document.getElementById('no-music-overlay');
 
                 if (data.current) {
                     if (noMusicOverlay) noMusicOverlay.classList.add('hidden');
 
                     const titleElem = document.getElementById('current-song-title');
                     const reqElem = document.getElementById('requested-by');
-                    const artElem = document.querySelector('.group-hover\\:bg-indigo-500 i'); // Icon or Image?
+                    // We need to target the icon inside the container again properly
+                    const artContainerIcon = document.querySelector('#now-playing-art-container i');
+                    const artImg = document.getElementById('now-playing-img');
 
                     // Update Title
                     if (titleElem) titleElem.innerText = data.current.text || (data.current.artist + ' - ' + data
                         .current.title);
 
-                    // Update Listeners/RequestedBy
+                    // Update Listeners
                     if (reqElem) reqElem.innerText = `Listeners: ${data.current.listeners || '-'}`;
 
                     // Update Art
-                    const artImg = document.getElementById('now-playing-img');
-                    const artIcon = document.getElementById('now-playing-icon');
-
-                    if (data.current.art && artImg && artIcon) {
+                    if (data.current.art && artImg && artContainerIcon) {
                         artImg.src = data.current.art;
                         artImg.classList.remove('hidden');
-                        artIcon.classList.add('hidden');
-                    } else if (artImg && artIcon) {
+                        artContainerIcon.classList.add('hidden');
+                    } else if (artImg && artContainerIcon) {
                         artImg.classList.add('hidden');
-                        artIcon.classList.remove('hidden');
+                        artContainerIcon.classList.remove('hidden');
                     }
 
                 } else {
                     if (noMusicOverlay) noMusicOverlay.classList.remove('hidden');
+
+                    // Fallback text
+                    const titleElem = document.getElementById('current-song-title');
+                    if (titleElem) titleElem.innerText = currentStation === 'fkstudio' ? 'Radio FKStudio' :
+                        'Alhastream Radio';
                 }
             } catch (error) {
                 console.error('Sync Error:', error);

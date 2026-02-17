@@ -94,7 +94,7 @@
                                     x-transition:leave="transition ease-in duration-200 transform"
                                     x-transition:leave-start="opacity-100 translate-x-0 scale-100"
                                     x-transition:leave-end="opacity-0 translate-x-8 scale-95"
-                                    class="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-3 bg-white/90 backdrop-blur-md border border-indigo-100 shadow-xl rounded-full pl-4 pr-2 py-1.5 h-10 w-[280px] overflow-hidden">
+                                    class="absolute right-10 top-1/2 -translate-y-1/2 flex items-center gap-3 bg-white/90 backdrop-blur-md border border-indigo-100 shadow-xl rounded-full pl-4 pr-2 py-1.5 h-10 w-[300px] overflow-hidden">
 
                                     <!-- Equalizer Animation -->
                                     <div class="flex items-end gap-[1px] h-4 w-6 shrink-0" x-show="isPlaying">
@@ -127,6 +127,12 @@
                                     </div>
 
                                     <!-- Controls -->
+                                    <button @click="toggleSource()"
+                                        class="w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors shrink-0"
+                                        :title="currentSource === 'fkstudio' ? 'Ganti ke Alhastream' : 'Ganti ke FKStudio'">
+                                        <i class="fas fa-exchange-alt text-[10px]"></i>
+                                    </button>
+
                                     <button @click="togglePlay()"
                                         class="w-7 h-7 flex items-center justify-center rounded-full bg-indigo-600 text-white hover:bg-indigo-700 transition-colors shrink-0 shadow-md">
                                         <i class="fas"
@@ -158,10 +164,7 @@
                                     </span>
                                 </button>
 
-                                <audio x-ref="audioPlayer" preload="none" class="hidden">
-                                    <source src="https://radio.fkstudio.my.id/listen/radio_fkstudio/radio.mp3"
-                                        type="audio/mpeg">
-                                </audio>
+                                <audio x-ref="audioPlayer" preload="none" class="hidden"></audio>
                             </div>
                         @endif
 
@@ -581,14 +584,18 @@
             return {
                 expanded: false,
                 isPlaying: false,
+                currentSource: 'fkstudio',
+                sources: {
+                    'fkstudio': 'https://radio.fkstudio.my.id/listen/radio_fkstudio/radio.mp3',
+                    'alhastream': 'https://s3.alhastream.com/listen/station_38/radio'
+                },
                 currentSong: 'Memuat Info...',
                 pollInterval: null,
 
                 initPlayer() {
                     const audio = this.$refs.audioPlayer;
-
-                    // Restore state logic could go here if using SPA/Pjax
-                    // For now, simple init
+                    // Set default source
+                    audio.src = this.sources[this.currentSource];
 
                     audio.addEventListener('play', () => {
                         this.isPlaying = true;
@@ -598,6 +605,11 @@
                     audio.addEventListener('pause', () => {
                         this.isPlaying = false;
                         this.stopPolling();
+                    });
+
+                    audio.addEventListener('error', (e) => {
+                        console.error('Audio Error:', e);
+                        this.isPlaying = false;
                     });
 
                     // Initial Poll
@@ -613,12 +625,30 @@
                                 // Play started
                             }).catch(error => {
                                 console.log("Playback prevented:", error);
-                                // Show user hint?
                             });
                         }
                     } else {
                         audio.pause();
                     }
+                },
+
+                toggleSource() {
+                    this.currentSource = this.currentSource === 'fkstudio' ? 'alhastream' : 'fkstudio';
+                    const audio = this.$refs.audioPlayer;
+                    const wasPlaying = !audio.paused;
+
+                    audio.src = this.sources[this.currentSource];
+                    audio.load();
+
+                    if (wasPlaying) {
+                        audio.play().catch(e => console.error("Auto-resume failed:", e));
+                    } else {
+                        this.isPlaying = false;
+                    }
+
+                    // Reset song info temporarily
+                    this.currentSong = 'Memuat Info...';
+                    this.fetchMeta();
                 },
 
                 startPolling() {
@@ -636,13 +666,26 @@
 
                 async fetchMeta() {
                     try {
-                        const response = await fetch('{{ route('radio.status') }}');
-                        const data = await response.json();
-                        if (data.current) {
-                            this.currentSong = data.current.text || (data.current.artist + ' - ' + data.current.title);
+                        if (this.currentSource === 'fkstudio') {
+                            const response = await fetch('{{ route('radio.status') }}');
+                            const data = await response.json();
+                            if (data.current) {
+                                this.currentSong = data.current.text || (data.current.artist + ' - ' + data.current
+                                    .title);
+                            }
+                        } else {
+                            // Alhastream fetch
+                            const response = await fetch('https://s3.alhastream.com/api/nowplaying/station_38');
+                            const data = await response.json();
+                            if (data.now_playing && data.now_playing.song) {
+                                this.currentSong = data.now_playing.song.text;
+                            } else {
+                                this.currentSong = 'Alhastream Radio';
+                            }
                         }
                     } catch (e) {
-                        // silent error
+                        console.log('Meta fetch error', e);
+                        this.currentSong = this.currentSource === 'fkstudio' ? 'Radio FKStudio' : 'Alhastream Radio';
                     }
                 }
             }
