@@ -491,9 +491,204 @@
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    document.getElementById('scan-input').click();
+                    showDragAndDropModal();
                 } else if (result.dismiss === Swal.DismissReason.cancel) {
                     showTextInput();
+                }
+            });
+        }
+
+        function showDragAndDropModal() {
+            const dragHtml = `
+                <div class="w-full">
+                    <div id="drop-zone" class="border-4 border-dashed border-indigo-200 rounded-[2rem] p-10 text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all duration-300 relative group">
+                        <input type="file" id="modal-scan-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="application/pdf,image/png,image/jpeg,image/jpg">
+                        
+                        <div class="pointer-events-none transform group-hover:scale-105 transition-transform duration-300">
+                            <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600">
+                                <i class="fas fa-cloud-upload-alt text-4xl"></i>
+                            </div>
+                            <h4 class="text-xl font-black text-gray-900 mb-2">Drag & Drop File Disini</h4>
+                            <p class="text-gray-500 font-medium">atau klik untuk memilih file</p>
+                            <p class="text-xs text-indigo-400 font-bold mt-4 uppercase tracking-widest">Format: PDF, JPG, PNG</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            Swal.fire({
+                title: 'Upload Invoice/Pesanan',
+                html: dragHtml,
+                showConfirmButton: false,
+                width: '600px',
+                customClass: {
+                    popup: 'rounded-[2.5rem] p-8'
+                },
+                didOpen: () => {
+                    const dropZone = document.getElementById('drop-zone');
+                    const input = document.getElementById('modal-scan-input');
+
+                    // Drag enter/leave effects
+                    ['dragenter', 'dragover'].forEach(eventName => {
+                        dropZone.addEventListener(eventName, (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            dropZone.classList.add('bg-indigo-50', 'border-indigo-400',
+                                'scale-[1.02]');
+                        }, false);
+                    });
+
+                    ['dragleave', 'drop'].forEach(eventName => {
+                        dropZone.addEventListener(eventName, (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            dropZone.classList.remove('bg-indigo-50', 'border-indigo-400',
+                                'scale-[1.02]');
+                        }, false);
+                    });
+
+                    // Handle Drop
+                    dropZone.addEventListener('drop', (e) => {
+                        const files = e.dataTransfer.files;
+                        if (files.length > 0) {
+                            handleFile(files[0]);
+                        }
+                    });
+
+                    // Handle Click / Input Change
+                    input.addEventListener('change', (e) => {
+                        if (input.files.length > 0) {
+                            handleFile(input.files[0]);
+                        }
+                    });
+                }
+            });
+        }
+
+        async function handleFile(file) {
+            Swal.close(); // Close the drag & drop modal
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('_token', '{{ csrf_token() }}');
+
+            // Show loading
+            Swal.fire({
+                title: 'Memproses AI...',
+                html: '<div class="text-gray-500 mb-2">Sedang membaca file...</div><div class="text-xs font-mono text-indigo-500 animate-pulse">Scanning items & prices...</div>',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const response = await fetch('{{ route('invoices.scan') }}', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showScanPreview(result.data);
+                } else {
+                    Swal.fire('Error', result.message, 'error');
+                }
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Gagal memproses file. Pastikan format didukung.', 'error');
+            }
+        }
+
+        function showScanPreview(data) {
+            if (!data) return;
+
+            // Build Items Table HTML
+            let itemsHtml = '';
+            let totalPreview = 0;
+
+            if (data.items && data.items.length > 0) {
+                itemsHtml = `<div class="overflow-x-auto mt-4 mb-4 border rounded-lg">
+                    <table class="w-full text-sm text-left text-gray-500">
+                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2">Produk</th>
+                                <th class="px-3 py-2 text-center">Qty</th>
+                                <th class="px-3 py-2 text-right">Harga</th>
+                                <th class="px-3 py-2 text-right">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>`;
+
+                data.items.forEach(item => {
+                    const price = parseFloat(item.price) || 0;
+                    const qty = parseFloat(item.quantity) || 0;
+                    const total = price * qty;
+                    totalPreview += total;
+
+                    itemsHtml += `<tr class="bg-white border-b">
+                        <td class="px-3 py-2 font-medium text-gray-900">${item.product_name}</td>
+                        <td class="px-3 py-2 text-center">${qty} ${item.unit || ''}</td>
+                        <td class="px-3 py-2 text-right">Rp ${formatCurrency(price)}</td>
+                        <td class="px-3 py-2 text-right font-bold">Rp ${formatCurrency(total)}</td>
+                    </tr>`;
+                });
+
+                itemsHtml += `</tbody>
+                        <tfoot>
+                            <tr class="font-bold text-gray-900 bg-gray-50">
+                                <td colspan="3" class="px-3 py-2 text-right">Total Estimasi:</td>
+                                <td class="px-3 py-2 text-right">Rp ${formatCurrency(totalPreview)}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>`;
+            } else {
+                itemsHtml = '<p class="text-center text-gray-500 italic my-4">Tidak ada item terdeteksi.</p>';
+            }
+
+            const contentHtml = `
+                <div class="text-left space-y-3">
+                    <div class="bg-indigo-50 p-4 rounded-xl space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-xs font-bold text-gray-500 uppercase">Pelanggan</span>
+                            <span class="font-bold text-indigo-700">${data.customer_name || '-'}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-xs font-bold text-gray-500 uppercase">Tanggal</span>
+                            <span class="font-bold text-indigo-700">${data.date ? new Date(data.date).toLocaleDateString('id-ID', {day: 'numeric', month: 'long', year: 'numeric'}) : '-'}</span>
+                        </div>
+                    </div>
+                    ${itemsHtml}
+                    <p class="text-xs text-gray-400 text-center">Pastikan data sudah benar sebelum dimasukkan ke form.</p>
+                </div>
+            `;
+
+            Swal.fire({
+                title: 'Preview Hasil Scan AI',
+                html: contentHtml,
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#4f46e5',
+                cancelButtonColor: '#ef4444',
+                confirmButtonText: 'Ya, Gunakan Data Ini',
+                cancelButtonText: 'Batal / Scan Ulang',
+                width: '600px',
+                customClass: {
+                    popup: 'rounded-[2rem]',
+                    content: 'text-left'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    processScanResult(data);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Data Diterapkan',
+                        text: 'Form telah diisi dengan hasil scan.',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
                 }
             });
         }
@@ -538,8 +733,7 @@
                 if (result.isConfirmed && result.value) {
                     const response = result.value;
                     if (response.success) {
-                        processScanResult(response.data);
-                        Swal.fire('Berhasil', 'Data berhasil diproses', 'success');
+                        showScanPreview(response.data);
                     } else {
                         Swal.fire('Error', response.message || 'Gagal memproses', 'error');
                     }
@@ -574,8 +768,7 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    processScanResult(result.data);
-                    Swal.fire('Berhasil', 'Scan Berhasil', 'success');
+                    showScanPreview(result.data);
                 } else {
                     Swal.fire('Error', result.message, 'error');
                 }
@@ -598,7 +791,20 @@
                 document.getElementById('date').value = today;
             }
 
-            if (data.customer_name) document.getElementById('customer_name').value = data.customer_name;
+            if (data.customer_name) {
+                // Check if select2 exists and set value
+                if ($('#customer_name').data('select2')) {
+                    // Check if option exists, if not create it
+                    if ($('#customer_name').find("option[value='" + data.customer_name + "']").length) {
+                        $('#customer_name').val(data.customer_name).trigger('change');
+                    } else {
+                        var newOption = new Option(data.customer_name, data.customer_name, true, true);
+                        $('#customer_name').append(newOption).trigger('change');
+                    }
+                } else {
+                    document.getElementById('customer_name').value = data.customer_name;
+                }
+            }
 
             // Clear existing items
             document.getElementById('items-container').innerHTML = '';

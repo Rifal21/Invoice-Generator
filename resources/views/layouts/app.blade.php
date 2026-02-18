@@ -30,6 +30,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* Select2 Tailwind Integration Fixes */
         .select2-container .select2-selection--single {
@@ -218,7 +220,7 @@
             <main class="px-4 sm:px-6 lg:px-8 pyt-4 pb-28 lg:py-6">
                 <div>
                     <script>
-                        const Toast = Swal.mixin({
+                        window.Toast = Swal.mixin({
                             toast: true,
                             position: 'top-end',
                             showConfirmButton: false,
@@ -268,19 +270,20 @@
     @stack('scripts')
     <script>
         // Initialize state
-        let lastNotificationCount = 0;
-        let isFirstLoad = true;
+        window.lastNotificationCount = window.lastNotificationCount || 0;
+        window.isFirstLoad = (typeof window.isFirstLoad === 'undefined') ? true : window.isFirstLoad;
 
         // Simple Ding Sound (Base64)
-        const notificationSound = new Audio(
+        var notificationSound = new Audio(
             "data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"
         ); // Short placeholder, replacing with a real functional base64 short beep below
-        const beepSound = new Audio(
+        var beepSound = new Audio(
             "data:audio/mp3;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWfkWgAI0wWs/ItAAAG84AAD555 GAP555MAAA777wAAPPMAAAAAAAAA9998AA//333////99999//333333/ //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////VEFHAAAAREZXUjD///8A"
         );
 
         // Use a better verified Base64 for a "Ping" sound
-        const pingAudio = new Audio("https://cdn.freesound.org/previews/536/536108_11568472-lq.mp3");
+        // Use a better verified sound
+        var pingAudio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3");
 
         async function fetchNotifications() {
             try {
@@ -295,7 +298,7 @@
                     badge.classList.add('hidden');
                 }
 
-                if (!isFirstLoad && data.count > lastNotificationCount) {
+                if (!window.isFirstLoad && data.count > window.lastNotificationCount) {
                     const latest = data.notifications[0];
                     if (latest) {
                         // 1. In-App Toast
@@ -318,7 +321,7 @@
                             'Audio play failed (user interaction needed first):', error));
                     }
                 }
-                lastNotificationCount = data.count;
+                window.lastNotificationCount = data.count;
 
                 // Render List
                 const list = document.getElementById('notification-list');
@@ -339,7 +342,7 @@
                     `;
                 }
 
-                isFirstLoad = false;
+                window.isFirstLoad = false;
 
             } catch (error) {
                 console.error('Notification Error:', error);
@@ -413,7 +416,8 @@
 
         // Fetch initially and every 10s (faster for chat)
         fetchNotifications();
-        setInterval(fetchNotifications, 10000);
+        if (window.notifInterval) clearInterval(window.notifInterval);
+        window.notifInterval = setInterval(fetchNotifications, 10000);
     </script>
     <!-- Global Backup Indicator -->
     <div id="global-backup-indicator"
@@ -458,15 +462,15 @@
 
     <script>
         // Global Backup Polling Logic
-        let backupPollInterval = null;
-        const gBackupEl = document.getElementById('global-backup-indicator');
-        const gMinimizedEl = document.getElementById('global-backup-minimized');
-        const gStatus = document.getElementById('global-status');
-        const gPerc = document.getElementById('global-perc');
-        const gBar = document.getElementById('global-bar');
-        const gMsg = document.getElementById('global-msg');
-        const gIcon = document.getElementById('global-backup-icon');
-        let isMinimized = localStorage.getItem('backup_minimized') === 'true';
+        window.backupPollInterval = window.backupPollInterval || null;
+        var gBackupEl = document.getElementById('global-backup-indicator');
+        var gMinimizedEl = document.getElementById('global-backup-minimized');
+        var gStatus = document.getElementById('global-status');
+        var gPerc = document.getElementById('global-perc');
+        var gBar = document.getElementById('global-bar');
+        var gMsg = document.getElementById('global-msg');
+        var gIcon = document.getElementById('global-backup-icon');
+        var isMinimized = localStorage.getItem('backup_minimized') === 'true';
 
         function showBackupUI() {
             if (isMinimized) {
@@ -502,20 +506,20 @@
 
         function checkGlobalBackup() {
             const isActive = localStorage.getItem('backup_active') === 'true';
-            if (isActive && !backupPollInterval) {
+            if (isActive && !window.backupPollInterval) {
                 startGlobalPolling();
             }
         }
 
         window.startGlobalPolling = function() {
-            if (backupPollInterval) return;
+            if (window.backupPollInterval) return;
 
             showBackupUI();
 
             // Initial fetch
             pollBackup();
 
-            backupPollInterval = setInterval(pollBackup, 2000);
+            window.backupPollInterval = setInterval(pollBackup, 2000);
         }
 
         function pollBackup() {
@@ -565,8 +569,8 @@
         }
 
         function stopGlobalPolling() {
-            clearInterval(backupPollInterval);
-            backupPollInterval = null;
+            clearInterval(window.backupPollInterval);
+            window.backupPollInterval = null;
         }
 
         // Listen for storage changes from other tabs

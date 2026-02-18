@@ -190,98 +190,130 @@
         </div>
     </div>
 
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <script>
-        const ctx = document.getElementById('revenueChart').getContext('2d');
-        const revenueChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {!! json_encode($chartLabels) !!},
-                datasets: [{
-                    label: 'Pendapatan (Harian)',
-                    data: {!! json_encode($chartData) !!},
-                    backgroundColor: 'rgba(99, 102, 241, 0.2)', // Indigo 500
-                    borderColor: 'rgba(79, 70, 229, 1)', // Indigo 600
-                    borderWidth: 3,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: 'rgba(79, 70, 229, 1)',
-                    pointBorderWidth: 2,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    fill: true,
-                    tension: 0.4
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: '#1e293b',
-                        padding: 12,
-                        titleFont: {
-                            size: 13
-                        },
-                        bodyFont: {
-                            size: 13
-                        },
-                        cornerRadius: 10,
-                        displayColors: false,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label) {
-                                    label += ': ';
-                                }
-                                if (context.parsed.y !== null) {
-                                    label += new Intl.NumberFormat('id-ID', {
-                                        style: 'currency',
-                                        currency: 'IDR',
-                                        minimumFractionDigits: 0
-                                    }).format(context.parsed.y);
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: '#f1f5f9',
-                            borderDash: [5, 5]
-                        },
-                        ticks: {
-                            font: {
-                                size: 11
-                            },
-                            color: '#64748b',
-                            callback: function(value) {
-                                return new Intl.NumberFormat('id-ID', {
-                                    maximumSignificantDigits: 3
-                                }).format(value);
-                            }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: {
-                                size: 11
-                            },
-                            color: '#64748b'
-                        }
-                    }
+        (function() {
+            const initChart = function() {
+                // Ensure Chart.js library is loaded
+                if (typeof Chart === 'undefined') {
+                    console.log('Chart.js not loaded yet, retrying...');
+                    setTimeout(initChart, 200);
+                    return;
                 }
-            }
-        });
+
+                var ctxEl = document.getElementById('revenueChart');
+                if (ctxEl) {
+                    // Destroy existing chart instance if exists to prevent "Canvas is already in use" errors
+                    if (window.myRevenueChart) {
+                        window.myRevenueChart.destroy();
+                    }
+
+                    var ctx = ctxEl.getContext('2d');
+                    window.myRevenueChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: {!! json_encode($chartLabels) !!},
+                            datasets: [{
+                                label: 'Pendapatan (Harian)',
+                                data: {!! json_encode($chartData) !!},
+                                backgroundColor: 'rgba(99, 102, 241, 0.2)', // Indigo 500
+                                borderColor: 'rgba(79, 70, 229, 1)', // Indigo 600
+                                borderWidth: 3,
+                                pointBackgroundColor: '#ffffff',
+                                pointBorderColor: 'rgba(79, 70, 229, 1)',
+                                pointBorderWidth: 2,
+                                pointRadius: 4,
+                                pointHoverRadius: 6,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                },
+                                tooltip: {
+                                    backgroundColor: '#1e293b',
+                                    padding: 12,
+                                    titleFont: {
+                                        size: 13
+                                    },
+                                    bodyFont: {
+                                        size: 13
+                                    },
+                                    cornerRadius: 10,
+                                    displayColors: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            if (context.parsed.y !== null) {
+                                                label += new Intl.NumberFormat('id-ID', {
+                                                    style: 'currency',
+                                                    currency: 'IDR',
+                                                    minimumFractionDigits: 0
+                                                }).format(context.parsed.y);
+                                            }
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    grid: {
+                                        color: '#f1f5f9',
+                                        borderDash: [5, 5]
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 11
+                                        },
+                                        color: '#64748b',
+                                        callback: function(value) {
+                                            return new Intl.NumberFormat('id-ID', {
+                                                maximumSignificantDigits: 3
+                                            }).format(value);
+                                        }
+                                    }
+                                },
+                                x: {
+                                    grid: {
+                                        display: false
+                                    },
+                                    ticks: {
+                                        font: {
+                                            size: 11
+                                        },
+                                        color: '#64748b'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+            };
+
+            // Run initialization
+            initChart();
+
+            // Also helpful for Turbo to re-run if needed on load events, 
+            // though the IIFE executes on body insertion.
+            document.addEventListener("turbo:load", function() {
+                // Check if our canvas exists and chart isn't initialized on this navigation
+                // Note: The IIFE above runs when this script tag is inserted. 
+                // Creating a redundant check here safely.
+                if (document.getElementById('revenueChart') && !window.myRevenueChart) {
+                    initChart();
+                }
+            }, {
+                once: true
+            });
+        })();
     </script>
 @endsection

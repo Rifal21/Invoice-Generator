@@ -810,355 +810,362 @@
     </div>
 
     <script>
-        // Desktop Select All
-        const selectAll = document.getElementById('select-all');
-        const checkboxes = document.querySelectorAll('.invoice-checkbox');
+        (function() {
+            // Desktop Select All
+            var selectAll = document.getElementById('select-all');
+            var checkboxes = document.querySelectorAll('.invoice-checkbox');
 
-        // Mobile Select All
-        const selectAllMobile = document.getElementById('select-all-mobile');
-        let checkboxesMobile = document.querySelectorAll('.invoice-checkbox-mobile');
+            // Mobile Select All
+            var selectAllMobile = document.getElementById('select-all-mobile');
+            var checkboxesMobile = document.querySelectorAll('.invoice-checkbox-mobile');
 
-        const bulkExportBtn = document.getElementById('bulk-export-btn');
-        const multiPrintBtn = document.getElementById('multi-print-btn');
-        const reportDropdownBtn = document.getElementById('report-dropdown-btn');
-        const telegramBtnText = document.getElementById('telegram-btn-text');
-        const telegramCustomerBtnText = document.getElementById('telegram-customer-btn-text');
-        const whatsappBtnText = document.getElementById('whatsapp-btn-text');
-        const whapiBtnText = document.getElementById('whapi-btn-text');
-        const bulkDeleteBtn = document.getElementById('bulk-delete-btn');
-        const bulkForm = document.getElementById('bulk-export-form');
+            var bulkExportBtn = document.getElementById('bulk-export-btn');
+            var multiPrintBtn = document.getElementById('multi-print-btn');
+            var reportDropdownBtn = document.getElementById('report-dropdown-btn');
+            var telegramBtnText = document.getElementById('telegram-btn-text');
+            var telegramCustomerBtnText = document.getElementById('telegram-customer-btn-text');
+            var whatsappBtnText = document.getElementById('whatsapp-btn-text');
+            var whapiBtnText = document.getElementById('whapi-btn-text');
+            var bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            var bulkForm = document.getElementById('bulk-export-form');
 
-        function updateExportButton() {
-            const checkedCount = document.querySelectorAll('.invoice-checkbox:checked, .invoice-checkbox-mobile:checked')
-                .length;
+            function updateExportButton() {
+                const checkedCount = document.querySelectorAll(
+                        '.invoice-checkbox:checked, .invoice-checkbox-mobile:checked')
+                    .length;
 
-            bulkExportBtn.disabled = checkedCount === 0;
-            multiPrintBtn.disabled = checkedCount === 0;
-            reportDropdownBtn.disabled = checkedCount === 0;
-            bulkDeleteBtn.disabled = checkedCount === 0;
+                bulkExportBtn.disabled = checkedCount === 0;
+                multiPrintBtn.disabled = checkedCount === 0;
+                reportDropdownBtn.disabled = checkedCount === 0;
+                bulkDeleteBtn.disabled = checkedCount === 0;
 
-            if (checkedCount > 0) {
-                bulkExportBtn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i> Laporan (${checkedCount})`;
-                multiPrintBtn.innerHTML = `<i class="fas fa-print mr-2"></i> Cetak (${checkedCount})`;
-                bulkDeleteBtn.innerHTML = `<i class="fas fa-trash-alt mr-2"></i> Hapus (${checkedCount})`;
-                reportDropdownBtn.querySelector('span').innerText = `Kirim Laporan (${checkedCount})`;
-                telegramBtnText.innerText = `Telegram Admin (${checkedCount})`;
-                telegramCustomerBtnText.innerText = `Telegram Personal (${checkedCount})`;
-                whatsappBtnText.innerText = `WhatsApp WAHA (${checkedCount})`;
-                whapiBtnText.innerText = `Whapi Cloud (${checkedCount})`;
-            } else {
-                bulkExportBtn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i> Laporan`;
-                multiPrintBtn.innerHTML = `<i class="fas fa-print mr-2"></i> Cetak Massal`;
-                bulkDeleteBtn.innerHTML = `<i class="fas fa-trash-alt mr-2"></i> Hapus terpilih`;
-                reportDropdownBtn.querySelector('span').innerText = `Kirim Laporan`;
-                telegramBtnText.innerText = `Telegram Admin`;
-                telegramCustomerBtnText.innerText = `Telegram Personal`;
-                whatsappBtnText.innerText = `WhatsApp WAHA`;
-                whapiBtnText.innerText = `Whapi Cloud`;
-            }
-        }
-
-        if (selectAll) {
-            selectAll.addEventListener('change', function() {
-                checkboxes.forEach(cb => cb.checked = this.checked);
-                updateExportButton();
-            });
-        }
-
-        if (selectAllMobile) {
-            selectAllMobile.addEventListener('change', function() {
-                document.querySelectorAll('.invoice-checkbox-mobile').forEach(cb => cb.checked = this.checked);
-                updateExportButton();
-            });
-        }
-
-        document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('invoice-checkbox') || e.target.classList.contains(
-                    'invoice-checkbox-mobile')) {
-                updateExportButton();
-            }
-        });
-
-        // INFINITE SCROLL LOGIC
-        let isLoading = false;
-        const mobileList = document.getElementById('mobile-invoices-list');
-        const loader = document.getElementById('infinite-scroll-loader');
-        const paginationContainer = document.getElementById('pagination-container');
-
-        if (window.innerWidth < 1024 && mobileList && loader && paginationContainer) {
-            if ('IntersectionObserver' in window) {
-                paginationContainer.style.display = 'none';
-                const observer = new IntersectionObserver((entries) => {
-                    if (entries[0].isIntersecting && !isLoading) {
-                        loadMore();
-                    }
-                }, {
-                    rootMargin: '400px',
-                    threshold: 0
-                });
-                observer.observe(loader);
-            }
-        }
-
-        async function loadMore() {
-            const nextLink = paginationContainer.querySelector('a[rel="next"]');
-            if (!nextLink) {
-                loader.style.display = 'none';
-                return;
-            }
-
-            isLoading = true;
-            loader.style.opacity = '1';
-            let url = nextLink.href;
-            if (window.location.protocol === 'https:' && url.startsWith('http:')) {
-                url = url.replace('http:', 'https:');
-            }
-
-            try {
-                const response = await fetch(url, {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                const html = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-
-                const newCards = doc.querySelectorAll('.invoice-card-mobile');
-                newCards.forEach(card => {
-                    const idInput = card.querySelector('input[type="checkbox"]');
-                    if (idInput) {
-                        const id = idInput.value;
-                        if (!mobileList.querySelector(`input[value="${id}"]`)) {
-                            mobileList.insertBefore(card, loader);
-                        }
-                    }
-                });
-
-                const newPagination = doc.getElementById('pagination-container');
-                if (newPagination) paginationContainer.innerHTML = newPagination.innerHTML;
-
-                if (!paginationContainer.querySelector('a[rel="next"]')) {
-                    loader.innerHTML =
-                        '<p class="text-center text-gray-300 font-bold uppercase tracking-[0.2em] py-8">Tuntas. Semua invoice telah dimuat.</p>';
+                if (checkedCount > 0) {
+                    bulkExportBtn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i> Laporan (${checkedCount})`;
+                    multiPrintBtn.innerHTML = `<i class="fas fa-print mr-2"></i> Cetak (${checkedCount})`;
+                    bulkDeleteBtn.innerHTML = `<i class="fas fa-trash-alt mr-2"></i> Hapus (${checkedCount})`;
+                    reportDropdownBtn.querySelector('span').innerText = `Kirim Laporan (${checkedCount})`;
+                    telegramBtnText.innerText = `Telegram Admin (${checkedCount})`;
+                    telegramCustomerBtnText.innerText = `Telegram Personal (${checkedCount})`;
+                    whatsappBtnText.innerText = `WhatsApp WAHA (${checkedCount})`;
+                    whapiBtnText.innerText = `Whapi Cloud (${checkedCount})`;
                 } else {
-                    loader.style.opacity = '0';
+                    bulkExportBtn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i> Laporan`;
+                    multiPrintBtn.innerHTML = `<i class="fas fa-print mr-2"></i> Cetak Massal`;
+                    bulkDeleteBtn.innerHTML = `<i class="fas fa-trash-alt mr-2"></i> Hapus terpilih`;
+                    reportDropdownBtn.querySelector('span').innerText = `Kirim Laporan`;
+                    telegramBtnText.innerText = `Telegram Admin`;
+                    telegramCustomerBtnText.innerText = `Telegram Personal`;
+                    whatsappBtnText.innerText = `WhatsApp WAHA`;
+                    whapiBtnText.innerText = `Whapi Cloud`;
                 }
-
-                if (selectAllMobile.checked) {
-                    document.querySelectorAll('.invoice-checkbox-mobile').forEach(cb => cb.checked = true);
-                }
-            } catch (error) {
-                console.error('Error loading more invoices:', error);
-                loader.style.opacity = '0';
-            } finally {
-                isLoading = false;
             }
-        }
 
-        function submitBulkExport() {
-            bulkForm.target = "_blank";
-            bulkForm.action = "{{ route('invoices.bulk-export-pdf') }}";
-            bulkForm.submit();
-        }
-
-        function submitMultiPrint() {
-            bulkForm.target = "_blank";
-            bulkForm.action = "{{ route('invoices.print-multi-pdf') }}";
-            bulkForm.submit();
-        }
-
-        function submitTelegram() {
-            Swal.fire({
-                title: 'Telegram Admin?',
-                text: "Kirim invoice dan laporan Laba Rugi ke Group Telegram Admin.",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Ya, Kirim Sekarang',
-                cancelButtonText: 'Batalkan',
-                customClass: {
-                    popup: 'rounded-[2rem]',
-                    container: 'backdrop-blur-sm'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Proses...',
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-                    bulkForm.target = "_self";
-                    bulkForm.action = "{{ route('invoices.send-telegram') }}";
-                    bulkForm.submit();
-                }
-            })
-        }
-
-        function submitTelegramCustomer() {
-            Swal.fire({
-                title: 'Telegram Personal?',
-                text: "Kirim invoice ke Telegram Pribadi pelanggan masing-masing.",
-                icon: 'info',
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Kirim Sekarang',
-                cancelButtonText: 'Batal',
-                customClass: {
-                    popup: 'rounded-[2rem]'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Mengirim...',
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-                    bulkForm.target = "_self";
-                    bulkForm.action = "{{ route('invoices.send-customer') }}";
-                    bulkForm.submit();
-                }
-            })
-        }
-
-        function submitWhatsApp() {
-            Swal.fire({
-                title: 'WhatsApp (WAHA)?',
-                text: "Kirim invoice ke nomor WhatsApp pelanggan via server WAHA.",
-                icon: 'success',
-                showCancelButton: true,
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Kirim WhatsApp',
-                cancelButtonText: 'Batal',
-                customClass: {
-                    popup: 'rounded-[2rem]'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Antrean WA...',
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-                    bulkForm.target = "_self";
-                    bulkForm.action = "{{ route('invoices.send-whatsapp') }}";
-                    bulkForm.submit();
-                }
-            })
-        }
-
-        function submitWhapi() {
-            Swal.fire({
-                title: 'Whapi Cloud?',
-                text: "Kirim invoice via Whapi.cloud API ke pelanggan.",
-                icon: 'success',
-                showCancelButton: true,
-                confirmButtonColor: '#10b981',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'Kirim via Whapi',
-                cancelButtonText: 'Batal',
-                customClass: {
-                    popup: 'rounded-[2rem]'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Sedang Proses...',
-                        allowOutsideClick: false,
-                        didOpen: () => Swal.showLoading()
-                    });
-                    bulkForm.target = "_self";
-                    bulkForm.action = "{{ route('invoices.send-whapi') }}";
-                    bulkForm.submit();
-                }
-            })
-        }
-
-        function submitBulkDelete() {
-            Swal.fire({
-                title: 'Hapus Massal?',
-                text: "Semua invoice terpilih akan dihapus permanen dari sistem!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                cancelButtonColor: '#ef4444',
-                confirmButtonText: 'Ya, Hapus Data',
-                cancelButtonText: 'Jangan Hapus',
-                customClass: {
-                    popup: 'rounded-[2rem]'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    bulkForm.target = "_self";
-                    bulkForm.action = "{{ route('invoices.bulk-delete') }}";
-                    bulkForm.submit();
-                }
-            })
-        }
-
-        function deleteInvoice(id) {
-            Swal.fire({
-                title: 'Hapus Invoice?',
-                text: "Data invoice ini akan hilang secara permanen.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#4f46e5',
-                cancelButtonColor: '#ef4444',
-                confirmButtonText: 'Hapus Permanen',
-                cancelButtonText: 'Batal',
-                customClass: {
-                    popup: 'rounded-[2rem]'
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const form = document.getElementById('delete-form');
-                    form.action = `/invoices/${id}`;
-                    form.submit();
-                }
-            })
-        }
-
-        function toggleDetails(id) {
-            const row = document.getElementById(id);
-            const icon = document.getElementById('icon-' + id);
-            const chevron = document.getElementById('chevron-' + id);
-
-            if (row.classList.contains('hidden')) {
-                row.classList.remove('hidden');
-                if (icon) icon.classList.replace('fa-file-invoice', 'fa-folder-open');
-                if (chevron) chevron.style.transform = 'rotate(90deg)';
-                row.style.opacity = '0';
-                setTimeout(() => {
-                    row.style.opacity = '1';
-                }, 10);
-            } else {
-                row.classList.add('hidden');
-                if (icon) icon.classList.replace('fa-folder-open', 'fa-file-invoice');
-                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    checkboxes.forEach(cb => cb.checked = this.checked);
+                    updateExportButton();
+                });
             }
-        }
 
-        // Initialize Swiper for Stats on Mobile
-        document.addEventListener('DOMContentLoaded', function() {
-            const swiper = new Swiper('.statsSwiper', {
-                slidesPerView: 1,
-                spaceBetween: 20,
-                grabCursor: true,
-                loop: true,
-                autoplay: {
-                    delay: 3500,
-                    disableOnInteraction: false,
-                },
-                pagination: {
-                    el: '.swiper-pagination',
-                    clickable: true,
-                },
-                observer: true,
-                observeParents: true,
+            if (selectAllMobile) {
+                selectAllMobile.addEventListener('change', function() {
+                    document.querySelectorAll('.invoice-checkbox-mobile').forEach(cb => cb.checked = this
+                        .checked);
+                    updateExportButton();
+                });
+            }
+
+            document.addEventListener('change', function(e) {
+                if (e.target.classList.contains('invoice-checkbox') || e.target.classList.contains(
+                        'invoice-checkbox-mobile')) {
+                    updateExportButton();
+                }
             });
-        });
+
+            // INFINITE SCROLL LOGIC
+            var isLoading = false;
+            var mobileList = document.getElementById('mobile-invoices-list');
+            var loader = document.getElementById('infinite-scroll-loader');
+            var paginationContainer = document.getElementById('pagination-container');
+
+            if (window.innerWidth < 1024 && mobileList && loader && paginationContainer) {
+                if ('IntersectionObserver' in window) {
+                    // Check if observer already exists to prevent duplicate observers? 
+                    // Actually with IIFE it's fine, new variables each run.
+                    paginationContainer.style.display = 'none';
+                    var observer = new IntersectionObserver((entries) => {
+                        if (entries[0].isIntersecting && !isLoading) {
+                            loadMore();
+                        }
+                    }, {
+                        rootMargin: '400px',
+                        threshold: 0
+                    });
+                    observer.observe(loader);
+                }
+            }
+
+            async function loadMore() {
+                const nextLink = paginationContainer.querySelector('a[rel="next"]');
+                if (!nextLink) {
+                    loader.style.display = 'none';
+                    return;
+                }
+
+                isLoading = true;
+                loader.style.opacity = '1';
+                let url = nextLink.href;
+                if (window.location.protocol === 'https:' && url.startsWith('http:')) {
+                    url = url.replace('http:', 'https:');
+                }
+
+                try {
+                    const response = await fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+
+                    const newCards = doc.querySelectorAll('.invoice-card-mobile');
+                    newCards.forEach(card => {
+                        const idInput = card.querySelector('input[type="checkbox"]');
+                        if (idInput) {
+                            const id = idInput.value;
+                            if (!mobileList.querySelector(`input[value="${id}"]`)) {
+                                mobileList.insertBefore(card, loader);
+                            }
+                        }
+                    });
+
+                    const newPagination = doc.getElementById('pagination-container');
+                    if (newPagination) paginationContainer.innerHTML = newPagination.innerHTML;
+
+                    if (!paginationContainer.querySelector('a[rel="next"]')) {
+                        loader.innerHTML =
+                            '<p class="text-center text-gray-300 font-bold uppercase tracking-[0.2em] py-8">Tuntas. Semua invoice telah dimuat.</p>';
+                    } else {
+                        loader.style.opacity = '0';
+                    }
+
+                    if (selectAllMobile.checked) {
+                        document.querySelectorAll('.invoice-checkbox-mobile').forEach(cb => cb.checked = true);
+                    }
+                } catch (error) {
+                    console.error('Error loading more invoices:', error);
+                    loader.style.opacity = '0';
+                } finally {
+                    isLoading = false;
+                }
+            }
+
+            // Attach global functions to window so they can be called from HTML attributes
+            window.submitBulkExport = function() {
+                bulkForm.target = "_blank";
+                bulkForm.action = "{{ route('invoices.bulk-export-pdf') }}";
+                bulkForm.submit();
+            }
+
+            window.submitMultiPrint = function() {
+                bulkForm.target = "_blank";
+                bulkForm.action = "{{ route('invoices.print-multi-pdf') }}";
+                bulkForm.submit();
+            }
+
+            window.submitTelegram = function() {
+                Swal.fire({
+                    title: 'Telegram Admin?',
+                    text: "Kirim invoice dan laporan Laba Rugi ke Group Telegram Admin.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4f46e5',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Ya, Kirim Sekarang',
+                    cancelButtonText: 'Batalkan',
+                    customClass: {
+                        popup: 'rounded-[2rem]',
+                        container: 'backdrop-blur-sm'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Proses...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+                        bulkForm.target = "_self";
+                        bulkForm.action = "{{ route('invoices.send-telegram') }}";
+                        bulkForm.submit();
+                    }
+                })
+            }
+
+            window.submitTelegramCustomer = function() {
+                Swal.fire({
+                    title: 'Telegram Personal?',
+                    text: "Kirim invoice ke Telegram Pribadi pelanggan masing-masing.",
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4f46e5',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Kirim Sekarang',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-[2rem]'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Mengirim...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+                        bulkForm.target = "_self";
+                        bulkForm.action = "{{ route('invoices.send-customer') }}";
+                        bulkForm.submit();
+                    }
+                })
+            }
+
+            window.submitWhatsApp = function() {
+                Swal.fire({
+                    title: 'WhatsApp (WAHA)?',
+                    text: "Kirim invoice ke nomor WhatsApp pelanggan via server WAHA.",
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Kirim WhatsApp',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-[2rem]'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Antrean WA...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+                        bulkForm.target = "_self";
+                        bulkForm.action = "{{ route('invoices.send-whatsapp') }}";
+                        bulkForm.submit();
+                    }
+                })
+            }
+
+            window.submitWhapi = function() {
+                Swal.fire({
+                    title: 'Whapi Cloud?',
+                    text: "Kirim invoice via Whapi.cloud API ke pelanggan.",
+                    icon: 'success',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Kirim via Whapi',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-[2rem]'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Sedang Proses...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+                        bulkForm.target = "_self";
+                        bulkForm.action = "{{ route('invoices.send-whapi') }}";
+                        bulkForm.submit();
+                    }
+                })
+            }
+
+            window.submitBulkDelete = function() {
+                Swal.fire({
+                    title: 'Hapus Massal?',
+                    text: "Semua invoice terpilih akan dihapus permanen dari sistem!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4f46e5',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, Hapus Data',
+                    cancelButtonText: 'Jangan Hapus',
+                    customClass: {
+                        popup: 'rounded-[2rem]'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        bulkForm.target = "_self";
+                        bulkForm.action = "{{ route('invoices.bulk-delete') }}";
+                        bulkForm.submit();
+                    }
+                })
+            }
+
+            window.deleteInvoice = function(id) {
+                Swal.fire({
+                    title: 'Hapus Invoice?',
+                    text: "Data invoice ini akan hilang secara permanen.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4f46e5',
+                    cancelButtonColor: '#ef4444',
+                    confirmButtonText: 'Hapus Permanen',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-[2rem]'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.getElementById('delete-form');
+                        form.action = `/invoices/${id}`;
+                        form.submit();
+                    }
+                })
+            }
+
+            window.toggleDetails = function(id) {
+                const row = document.getElementById(id);
+                const icon = document.getElementById('icon-' + id);
+                const chevron = document.getElementById('chevron-' + id);
+
+                if (row.classList.contains('hidden')) {
+                    row.classList.remove('hidden');
+                    if (icon) icon.classList.replace('fa-file-invoice', 'fa-folder-open');
+                    if (chevron) chevron.style.transform = 'rotate(90deg)';
+                    row.style.opacity = '0';
+                    setTimeout(() => {
+                        row.style.opacity = '1';
+                    }, 10);
+                } else {
+                    row.classList.add('hidden');
+                    if (icon) icon.classList.replace('fa-folder-open', 'fa-file-invoice');
+                    if (chevron) chevron.style.transform = 'rotate(0deg)';
+                }
+            }
+
+            // Initialize Swiper for Stats on Mobile
+            document.addEventListener('DOMContentLoaded', function() {
+                const swiper = new Swiper('.statsSwiper', {
+                    slidesPerView: 1,
+                    spaceBetween: 20,
+                    grabCursor: true,
+                    loop: true,
+                    autoplay: {
+                        delay: 3500,
+                        disableOnInteraction: false,
+                    },
+                    pagination: {
+                        el: '.swiper-pagination',
+                        clickable: true,
+                    },
+                    observer: true,
+                    observeParents: true,
+                });
+            });
+        })();
     </script>
 @endsection
