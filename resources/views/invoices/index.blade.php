@@ -285,6 +285,21 @@
             </div>
 
             <div class="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                @if (isset($isRifal) && $isRifal)
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        @if (isset($showTrashed) && $showTrashed)
+                            <a href="{{ route('invoices.index') }}"
+                                class="w-full sm:w-auto py-2 px-4 rounded-xl bg-indigo-50 text-indigo-700 text-sm font-bold shadow-sm hover:bg-indigo-100 transition-all text-center">
+                                <i class="fas fa-arrow-left mr-1"></i> Invoice Aktif
+                            </a>
+                        @else
+                            <a href="{{ route('invoices.index', ['status' => 'trashed'] + request()->except(['status', 'page'])) }}"
+                                class="w-full sm:w-auto py-2 px-4 rounded-xl bg-gray-900 text-white text-sm font-bold shadow-sm hover:bg-black transition-all text-center">
+                                <i class="fas fa-trash mr-1"></i> Terhapus
+                            </a>
+                        @endif
+                    </div>
+                @endif
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <select name="sort_by" onchange="document.getElementById('filter-form').submit()" form="filter-form"
                         class="w-full sm:auto rounded-xl border-gray-200 text-sm font-bold focus:ring-indigo-500 focus:border-indigo-500 py-2 pl-3 pr-8 shadow-sm">
@@ -375,7 +390,7 @@
                                     </td>
                                     <td class="whitespace-nowrap px-4 py-6">
                                         <div class="text-sm font-black text-gray-900 leading-tight">
-                                            {{ $invoice->customer_name }}</div>
+                                            {{ $invoice->customer_name ?: '-' }}</div>
                                         <div
                                             class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1 italic">
                                             Client Partner</div>
@@ -443,10 +458,18 @@
                                                 class="h-12 w-12 flex items-center justify-center rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 active:scale-95">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
-                                                class="h-12 w-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm active:scale-95">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
+                                            @if (isset($showTrashed) && $showTrashed)
+                                                <button type="button" onclick="restoreInvoice({{ $invoice->id }})"
+                                                    class="h-12 w-12 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all shadow-sm active:scale-95"
+                                                    title="Restore Invoice">
+                                                    <i class="fas fa-trash-restore"></i>
+                                                </button>
+                                            @else
+                                                <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
+                                                    class="h-12 w-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm active:scale-95">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            @endif
                                         </div>
                                     </td>
                                 </tr>
@@ -666,7 +689,8 @@
                             <div>
                                 <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-1">Pelanggan
                                 </p>
-                                <p class="text-base font-black text-gray-900 leading-tight">{{ $invoice->customer_name }}
+                                <p class="text-base font-black text-gray-900 leading-tight">
+                                    {{ $invoice->customer_name ?: '-' }}
                                 </p>
                             </div>
                             <div class="pt-4 border-t border-gray-100 flex justify-between items-end">
@@ -705,10 +729,18 @@
                                 class="h-12 flex items-center justify-center rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg active:scale-95">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
-                                class="h-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm active:scale-95">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
+                            @if (isset($showTrashed) && $showTrashed)
+                                <button type="button" onclick="restoreInvoice({{ $invoice->id }})"
+                                    class="h-12 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all shadow-sm active:scale-95"
+                                    title="Restore Invoice">
+                                    <i class="fas fa-trash-restore"></i>
+                                </button>
+                            @else
+                                <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
+                                    class="h-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm active:scale-95">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            @endif
                         </div>
 
                         <!-- Mobile Details Section -->
@@ -806,6 +838,9 @@
         <form id="delete-form" action="" method="POST" class="hidden">
             @csrf
             @method('DELETE')
+        </form>
+        <form id="restore-form" action="" method="POST" class="hidden">
+            @csrf
         </form>
     </div>
 
@@ -1122,6 +1157,28 @@
                     if (result.isConfirmed) {
                         const form = document.getElementById('delete-form');
                         form.action = `/invoices/${id}`;
+                        form.submit();
+                    }
+                })
+            }
+
+            window.restoreInvoice = function(id) {
+                Swal.fire({
+                    title: 'Restore Invoice?',
+                    text: "Data invoice ini akan dikembalikan ke daftar aktif.",
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981',
+                    cancelButtonColor: '#9ca3af',
+                    confirmButtonText: 'Ya, Restore!',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-[2rem]'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.getElementById('restore-form');
+                        form.action = `/invoices/${id}/restore`;
                         form.submit();
                     }
                 })

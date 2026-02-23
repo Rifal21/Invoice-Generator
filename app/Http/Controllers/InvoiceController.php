@@ -22,6 +22,13 @@ class InvoiceController extends Controller
     {
         $query = Invoice::query();
 
+        $isRifal = auth()->check() && auth()->user()->name === 'Rifal Kurniawan';
+        $showTrashed = $request->get('status') === 'trashed';
+
+        if ($isRifal && $showTrashed) {
+            $query->onlyTrashed();
+        }
+
         if ($request->filled('date')) {
             $query->whereDate('date', $request->date);
         }
@@ -77,7 +84,7 @@ class InvoiceController extends Controller
             'total_amount_page' => $totalAmountPage,
         ];
 
-        return view('invoices.index', compact('invoices', 'customers', 'stats'));
+        return view('invoices.index', compact('invoices', 'customers', 'stats', 'isRifal', 'showTrashed'));
     }
 
     /**
@@ -90,6 +97,22 @@ class InvoiceController extends Controller
         return view('invoices.create', compact('products', 'customers'));
     }
 
+    private function getTipeCode($tipe) {
+        $standard = ['BSH', 'KR', 'OPR', 'KRBSBM', 'LMN'];
+        if (in_array($tipe, $standard)) {
+            return $tipe;
+        }
+        $upper = strtoupper($tipe);
+        $vowels = ['A', 'E', 'I', 'O', 'U', ' '];
+        $code = str_replace($vowels, '', $upper);
+        if (strlen($code) == 0) {
+            $code = substr($upper, 0, 3);
+        } else {
+            $code = substr($code, 0, 3);
+        }
+        return $code;
+    }
+
     /**
      * Store a newly created resource in storage.
      */
@@ -97,7 +120,7 @@ class InvoiceController extends Controller
     {
         $request->validate([
             'date' => 'required|date',
-            'customer_name' => 'required|string',
+            'customer_name' => 'nullable|string',
             'tipe' => 'required|string',
             'items' => 'required|array',
             'items.*.product_id' => 'required',
@@ -108,13 +131,18 @@ class InvoiceController extends Controller
             'items.*.description' => 'nullable|string',
             'discount' => 'nullable|numeric|min:0',
         ]);
-        $invoice_number = 'INV-' . Carbon::parse($request->date)->format('Ymd') . '-' . str_pad(Invoice::max('id') + 1, 3, '0', STR_PAD_LEFT) . '-' . $request->tipe;
+        
+        $tipeCode = $this->getTipeCode($request->tipe);
+        $is_custom = !in_array($request->tipe, ['BSH', 'KR', 'OPR', 'KRBSBM', 'LMN']);
+
+        $invoice_number = 'INV-' . Carbon::parse($request->date)->format('Ymd') . '-' . str_pad(Invoice::max('id') + 1, 3, '0', STR_PAD_LEFT) . '-' . $tipeCode;
         $invoice = Invoice::create([
             'invoice_number' => $invoice_number,
             'date' => $request->date,
             'customer_name' => $request->customer_name,
             'discount' => $request->input('discount', 0),
             'total_amount' => 0, // Will calculate below
+            'is_custom' => $is_custom,
         ]);
 
         $totalAmount = 0;
@@ -154,8 +182,8 @@ class InvoiceController extends Controller
                 'description' => $item['description'] ?? null,
             ]);
 
-            // Sync master product price
-            if ($product) {
+            // Sync master product price if not a custom invoice
+            if ($product && !$is_custom) {
                 $product->update([
                     'price' => $item['price'],
                     'purchase_price' => $item['purchase_price'] ?? $product->purchase_price,
@@ -201,7 +229,8 @@ class InvoiceController extends Controller
         $request->validate([
             'invoice_number' => 'required|string|unique:invoices,invoice_number,' . $invoice->id,
             'date' => 'required|date',
-            'customer_name' => 'required|string',
+            'customer_name' => 'nullable|string',
+            'tipe' => 'required|string',
             'items' => 'required|array',
             'items.*.product_id' => 'required',
             'items.*.quantity' => 'required|numeric|min:0.01',
@@ -212,11 +241,14 @@ class InvoiceController extends Controller
             'discount' => 'nullable|numeric|min:0',
         ]);
 
+        $is_custom = !in_array($request->tipe, ['BSH', 'KR', 'OPR', 'KRBSBM', 'LMN']);
+
         $invoice->update([
             'invoice_number' => $request->invoice_number,
             'date' => $request->date,
             'customer_name' => $request->customer_name,
             'discount' => $request->input('discount', 0),
+            'is_custom' => $is_custom,
         ]);
 
         // Delete existing items
@@ -259,8 +291,8 @@ class InvoiceController extends Controller
                 'description' => $item['description'] ?? null,
             ]);
 
-            // Sync master product price
-            if ($product) {
+            // Sync master product price if not a custom invoice
+            if ($product && !$is_custom) {
                 $product->update([
                     'price' => $item['price'],
                     'purchase_price' => $item['purchase_price'] ?? $product->purchase_price,
@@ -300,6 +332,17 @@ class InvoiceController extends Controller
 
         return back()->with('success', 'Invoices deleted successfully.');
     }
+
+    public function restore($id)
+    {
+        if (auth()->check() && auth()->user()->name === 'Rifal Kurniawan') {
+            $invoice = Invoice::onlyTrashed()->findOrFail($id);
+            $invoice->restore();
+            return back()->with('success', 'Invoice berhasil direstore.');
+        }
+        return back()->with('error', 'Akses ditolak.');
+    }
+
     public function exportPdf(Invoice $invoice)
     {
         $pdf = Pdf::loadView('invoices.pdf', compact('invoice'));

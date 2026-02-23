@@ -72,13 +72,8 @@
                                 class="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-2">Tipe
                                 Invoice</label>
                             <div class="relative group">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                    <i
-                                        class="fas fa-tags text-indigo-400 group-focus-within:text-indigo-600 transition-colors"></i>
-                                </div>
-                                <select name="tipe" id="tipe" required
-                                    class="block w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-gray-900 font-bold shadow-sm ring-1 ring-gray-200 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all duration-300 appearance-none">
-                                    <option value="">Pilih Tipe</option>
+                                <select name="tipe" id="tipe" required class="tipe-select-input block w-full">
+                                    <option value="">Pilih / Ketik Tipe</option>
                                     <option value="BSH" {{ old('tipe') == 'BSH' ? 'selected' : '' }}>Basahan Siswa (BSH)
                                     </option>
                                     <option value="KR" {{ old('tipe') == 'KR' ? 'selected' : '' }}>Keringan Siswa (KR)
@@ -87,10 +82,9 @@
                                     </option>
                                     <option value="KRBSBM" {{ old('tipe') == 'KRBSBM' ? 'selected' : '' }}>Keringan Bumil
                                         Busui (KRBSBM)</option>
+                                    <option value="LMN" {{ old('tipe') == 'LMN' ? 'selected' : '' }}>Lain-lain (LMN)
+                                    </option>
                                 </select>
-                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none z-10">
-                                    <i class="fas fa-chevron-down text-gray-400"></i>
-                                </div>
                             </div>
                         </div>
 
@@ -99,9 +93,8 @@
                                 class="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-2">Nama
                                 Pelanggan</label>
                             <div class="relative group">
-                                <select name="customer_name" id="customer_name" required
-                                    class="customer-select-input block w-full">
-                                    <option value="">Pilih Pelanggan</option>
+                                <select name="customer_name" id="customer_name" class="customer-select-input block w-full">
+                                    <option value="">Pilih Pelanggan / Kosongkan</option>
                                     @foreach ($customers as $customer)
                                         <option value="{{ $customer->name }}"
                                             {{ old('customer_name') == $customer->name ? 'selected' : '' }}>
@@ -888,6 +881,14 @@
             // Initialize Customer Select2
             $('#customer_name').select2({
                 placeholder: "Pilih atau ketik nama pelanggan...",
+                tags: true,
+                allowClear: true,
+                width: '100%'
+            });
+
+            // Initialize Tipe Select2
+            $('#tipe').select2({
+                placeholder: "Pilih atau ketik tipe invoice...",
                 tags: true,
                 allowClear: true,
                 width: '100%'

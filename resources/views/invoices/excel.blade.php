@@ -45,7 +45,7 @@
         </tr>
         <tr>
             <td colspan="5" style="border: 1px solid #000000; font-weight: bold; font-size: 14px;">
-                {{ $invoice->customer_name }}</td>
+                {{ $invoice->customer_name ?: '-' }}</td>
             <td colspan="3"
                 style="border: 1px solid #000000; font-weight: bold; font-size: 18px; text-align: center;">
                 Rp{{ number_format((float) $invoice->total_amount, 0, ',', '.') }}</td>

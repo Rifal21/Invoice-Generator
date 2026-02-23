@@ -106,6 +106,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('invoices/send-whatsapp', [InvoiceController::class, 'sendToWhatsApp'])->name('invoices.send-whatsapp');
     Route::post('invoices/send-whapi', [InvoiceController::class, 'sendToWhapi'])->name('invoices.send-whapi');
     Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-delete');
+    Route::post('invoices/{id}/restore', [InvoiceController::class, 'restore'])->name('invoices.restore');
 
     Route::resource('invoices', InvoiceController::class);
 

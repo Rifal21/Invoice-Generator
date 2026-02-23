@@ -108,7 +108,8 @@
                                 #{{ $index + 1 }}
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-bold text-gray-900 truncate">{{ $customer->customer_name }}</p>
+                                <p class="text-sm font-bold text-gray-900 truncate">{{ $customer->customer_name ?: '-' }}
+                                </p>
                                 <p class="text-xs text-gray-500">{{ number_format($customer->total_invoices) }} Transaksi
                                 </p>
                             </div>
@@ -145,7 +146,8 @@
                             @foreach ($recentInvoices as $invoice)
                                 <tr class="hover:bg-gray-50/50 transition-colors">
                                     <td class="px-6 py-4 font-bold text-indigo-600">{{ $invoice->invoice_number }}</td>
-                                    <td class="px-6 py-4 font-medium text-gray-900">{{ $invoice->customer_name }}</td>
+                                    <td class="px-6 py-4 font-medium text-gray-900">{{ $invoice->customer_name ?: '-' }}
+                                    </td>
                                     <td class="px-6 py-4 text-right font-black text-gray-900">Rp
                                         {{ number_format($invoice->total_amount, 0, ',', '.') }}</td>
                                 </tr>
