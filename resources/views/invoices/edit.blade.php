@@ -78,17 +78,18 @@
                         </div>
 
                         <div>
+                            @php
+                                $parts = explode('-', $invoice->invoice_number);
+                                $currentTipe = end($parts);
+                                $standardTypes = ['BSH', 'KR', 'KRBSBM', 'OPR', 'LMN'];
+                                $isCustomType = !in_array($currentTipe, $standardTypes);
+                            @endphp
                             <label for="tipe"
                                 class="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-2">Tipe
                                 Invoice</label>
                             <div class="relative group">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
-                                    <i
-                                        class="fas fa-tags text-indigo-400 group-focus-within:text-indigo-600 transition-colors"></i>
-                                </div>
-                                <select name="tipe" id="tipe" required
-                                    class="block w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-gray-900 font-bold shadow-sm ring-1 ring-gray-200 focus:ring-4 focus:ring-indigo-500/10 focus:outline-none transition-all duration-300 appearance-none">
-                                    <option value="">Pilih Tipe</option>
+                                <select name="tipe" id="tipe" required class="tipe-select-input block w-full">
+                                    <option value="">Pilih / Ketik Tipe</option>
                                     <option value="BSH"
                                         {{ old('tipe', str_contains($invoice->invoice_number, '-BSH') ? 'BSH' : '') == 'BSH' ? 'selected' : '' }}>
                                         Basahan (BSH)</option>
@@ -104,10 +105,10 @@
                                     <option value="LMN"
                                         {{ old('tipe', str_contains($invoice->invoice_number, '-LMN') ? 'LMN' : '') == 'LMN' ? 'selected' : '' }}>
                                         Lain-lain (LMN)</option>
+                                    @if ($isCustomType)
+                                        <option value="{{ $currentTipe }}" selected>{{ $currentTipe }}</option>
+                                    @endif
                                 </select>
-                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none z-10">
-                                    <i class="fas fa-chevron-down text-gray-400"></i>
-                                </div>
                             </div>
                         </div>
 
@@ -116,9 +117,8 @@
                                 class="block text-xs font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ml-2">Nama
                                 Pelanggan</label>
                             <div class="relative group">
-                                <select name="customer_name" id="customer_name" required
-                                    class="customer-select-input block w-full">
-                                    <option value="">Pilih Pelanggan</option>
+                                <select name="customer_name" id="customer_name" class="customer-select-input block w-full">
+                                    <option value="">Pilih Pelanggan / Kosongkan</option>
                                     @foreach ($customers as $customer)
                                         <option value="{{ $customer->name }}"
                                             {{ old('customer_name', $invoice->customer_name) == $customer->name ? 'selected' : '' }}>
@@ -548,15 +548,37 @@
                 width: '100%'
             });
 
+            // Initialize Tipe Select2
+            $('#tipe').select2({
+                placeholder: "Pilih atau ketik tipe invoice...",
+                tags: true,
+                allowClear: true,
+                width: '100%'
+            });
+
             // Auto-update Invoice Number Logic
             const invoiceInput = document.getElementById('invoice_number');
             const invoiceDisplay = document.getElementById('invoice_number_display');
             const dateInput = document.getElementById('date');
-            const typeSelect = document.getElementById('tipe');
+
+            function getAbbreviation(str) {
+                const standard = ['BSH', 'KR', 'OPR', 'KRBSBM', 'LMN'];
+                if (standard.includes(str)) return str;
+
+                const vowels = ['A', 'E', 'I', 'O', 'U', ' '];
+                let code = '';
+                for (let char of str.toUpperCase()) {
+                    if (!vowels.includes(char)) {
+                        code += char;
+                    }
+                }
+                if (code.length === 0) code = str.substring(0, 3).toUpperCase();
+                return code.substring(0, 3);
+            }
 
             function updateInvoiceNumber() {
                 const currentDate = dateInput.value;
-                const currentType = typeSelect.value;
+                const currentTypeRaw = $('#tipe').val();
                 let currentNumber = invoiceInput.value;
 
                 if (!currentDate || !currentNumber) return;
@@ -569,7 +591,8 @@
                     parts[1] = dateComponents.join('');
                 }
 
-                if (currentType) {
+                if (currentTypeRaw) {
+                    const currentType = getAbbreviation(currentTypeRaw);
                     if (parts.length >= 4) {
                         parts[parts.length - 1] = currentType;
                     }
@@ -581,7 +604,7 @@
             }
 
             dateInput.addEventListener('change', updateInvoiceNumber);
-            typeSelect.addEventListener('change', updateInvoiceNumber);
+            $('#tipe').on('change', updateInvoiceNumber);
         });
     </script>
 @endsection

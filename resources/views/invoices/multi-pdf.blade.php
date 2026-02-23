@@ -302,7 +302,8 @@
                         <div class="customer-info">
                             <div style="border: 1px solid #000; padding: 5px; width: 300px;">
                                 <div style="font-size: 10px; color: #666;">Kepada Yth.</div>
-                                <div style="font-weight: bold; font-size: 14px;">{{ $invoice->customer_name }}</div>
+                                <div style="font-weight: bold; font-size: 14px;">{{ $invoice->customer_name ?: '-' }}
+                                </div>
                             </div>
                         </div>
                         <div class="payment-box-container">

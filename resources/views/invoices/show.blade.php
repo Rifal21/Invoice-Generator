@@ -103,7 +103,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mt-8 md:mt-12 mb-8 md:mb-12">
                     <div class="bg-gray-50 rounded-3xl p-6 md:p-8 border border-gray-100">
                         <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest mb-4">Ditagihkan Kepada</h3>
-                        <p class="text-xl md:text-2xl font-black text-gray-900">{{ $invoice->customer_name }}</p>
+                        <p class="text-xl md:text-2xl font-black text-gray-900">{{ $invoice->customer_name ?: '-' }}</p>
                         <p class="mt-2 text-sm text-gray-500 font-medium italic">Pelanggan Setia</p>
                     </div>
                     <div class="bg-indigo-600 rounded-3xl p-6 md:p-8 text-white shadow-xl transform md:rotate-1">
