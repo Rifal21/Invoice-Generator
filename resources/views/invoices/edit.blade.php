@@ -1,10 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-    <!-- SortableJS -->
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-
     <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 md:py-12">
+
         <!-- Header Section with Premium Touch -->
         <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between mb-10 gap-6">
             <div class="space-y-2">
@@ -591,7 +589,7 @@
             itemIndex = cards.length;
         }
 
-        $(document).ready(function() {
+        $(document).on('turbo:load', function() {
             // Initialize SortableJS
             const container = document.getElementById('items-container');
             new Sortable(container, {

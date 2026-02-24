@@ -330,6 +330,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
+                <!-- Drag Handle -->
+                <div class="drag-handle absolute -top-3 left-0 bg-white text-indigo-400 p-3 rounded-full shadow-lg border border-indigo-50 hover:text-indigo-600 transition-all duration-300 z-10">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 8h16M4 16h16"/>
+                    </svg>
+                </div>
 
                 <div class="grid grid-cols-12 gap-x-3 gap-y-5 md:gap-6 items-center">
                     <!-- Product Selection -->
@@ -895,7 +901,7 @@
         }
 
 
-        $(document).ready(function() {
+        $(document).on('turbo:load', function() {
             // Initialize SortableJS
             const container = document.getElementById('items-container');
             new Sortable(container, {
