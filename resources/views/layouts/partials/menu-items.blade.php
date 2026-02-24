@@ -124,9 +124,16 @@
             </li>
             <li>
                 <a href="{{ route('invoices.index') }}"
-                    class="{{ request()->routeIs('invoices.*') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
+                    class="{{ request()->routeIs('invoices.index') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold">
                     <i class="fas fa-file-invoice text-sm w-4"></i>
                     Invoice Generator
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('invoices.calendar') }}"
+                    class="{{ request()->routeIs('invoices.calendar') ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800' }} flex items-center gap-3 rounded-md py-2 pl-9 pr-2 text-sm font-semibold text-amber-400">
+                    <i class="fas fa-calendar-alt text-sm w-4"></i>
+                    Kalender Invoice
                 </a>
             </li>
             <li>

@@ -108,6 +108,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-delete');
     Route::post('invoices/{id}/restore', [InvoiceController::class, 'restore'])->name('invoices.restore');
 
+    Route::get('invoices/calendar', [\App\Http\Controllers\InvoiceCalendarController::class, 'index'])->name('invoices.calendar');
+    Route::get('invoices/calendar/events', [\App\Http\Controllers\InvoiceCalendarController::class, 'events'])->name('invoices.calendar.events');
     Route::resource('invoices', InvoiceController::class);
 
     // Radio Routes
