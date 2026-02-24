@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
     <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-6 md:py-12">
         <!-- Header Section with Premium Touch -->
         <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between mb-10 gap-6">
@@ -279,6 +282,29 @@
             }
         }
 
+        .drag-handle {
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .sortable-ghost {
+            opacity: 0.4;
+            background: #f3f4f6 !important;
+            border: 2px dashed #6366f1 !important;
+        }
+
+        .sortable-chosen {
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+        }
+
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
@@ -317,8 +343,10 @@
             const itemDiv = document.createElement('div');
             itemDiv.className =
                 "item-card bg-white p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.03)] hover:border-indigo-200 transition-all duration-300 relative group mb-4 md:mb-6";
+            itemDiv.setAttribute('data-index', itemIndex);
 
             let productOptions = '<option value="">Pilih Produk</option>';
+
             let isCustomProduct = existingItem && existingItem.product_id && !products.find(p => p.id == existingItem
                 .product_id);
 
@@ -354,6 +382,13 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
+
+                <!-- Drag Handle -->
+                <div class="drag-handle absolute -top-3 left-0 md:left-0 bg-white text-indigo-400 p-3 rounded-full shadow-lg border border-indigo-50 hover:text-indigo-600 transition-all duration-300 z-10">
+                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 8h16M4 16h16"/>
+                    </svg>
+                </div>
 
                 <div class="grid grid-cols-12 gap-x-3 gap-y-5 md:gap-6 items-center">
                     <!-- Product Selection -->
@@ -530,7 +565,45 @@
             document.getElementById('grand-total').innerText = formatCurrency(grandTotal < 0 ? 0 : grandTotal);
         }
 
+        function reindexItems() {
+            const container = document.getElementById('items-container');
+            const cards = container.querySelectorAll('.item-card');
+            cards.forEach((card, index) => {
+                const oldIndex = card.getAttribute('data-index');
+
+                // Update names of all inputs within this card
+                const inputs = card.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    if (input.name) {
+                        input.name = input.name.replace(/items\[\d+\]/, `items[${index}]`);
+                    }
+                });
+
+                // Update select ID if needed (though select2 handles it)
+                const select = card.querySelector('.product-select');
+                if (select) {
+                    select.id = `product-select-${index}`;
+                }
+
+                card.setAttribute('data-index', index);
+            });
+            // Update the global itemIndex to the next available one
+            itemIndex = cards.length;
+        }
+
         $(document).ready(function() {
+            // Initialize SortableJS
+            const container = document.getElementById('items-container');
+            new Sortable(container, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                onEnd: function() {
+                    reindexItems();
+                }
+            });
+
             if (existingItems.length > 0) {
                 existingItems.forEach(item => {
                     addItem(item);

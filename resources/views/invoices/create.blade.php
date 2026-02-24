@@ -868,7 +868,46 @@
             document.getElementById('grand-total').innerText = formatCurrency(grandTotal < 0 ? 0 : grandTotal);
         }
 
+        function reindexItems() {
+            const container = document.getElementById('items-container');
+            const cards = container.querySelectorAll('.item-card');
+            cards.forEach((card, index) => {
+                const oldIndex = card.getAttribute('data-index');
+
+                // Update names of all inputs within this card
+                const inputs = card.querySelectorAll('input, select, textarea');
+                inputs.forEach(input => {
+                    if (input.name) {
+                        input.name = input.name.replace(/items\[\d+\]/, `items[${index}]`);
+                    }
+                });
+
+                // Update select ID if needed
+                const select = card.querySelector('.product-select');
+                if (select) {
+                    select.id = `product-select-${index}`;
+                }
+
+                card.setAttribute('data-index', index);
+            });
+            // Update the global itemIndex to the next available one
+            itemIndex = cards.length;
+        }
+
+
         $(document).ready(function() {
+            // Initialize SortableJS
+            const container = document.getElementById('items-container');
+            new Sortable(container, {
+                handle: '.drag-handle',
+                animation: 150,
+                ghostClass: 'sortable-ghost',
+                chosenClass: 'sortable-chosen',
+                onEnd: function() {
+                    reindexItems();
+                }
+            });
+
             if (oldItems.length > 0) {
                 oldItems.forEach(item => {
                     addItem(item);
