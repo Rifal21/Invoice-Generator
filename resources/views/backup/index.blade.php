@@ -270,7 +270,125 @@
                         </div>
                     </div>
 
+                    <!-- Server Synchronization Card -->
+                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden mb-8">
+                        <div class="p-8">
+                            <div class="flex items-center justify-center mb-6 text-indigo-500">
+                                <i class="fas fa-sync-alt text-6xl"></i>
+                            </div>
+                            <h2 class="text-center text-xl font-bold text-gray-900 mb-2">Sinkronisasi Antar Server</h2>
+                            <p class="text-center text-sm text-gray-500 mb-8">Kirim data dari server ini
+                                ({{ request()->getHost() }})
+                                langsung ke server backup / utama tanpa download manual.</p>
+
+                            @php
+                                $target = env('SYNC_TARGET_URL');
+                            @endphp
+
+                            <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-6">
+                                <h4 class="text-sm font-bold text-indigo-900 mb-2"><i class="fas fa-link mr-1"></i> Target
+                                    Server:</h4>
+                                <p class="text-xs text-indigo-800 font-mono">
+                                    {{ $target ?: 'BELUM DIATUR (SYNC_TARGET_URL di .env)' }}</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <button type="button" onclick="confirmSync('push')"
+                                    @if (!$target) disabled @endif
+                                    class="w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent rounded-2xl shadow-sm text-sm font-black text-white {{ $target ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-400 cursor-not-allowed' }} transition-all hover:scale-[1.02]">
+                                    <i class="fas fa-cloud-upload-alt text-lg"></i>
+                                    PUSH DATA (KIRIM)
+                                </button>
+                                <button type="button" onclick="confirmSync('pull')"
+                                    @if (!$target) disabled @endif
+                                    class="w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent rounded-2xl shadow-sm text-sm font-black text-white {{ $target ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-gray-400 cursor-not-allowed' }} transition-all hover:scale-[1.02]">
+                                    <i class="fas fa-cloud-download-alt text-lg"></i>
+                                    PULL DATA (AMBIL)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
                     <script>
+                        function confirmSync(type) {
+                            const title = type === 'push' ? 'Kirim Data ke Server Lawan?' : 'Ambil Data dari Server Lawan?';
+                            const text = type === 'push' ?
+                                'Seluruh data di server {{ $target }} akan DIHAPUS dan digantikan dengan data dari server ini.' :
+                                'Seluruh data di server INI akan DIHAPUS dan digantikan dengan data dari server {{ $target }}.';
+                            const route = type === 'push' ? "{{ route('backup.push-sync') }}" : "{{ route('backup.pull-sync') }}";
+
+                            Swal.fire({
+                                title: title,
+                                text: text + ' Masukkan password Anda:',
+                                icon: 'warning',
+                                input: 'password',
+                                inputAttributes: {
+                                    placeholder: 'Masukkan password login'
+                                },
+                                showCancelButton: true,
+                                confirmButtonText: 'Ya, Sinkronkan!',
+                                confirmButtonColor: type === 'push' ? '#4F46E5' : '#10b981',
+                                showLoaderOnConfirm: true,
+                                preConfirm: (password) => {
+                                    if (!password) {
+                                        Swal.showValidationMessage('Password wajib diisi!');
+                                        return false;
+                                    }
+
+                                    return fetch(route, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                            },
+                                            body: JSON.stringify({
+                                                password: password
+                                            })
+                                        })
+                                        .then(response => {
+                                            if (!response.ok) {
+                                                return response.json().then(json => {
+                                                    throw new Error(json.message || 'Gagal sinkronisasi');
+                                                });
+                                            }
+                                            return response.json();
+                                        })
+                                        .catch(error => {
+                                            Swal.showValidationMessage(`Error: ${error.message}`);
+                                        });
+                                },
+                                allowOutsideClick: () => !Swal.isLoading()
+                            }).then((result) => {
+                                if (result.isConfirmed && result.value.status === 'success') {
+                                    let summaryHtml = '';
+                                    if (type === 'pull' && result.value.stats) {
+                                        summaryHtml = `
+                                            <div class="mt-4 text-left bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                                <p class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-widest">Data Terambil:</p>
+                                                <table class="w-full text-sm">
+                                                    ${Object.entries(result.value.stats).map(([key, val]) => `
+                                                                            <tr class="border-b border-gray-100 last:border-0">
+                                                                                <td class="py-1 text-gray-600">${key}</td>
+                                                                                <td class="py-1 text-right font-bold text-indigo-600">${val}</td>
+                                                                            </tr>
+                                                                        `).join('')}
+                                                </table>
+                                            </div>
+                                        `;
+                                    }
+
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        html: `<p>${result.value.message}</p>${summaryHtml}`,
+                                        confirmButtonText: 'Mantap!'
+                                    }).then(() => {
+                                        if (type === 'pull') window.location.reload();
+                                    });
+                                }
+                            });
+                        }
+
                         function confirmImport() {
                             const fileInput = document.getElementById('db_file');
                             if (!fileInput.files.length) {

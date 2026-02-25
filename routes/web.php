@@ -57,6 +57,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/backup/progress', [\App\Http\Controllers\BackupController::class, 'checkProgress'])->name('backup.progress');
     Route::get('/backup/database', [\App\Http\Controllers\BackupController::class, 'downloadDatabase'])->name('backup.database');
     Route::post('/backup/import', [\App\Http\Controllers\BackupController::class, 'importDatabase'])->name('backup.import');
+    Route::post('/backup/push-sync', [\App\Http\Controllers\BackupController::class, 'pushSync'])->name('backup.push-sync');
+    Route::post('/backup/pull-sync', [\App\Http\Controllers\BackupController::class, 'pullSync'])->name('backup.pull-sync');
     Route::get('/backup/history', [\App\Http\Controllers\BackupController::class, 'history'])->name('backup.history');
 
     // Document Library Routes

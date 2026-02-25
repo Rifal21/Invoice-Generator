@@ -17,3 +17,5 @@ Route::middleware('auth:sanctum')->group(function () {
     // Protected Invoice Recap
     Route::get('/invoices/monthly-recap', [InvoiceRecapController::class, 'getMonthlyRecap']);
 });
+
+Route::post('/receive-sync', [\App\Http\Controllers\BackupController::class, 'receiveSync']);
