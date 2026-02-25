@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 
 class BackupController extends Controller
 {
@@ -402,7 +403,16 @@ class BackupController extends Controller
             ]);
 
             if (!$response->successful()) {
-                return response()->json(['status' => 'error', 'message' => 'Server target gagal menyediakan data smart sync.'], 500);
+                $errorMessage = 'Server target gagal menyediakan data smart sync.';
+                try {
+                    $errorJson = $response->json();
+                    if (isset($errorJson['message'])) {
+                        $errorMessage .= ' Detail: ' . $errorJson['message'];
+                    }
+                } catch (\Exception $e) {
+                    $errorMessage .= ' (Status: ' . $response->status() . ')';
+                }
+                return response()->json(['status' => 'error', 'message' => $errorMessage], 500);
             }
 
             $data = $response->json();
@@ -410,7 +420,7 @@ class BackupController extends Controller
             $syncLog = [];
 
             // 2. Perform Smart Merge (Upsert) for each model
-            \DB::beginTransaction();
+            DB::beginTransaction();
             try {
                 foreach ($data['models'] as $modelName => $records) {
                     if (empty($records)) continue;
@@ -424,15 +434,15 @@ class BackupController extends Controller
                     
                     // We use database Query Builder for faster batch upsert
                     // This will update existing IDs and insert new ones
-                    \DB::table($table)->upsert($records, ['id'], array_diff($fillable, ['id']));
+                    DB::table($table)->upsert($records, ['id'], array_diff($fillable, ['id']));
                     
                     $count = count($records);
                     $allStats[$modelName] = $count;
                     $syncLog[] = "Merged $count records for $modelName";
                 }
-                \DB::commit();
+                DB::commit();
             } catch (\Exception $e) {
-                \DB::rollBack();
+                DB::rollBack();
                 throw $e;
             }
 
