@@ -7,6 +7,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
 
 class BackupController extends Controller
 {
@@ -219,5 +220,69 @@ class BackupController extends Controller
         ]);
 
         return response()->download($filePath)->deleteFileAfterSend(true);
+    }
+    public function importDatabase(Request $request)
+    {
+        // Only allow Rifal Kurniawan to import the database
+        if (auth()->user()->name !== 'Rifal Kurniawan') {
+            abort(403);
+        }
+
+        $request->validate([
+            'db_file' => 'required|file|mimes:sql,txt',
+            'password' => 'required|string',
+        ]);
+
+        // Verify password
+        if (!Hash::check($request->password, auth()->user()->getAuthPassword())) {
+            return back()->with('error', 'PASSWORD SALAH: Akses ditolak untuk operasi berbahaya.');
+        }
+
+        try {
+            $file = $request->file('db_file');
+            $filePath = $file->getRealPath();
+
+            $dbConfig = config('database.connections.mysql');
+            $host = $dbConfig['host'];
+            $database = $dbConfig['database'];
+            $username = $dbConfig['username'];
+            $password = $dbConfig['password'];
+
+            // Command to import database
+            $command = sprintf(
+                'mysql --user=%s --password=%s --host=%s %s < %s',
+                escapeshellarg($username),
+                escapeshellarg($password),
+                escapeshellarg($host),
+                escapeshellarg($database),
+                escapeshellarg($filePath)
+            );
+
+            $output = [];
+            $returnVar = null;
+            exec($command, $output, $returnVar);
+
+            if ($returnVar !== 0) {
+                Log::error("Database Import Failed: " . implode("\n", $output));
+                return back()->with('error', 'Gagal mengimpor database. Pastikan format file benar dan mysql terinstall.');
+            }
+
+            // Log the activity
+            \App\Models\ActivityLog::create([
+                'user_id' => auth()->id(),
+                'user_name' => auth()->user()->name,
+                'action' => 'import_database',
+                'model_type' => 'Database',
+                'model_id' => 0,
+                'description' => "Imported Database from file: " . $file->getClientOriginalName(),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+
+            return back()->with('success', 'Database berhasil diimpor!');
+        } catch (\Exception $e) {
+            Log::error("Database Import Exception: " . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
     }
 }

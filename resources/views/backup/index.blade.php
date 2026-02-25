@@ -205,32 +205,113 @@
                     </div>
 
                     <!-- Manual DB Backup Card -->
-                    <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden mb-8">
-                        <div class="p-8">
-                            <div class="flex items-center justify-center mb-6 text-indigo-500">
-                                <i class="fas fa-database text-6xl"></i>
-                            </div>
-                            <h2 class="text-center text-xl font-bold text-gray-900 mb-2">Manual Database Backup</h2>
-                            <p class="text-center text-sm text-gray-500 mb-8">Download keseluruhan database website (format
-                                .sql)
-                                secara langsung ke komputer Anda.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                            <div class="p-8">
+                                <div class="flex items-center justify-center mb-6 text-indigo-500">
+                                    <i class="fas fa-database text-6xl"></i>
+                                </div>
+                                <h2 class="text-center text-xl font-bold text-gray-900 mb-2">Manual Database Backup</h2>
+                                <p class="text-center text-sm text-gray-500 mb-8">Download keseluruhan database website
+                                    (format
+                                    .sql)
+                                    secara langsung ke komputer Anda.</p>
 
-                            <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
-                                <h4 class="text-sm font-bold text-amber-900 mb-2"><i
-                                        class="fas fa-exclamation-triangle mr-1"></i>
-                                    Penting:</h4>
-                                <p class="text-xs text-amber-800">File ini berisi seluruh data transaksi, produk, dan
-                                    pengguna.
-                                    Simpan di tempat yang aman.</p>
-                            </div>
+                                <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
+                                    <h4 class="text-sm font-bold text-amber-900 mb-2"><i
+                                            class="fas fa-exclamation-triangle mr-1"></i>
+                                        Penting:</h4>
+                                    <p class="text-xs text-amber-800">File ini berisi seluruh data transaksi, produk, dan
+                                        pengguna.
+                                        Simpan di tempat yang aman.</p>
+                                </div>
 
-                            <a href="{{ route('backup.database') }}"
-                                class="w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent rounded-2xl shadow-sm text-sm font-black text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all hover:scale-[1.02]">
-                                <i class="fas fa-download text-lg"></i>
-                                DOWNLOAD DATABASE (.SQL)
-                            </a>
+                                <a href="{{ route('backup.database') }}"
+                                    class="w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent rounded-2xl shadow-sm text-sm font-black text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all hover:scale-[1.02]">
+                                    <i class="fas fa-download text-lg"></i>
+                                    DOWNLOAD DATABASE (.SQL)
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Manual DB Import Card -->
+                        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                            <div class="p-8">
+                                <div class="flex items-center justify-center mb-6 text-rose-500">
+                                    <i class="fas fa-file-import text-6xl"></i>
+                                </div>
+                                <h2 class="text-center text-xl font-bold text-gray-900 mb-2">Manual Database Import</h2>
+                                <p class="text-center text-sm text-gray-500 mb-8">Upload file database (.sql) untuk
+                                    memperbaharui data website Anda.</p>
+
+                                <div class="bg-rose-50 border border-rose-100 rounded-xl p-4 mb-6">
+                                    <h4 class="text-sm font-bold text-rose-900 mb-2"><i class="fas fa-radiation mr-1"></i>
+                                        Bahaya:</h4>
+                                    <p class="text-xs text-rose-800">Proses ini akan <strong>menghapus data lama</strong>
+                                        dan
+                                        menggantinya dengan isi file yang Anda upload. Pastikan file benar!</p>
+                                </div>
+
+                                <form id="import-form" action="{{ route('backup.import') }}" method="POST"
+                                    enctype="multipart/form-data">
+                                    @csrf
+                                    <input type="hidden" name="password" id="import-password">
+                                    <div class="mb-4">
+                                        <input type="file" name="db_file" id="db_file" accept=".sql" required
+                                            class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-rose-50 file:text-rose-700 hover:file:bg-rose-100">
+                                    </div>
+                                    <button type="button" onclick="confirmImport()"
+                                        class="w-full flex justify-center items-center gap-2 py-4 px-4 border border-transparent rounded-2xl shadow-sm text-sm font-black text-white bg-rose-600 hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-rose-500 transition-all hover:scale-[1.02]">
+                                        <i class="fas fa-upload text-lg"></i>
+                                        IMPORT DATABASE (.SQL)
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
+
+                    <script>
+                        function confirmImport() {
+                            const fileInput = document.getElementById('db_file');
+                            if (!fileInput.files.length) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'File Belum Dipilih',
+                                    text: 'Silakan pilih file .sql terlebih dahulu!'
+                                });
+                                return;
+                            }
+
+                            Swal.fire({
+                                title: 'Konfirmasi Keamanan',
+                                text: 'Proses ini akan MENGHAPUS seluruh data lama dan menggantinya. Masukkan password login Anda untuk melanjutkan:',
+                                icon: 'warning',
+                                input: 'password',
+                                inputAttributes: {
+                                    autocapitalize: 'off',
+                                    autocorrect: 'off',
+                                    placeholder: 'Masukkan password Anda'
+                                },
+                                showCancelButton: true,
+                                confirmButtonText: 'Ya, Import Sekarang!',
+                                cancelButtonText: 'Batal',
+                                confirmButtonColor: '#e11d48', // rose-600
+                                showLoaderOnConfirm: true,
+                                preConfirm: (password) => {
+                                    if (!password) {
+                                        Swal.showValidationMessage('Password wajib diisi!');
+                                    }
+                                    return password;
+                                },
+                                allowOutsideClick: () => !Swal.isLoading()
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    document.getElementById('import-password').value = result.value;
+                                    document.getElementById('import-form').submit();
+                                }
+                            });
+                        }
+                    </script>
 
                     <!-- History List -->
                     <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
