@@ -436,8 +436,19 @@ class BackupController extends Controller
                     $tableColumns = DB::getSchemaBuilder()->getColumnListing($table);
                     
                     // Filter records to only include columns that exist in the local table
+                    // AND fix ISO-8601 date format from JSON to MySQL datetime format
                     $filteredRecords = array_map(function($record) use ($tableColumns) {
-                        return array_intersect_key($record, array_flip($tableColumns));
+                        $cleaned = array_intersect_key($record, array_flip($tableColumns));
+                        foreach ($cleaned as $key => $value) {
+                            if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $value)) {
+                                try {
+                                    $cleaned[$key] = \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
+                                } catch (\Exception $e) {
+                                    // If parsing fails, keep original value
+                                }
+                            }
+                        }
+                        return $cleaned;
                     }, $records);
 
                     // Columns to update (all except 'id')
