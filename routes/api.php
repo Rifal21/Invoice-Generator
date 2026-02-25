@@ -19,3 +19,4 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::post('/receive-sync', [\App\Http\Controllers\BackupController::class, 'receiveSync']);
+Route::post('/provide-sync', [\App\Http\Controllers\BackupController::class, 'provideSync']);

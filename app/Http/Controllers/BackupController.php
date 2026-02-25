@@ -420,6 +420,7 @@ class BackupController extends Controller
             $syncLog = [];
 
             // 2. Perform Smart Merge (Upsert) for each model
+            ini_set('memory_limit', '512M');
             DB::beginTransaction();
             try {
                 foreach ($data['models'] as $modelName => $records) {
@@ -430,11 +431,22 @@ class BackupController extends Controller
 
                     $model = new $fullModelPath;
                     $table = $model->getTable();
-                    $fillable = array_merge(['id'], $model->getFillable());
                     
-                    // We use database Query Builder for faster batch upsert
-                    // This will update existing IDs and insert new ones
-                    DB::table($table)->upsert($records, ['id'], array_diff($fillable, ['id']));
+                    // Get actual table columns to avoid "Unknown column" errors during upsert
+                    $tableColumns = DB::getSchemaBuilder()->getColumnListing($table);
+                    
+                    // Filter records to only include columns that exist in the local table
+                    $filteredRecords = array_map(function($record) use ($tableColumns) {
+                        return array_intersect_key($record, array_flip($tableColumns));
+                    }, $records);
+
+                    // Columns to update (all except 'id')
+                    $updateColumns = array_diff($tableColumns, ['id']);
+                    
+                    // Chunk the upsert to avoid "too many placeholders" or memory issues
+                    foreach (array_chunk($filteredRecords, 100) as $chunk) {
+                        DB::table($table)->upsert($chunk, ['id'], $updateColumns);
+                    }
                     
                     $count = count($records);
                     $allStats[$modelName] = $count;
