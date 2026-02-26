@@ -451,12 +451,28 @@ class BackupController extends Controller
                         return $cleaned;
                     }, $records);
 
+                    // Identify columns present in the incoming data
+                    $incomingKeys = !empty($filteredRecords) ? array_keys($filteredRecords[0]) : [];
+
+                    // Resiliency for 'users' table: If password is missing (old server source),
+                    // we MUST provide a base value for the INSERT part to succeed, but we WON'T include it
+                    // in $updateColumns so existing passwords remain untouched.
+                    if ($table === 'users' && !empty($filteredRecords) && !in_array('password', $incomingKeys)) {
+                        foreach ($filteredRecords as $idx => $record) {
+                            $filteredRecords[$idx]['password'] = Hash::make('JR-Sync-Default-123');
+                        }
+                    }
+
                     // Columns to update (all except 'id')
                     $updateColumns = array_diff($tableColumns, ['id']);
                     
+                    // CRITICAL: Only update columns that were actually present in the source data
+                    // This is what prevents local passwords from being lost if they are missing in the sync package
+                    $updateColumns = array_intersect($updateColumns, $incomingKeys);
+                    
                     // Chunk the upsert to avoid "too many placeholders" or memory issues
                     foreach (array_chunk($filteredRecords, 100) as $chunk) {
-                        DB::table($table)->upsert($chunk, ['id'], $updateColumns);
+                        DB::table($table)->upsert($chunk, ['id'], array_values($updateColumns));
                     }
                     
                     $count = count($records);
@@ -520,7 +536,12 @@ class BackupController extends Controller
                 foreach ($models as $m) {
                     $fullClass = "App\\Models\\$m";
                     if (class_exists($fullClass)) {
-                        $data[$m] = $fullClass::all()->toArray();
+                        $model = new $fullClass;
+                        // Use DB::table to bypass Eloquent hidden attributes (like password)
+                        // This ensures all data is sent for the sync
+                        $data[$m] = DB::table($model->getTable())->get()->map(function($item) {
+                            return (array) $item;
+                        })->toArray();
                     }
                 }
                 

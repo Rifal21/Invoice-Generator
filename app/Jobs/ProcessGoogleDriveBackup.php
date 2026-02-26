@@ -65,7 +65,19 @@ class ProcessGoogleDriveBackup implements ShouldQueue
                 throw new \Exception('Google Drive tidak terhubung.');
             }
 
-            if ($this->startDate && $this->endDate) {
+            if ($this->type === 'monthly') {
+                $startDate = Carbon::createFromDate($this->year, $this->month, 1)->startOfMonth();
+                $endDate = Carbon::createFromDate($this->year, $this->month, 1)->endOfMonth();
+                $periodFolderName = $startDate->format('F Y');
+            } elseif ($this->type === 'weekly') {
+                $startDate = Carbon::now()->setISODate($this->year, $this->week)->startOfWeek();
+                $endDate = Carbon::now()->setISODate($this->year, $this->week)->endOfWeek();
+                $periodFolderName = "Weekly - Week {$this->week} ({$startDate->format('d M')} - {$endDate->format('d M Y')})";
+            } elseif ($this->type === 'products' || $this->type === 'database') {
+                $startDate = Carbon::now()->startOfMonth();
+                $endDate = Carbon::now()->endOfMonth();
+                $periodFolderName = $this->type === 'products' ? "Products Backup" : "Database Backup";
+            } elseif ($this->startDate && $this->endDate) {
                 $startDate = Carbon::parse($this->startDate)->startOfDay();
                 $endDate = Carbon::parse($this->endDate)->endOfDay();
                 $periodFolderName = "Custom ({$startDate->format('d M')} - {$endDate->format('d M Y')})";
@@ -75,18 +87,11 @@ class ProcessGoogleDriveBackup implements ShouldQueue
                     $cName = $customer ? $customer->name : 'Unknown';
                     $periodFolderName = "Backup {$cName} ({$startDate->format('d M')} - {$endDate->format('d M Y')})";
                 }
-            } elseif ($this->type === 'weekly') {
-                $startDate = Carbon::now()->setISODate($this->year, $this->week)->startOfWeek();
-                $endDate = Carbon::now()->setISODate($this->year, $this->week)->endOfWeek();
-                $periodFolderName = "Weekly - Week {$this->week} ({$startDate->format('d M')} - {$endDate->format('d M Y')})";
-            } elseif ($this->type === 'products' || $this->type === 'database') {
+            } else {
+                // Fallback to current month if type unknown
                 $startDate = Carbon::now()->startOfMonth();
                 $endDate = Carbon::now()->endOfMonth();
-                $periodFolderName = $this->type === 'products' ? "Products Backup" : "Database Backup";
-            } else {
-                $startDate = Carbon::createFromDate($this->year, $this->month, 1)->startOfMonth();
-                $endDate = Carbon::createFromDate($this->year, $this->month, 1)->endOfMonth();
-                $periodFolderName = $startDate->format('F Y');
+                $periodFolderName = "General Backup - " . $startDate->format('F Y');
             }
 
             $invoices = collect();
