@@ -418,67 +418,137 @@ class BackupController extends Controller
             $data = $response->json();
             $allStats = [];
             $syncLog = [];
+            $idMap = []; // [ModelName => [RemoteID => LocalID]]
 
-            // 2. Perform Smart Merge (Upsert) for each model
-            ini_set('memory_limit', '512M');
+            // Define Model Metadata for Intelligence
+            $modelMeta = [
+                'User' => ['nk' => ['email'], 'fk' => []],
+                'Category' => ['nk' => ['name'], 'fk' => []],
+                'Supplier' => ['nk' => ['name'], 'fk' => []],
+                'Customer' => ['nk' => ['name'], 'fk' => []],
+                'AttendanceSetting' => ['nk' => [], 'singleton' => true],
+                'Document' => ['nk' => ['title'], 'fk' => []],
+                'Product' => ['nk' => ['name'], 'fk' => ['category_id' => 'Category', 'supplier_id' => 'Supplier']],
+                'Invoice' => ['nk' => ['invoice_number'], 'fk' => []],
+                'InvoiceItem' => ['nk' => ['invoice_id', 'product_name', 'quantity', 'total'], 'fk' => ['invoice_id' => 'Invoice', 'product_id' => 'Product']],
+                'Expense' => ['nk' => ['description', 'amount', 'date'], 'fk' => ['category_id' => 'Category']],
+                'Attendance' => ['nk' => ['user_id', 'date'], 'fk' => ['user_id' => 'User', 'approved_by' => 'User']],
+                'Salary' => ['nk' => ['user_id', 'period'], 'fk' => ['user_id' => 'User']],
+                'RiceDelivery' => ['nk' => ['nota_number'], 'fk' => []],
+                'RiceDeliveryItem' => ['nk' => ['rice_delivery_id', 'description', 'total'], 'fk' => ['rice_delivery_id' => 'RiceDelivery']],
+                'DediInvoice' => ['nk' => ['invoice_number'], 'fk' => []],
+                'DediInvoiceItem' => ['nk' => ['dedi_invoice_id', 'item_name', 'quantity'], 'fk' => ['dedi_invoice_id' => 'DediInvoice']],
+                'KitchenIncentive' => ['nk' => ['invoice_number'], 'fk' => ['customer_id' => 'Customer']],
+                'KitchenIncentiveItem' => ['nk' => ['kitchen_incentive_id', 'description', 'total_price'], 'fk' => ['kitchen_incentive_id' => 'KitchenIncentive']],
+                'VehicleRentalInvoice' => ['nk' => ['invoice_number'], 'fk' => []],
+                'VehicleRentalItem' => ['nk' => ['vehicle_rental_invoice_id', 'description', 'total'], 'fk' => ['vehicle_rental_invoice_id' => 'VehicleRentalInvoice']],
+            ];
+
+            // 2. Perform Intelligent Merge
+            ini_set('memory_limit', '1024M');
+            ini_set('max_execution_time', 600);
+            
             DB::beginTransaction();
             try {
-                foreach ($data['models'] as $modelName => $records) {
-                    if (empty($records)) continue;
-
+                // Iterate through models in defined order (to satisfy dependencies)
+                $syncOrder = array_keys($modelMeta);
+                
+                foreach ($syncOrder as $modelName) {
+                    if (!isset($data['models'][$modelName]) || empty($data['models'][$modelName])) continue;
+                    
+                    $records = $data['models'][$modelName];
+                    $meta = $modelMeta[$modelName];
                     $fullModelPath = "App\\Models\\$modelName";
+                    
                     if (!class_exists($fullModelPath)) continue;
-
-                    $model = new $fullModelPath;
-                    $table = $model->getTable();
-                    $primaryKey = $model->getKeyName() ?: 'id';
                     
-                    // Get actual table columns to avoid "Unknown column" errors during upsert
-                    $tableColumns = DB::getSchemaBuilder()->getColumnListing($table);
+                    $modelInstance = new $fullModelPath;
+                    $tableName = $modelInstance->getTable();
+                    $tableColumns = DB::getSchemaBuilder()->getColumnListing($tableName);
+                    $primaryKey = $modelInstance->getKeyName() ?: 'id';
                     
-                    // Filter records to only include columns that exist in the local table
-                    // AND fix ISO-8601 date format from JSON to MySQL datetime format
-                    $filteredRecords = array_map(function($record) use ($tableColumns) {
-                        $cleaned = array_intersect_key($record, array_flip($tableColumns));
-                        foreach ($cleaned as $key => $value) {
+                    $processedCount = 0;
+                    
+                    foreach ($records as $remoteRecord) {
+                        $remoteId = $remoteRecord[$primaryKey] ?? null;
+                        
+                        // 1. Clean and filter record
+                        $recordData = array_intersect_key($remoteRecord, array_flip($tableColumns));
+                        
+                        // Fix date formats
+                        foreach ($recordData as $key => $value) {
                             if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $value)) {
-                                try {
-                                    $cleaned[$key] = \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
-                                } catch (\Exception $e) {
-                                    // If parsing fails, keep original value
-                                }
+                                $recordData[$key] = \Carbon\Carbon::parse($value)->format('Y-m-d H:i:s');
                             }
                         }
-                        return $cleaned;
-                    }, $records);
-
-                    // Identify columns present in the incoming data
-                    $incomingKeys = !empty($filteredRecords) ? array_keys($filteredRecords[0]) : [];
-
-                    // Resiliency for 'users' table: If password is missing (old server source),
-                    // we MUST provide a base value for the INSERT part to succeed, but we WON'T include it
-                    // in $updateColumns so existing passwords remain untouched.
-                    if ($table === 'users' && !empty($filteredRecords) && !in_array('password', $incomingKeys)) {
-                        foreach ($filteredRecords as $idx => $record) {
-                            $filteredRecords[$idx]['password'] = Hash::make('JR-Sync-Default-123');
+                        
+                        // 2. Translate Foreign Keys
+                        foreach ($meta['fk'] ?? [] as $fkColumn => $parentModel) {
+                            if (isset($recordData[$fkColumn]) && isset($idMap[$parentModel][$recordData[$fkColumn]])) {
+                                $recordData[$fkColumn] = $idMap[$parentModel][$recordData[$fkColumn]];
+                            }
                         }
+                        
+                        // 3. Find if record exists locally
+                        $localRecord = null;
+                        
+                        // Search by Natural Key first
+                        if (!empty($meta['nk'] ?? [])) {
+                            $query = DB::table($tableName);
+                            foreach ($meta['nk'] as $nkCol) {
+                                $query->where($nkCol, $recordData[$nkCol] ?? null);
+                            }
+                            $localRecord = $query->first();
+                        }
+                        
+                        // Singleton handling
+                        if (!$localRecord && ($meta['singleton'] ?? false)) {
+                            $localRecord = DB::table($tableName)->first();
+                        }
+                        
+                        // Match by Remote ID as last resort if NK missing or if the NK points to same ID anyway
+                        if (!$localRecord && $remoteId) {
+                            $localRecord = DB::table($tableName)->where($primaryKey, $remoteId)->first();
+                        }
+                        
+                        if ($localRecord) {
+                            $localId = $localRecord->$primaryKey;
+                            
+                            // Check if "Exactly the Same" to avoid unnecessary writes
+                            $isIdentical = true;
+                            foreach ($recordData as $key => $val) {
+                                if (in_array($key, [$primaryKey, 'created_at', 'updated_at'])) continue;
+                                if ((string)($localRecord->$key ?? '') !== (string)($val ?? '')) {
+                                    $isIdentical = false;
+                                    break;
+                                }
+                            }
+                            
+                            if (!$isIdentical) {
+                                DB::table($tableName)->where($primaryKey, $localId)->update(array_diff_key($recordData, array_flip([$primaryKey, 'created_at'])));
+                            }
+                            
+                            $idMap[$modelName][$remoteId] = $localId;
+                        } else {
+                            // 4. Insert as New
+                            $newRecord = $recordData;
+                            unset($newRecord[$primaryKey]); // Let local DB assign new ID
+                            
+                            $newId = DB::table($tableName)->insertGetId($newRecord);
+                            $idMap[$modelName][$remoteId] = $newId;
+                        }
+                        
+                        $processedCount++;
                     }
-
-                    // Columns to update (all keys present in incoming data except primary key)
-                    $updateColumns = array_diff($incomingKeys, [$primaryKey]);
                     
-                    // Chunk the upsert to avoid "too many placeholders" or memory issues
-                    foreach (array_chunk($filteredRecords, 100) as $chunk) {
-                        DB::table($table)->upsert($chunk, [$primaryKey], array_values($updateColumns));
-                    }
-                    
-                    $count = count($records);
-                    $allStats[$modelName] = $count;
-                    $syncLog[] = "Merged $count records for $modelName";
+                    $allStats[$modelName] = $processedCount;
+                    $syncLog[] = "Processed $processedCount records for $modelName";
                 }
+                
                 DB::commit();
             } catch (\Exception $e) {
                 DB::rollBack();
+                Log::error("Pull Sync Error at $modelName: " . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
                 throw $e;
             }
 
@@ -487,7 +557,7 @@ class BackupController extends Controller
                 'user_id' => auth()->id(),
                 'type' => 'database',
                 'status' => 'completed',
-                'details' => "SMART PULL SYNC (Merge Mode) dari $targetUrl. " . implode(', ', $syncLog)
+                'details' => "SMART MERGE PULL dari $targetUrl. Data telah digabungkan dengan pengecekan duplikasi."
             ]);
 
             \App\Models\ActivityLog::create([
@@ -496,14 +566,14 @@ class BackupController extends Controller
                 'action' => 'pull_sync_smart',
                 'model_type' => 'Database',
                 'model_id' => 0,
-                'description' => "Smart Merge Pull from $targetUrl",
+                'description' => "Smart Merge Pull from $targetUrl with ID mapping.",
                 'ip_address' => $request->ip(),
                 'user_agent' => $request->userAgent(),
             ]);
 
             return response()->json([
                 'status' => 'success', 
-                'message' => 'Smart Sync Berhasil! Data telah digabungkan tanpa menghapus data lokal.',
+                'message' => 'Smart Sync Berhasil! Data telah digabungkan tanpa duplikasi (mapping ID otomatis).',
                 'stats' => $allStats
             ]);
 

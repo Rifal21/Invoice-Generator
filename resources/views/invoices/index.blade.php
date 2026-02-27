@@ -5,6 +5,9 @@
 @push('scripts')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <style>
         .statsSwiper {
             width: 100%;
@@ -16,6 +19,38 @@
                 width: 100% !important;
             }
         }
+
+        /* Select2 Custom Styling */
+        .select2-container--default .select2-selection--single {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            height: 38px;
+            display: flex;
+            align-items: center;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #111827;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+
+        .select2-dropdown {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            z-index: 9999;
+        }
+
+        .select2-search__field {
+            border-radius: 0.5rem !important;
+            font-size: 0.75rem !important;
+        }
     </style>
 @endpush
 
@@ -25,7 +60,8 @@
         <div class="flex flex-col md:flex-row md:items-end md:justify-between mb-8 gap-6">
             <div class="min-w-0 flex-1">
                 <h1 class="text-3xl md:text-5xl font-black text-gray-900 tracking-tight">Daftar Invoice</h1>
-                <p class="mt-3 text-base md:text-lg text-gray-500 font-medium tracking-tight">Kelola dan pantau semua invoice
+                <p class="mt-3 text-base md:text-lg text-gray-500 font-medium tracking-tight">Kelola dan pantau semua
+                    invoice
                     transaksi dalam satu dasbor terpusat.</p>
             </div>
             <div class="flex shrink-0">
@@ -547,7 +583,7 @@
                                                                             <div
                                                                                 class="edit-mode-{{ $item->id }} hidden">
                                                                                 <select id="product-{{ $item->id }}"
-                                                                                    class="text-xs font-bold text-gray-900 border-gray-200 rounded-lg w-full focus:ring-indigo-500 focus:border-indigo-500">
+                                                                                    class="product-select-js text-xs font-bold text-gray-900 border-gray-200 rounded-lg w-full focus:ring-indigo-500 focus:border-indigo-500">
                                                                                     @foreach ($products as $p)
                                                                                         <option
                                                                                             value="{{ $p->id }}"
@@ -872,7 +908,7 @@
                                             <div>
                                                 <label class="text-[8px] font-black text-gray-400 uppercase">Produk</label>
                                                 <select id="product-mobile-{{ $item->id }}"
-                                                    class="w-full text-xs font-bold border-gray-200 rounded-lg">
+                                                    class="product-select-js w-full text-xs font-bold border-gray-200 rounded-lg">
                                                     @foreach ($products as $p)
                                                         <option value="{{ $p->id }}"
                                                             {{ $item->product_id == $p->id ? 'selected' : '' }}>
@@ -1370,9 +1406,22 @@
                 if (isEdit) {
                     viewElements.forEach(el => el.classList.add('hidden'));
                     editElements.forEach(el => el.classList.remove('hidden'));
+
+                    // Initialize Select2 for this row's product select
+                    setTimeout(() => {
+                        $('.edit-mode-' + id + ' .product-select-js').select2({
+                            width: '100%',
+                            dropdownParent: $(document.body)
+                        });
+                    }, 100);
                 } else {
                     viewElements.forEach(el => el.classList.remove('hidden'));
                     editElements.forEach(el => el.classList.add('hidden'));
+
+                    // Destroy Select2 to return to original state
+                    if ($('.edit-mode-' + id + ' .product-select-js').data('select2')) {
+                        $('.edit-mode-' + id + ' .product-select-js').select2('destroy');
+                    }
                 }
             }
 
