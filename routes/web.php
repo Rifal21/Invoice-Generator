@@ -116,6 +116,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('invoices/calendar', [\App\Http\Controllers\InvoiceCalendarController::class, 'index'])->name('invoices.calendar');
     Route::get('invoices/calendar/events', [\App\Http\Controllers\InvoiceCalendarController::class, 'events'])->name('invoices.calendar.events');
+    Route::get('invoices/{invoice}/items', [InvoiceController::class, 'getItems'])->name('invoices.items');
     Route::resource('invoices', InvoiceController::class);
 
     // Radio Routes

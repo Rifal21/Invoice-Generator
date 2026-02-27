@@ -8,49 +8,30 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <style>
-        .statsSwiper {
-            width: 100%;
-            padding: 10px 0 35px !important;
-        }
+    /* Performance Optimizations */
+    .invoice-row-desktop, .invoice-card-mobile {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 100px; /* Default height estimation */
+    }
 
-        @media (max-width: 639px) {
-            .statsSwiper .swiper-slide {
-                width: 100% !important;
-            }
-        }
+    .invoice-row-desktop {
+    transition: background-color 0.2s ease-in-out;
+    }
 
-        /* Select2 Custom Styling */
-        .select2-container--default .select2-selection--single {
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            height: 38px;
-            display: flex;
-            align-items: center;
-        }
+    /* Optimize transition-all to be more specific and efficient */
+    .btn-action-optimized {
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+    will-change: transform;
+    }
 
-        .select2-container--default .select2-selection--single .select2-selection__rendered {
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #111827;
-        }
+    /* Simplified shadows for better scroll performance on low-end devices */
+    .shadow-soft {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    }
 
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 36px;
-        }
-
-        .select2-dropdown {
-            border: 1px solid #e5e7eb;
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            z-index: 9999;
-        }
-
-        .select2-search__field {
-            border-radius: 0.5rem !important;
-            font-size: 0.75rem !important;
-        }
+    .shadow-heavy-hover:hover {
+    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
     </style>
 @endpush
 
@@ -397,7 +378,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-50 bg-white">
                             @forelse($invoices as $invoice)
-                                <tr class="hover:bg-indigo-50/30 transition-all duration-200 group cursor-pointer"
+                                <tr class="invoice-row-desktop hover:bg-indigo-50/30 transition-colors duration-200 group cursor-pointer"
                                     onclick="toggleDetails('details-{{ $invoice->id }}')">
                                     <td class="py-6 pl-8 pr-4" onclick="event.stopPropagation()">
                                         <input type="checkbox" name="invoice_ids[]" value="{{ $invoice->id }}"
@@ -481,28 +462,28 @@
                                     </td>
                                     <td class="whitespace-nowrap py-6 pl-4 pr-8 text-right text-sm font-medium"
                                         onclick="event.stopPropagation()">
-                                        <div class="flex justify-end gap-2 transition-all duration-300">
+                                        <div class="flex justify-end gap-2">
                                             <a href="{{ route('invoices.show', $invoice->id) }}"
-                                                class="h-12 w-12 flex items-center justify-center rounded-2xl bg-gray-900 text-white hover:bg-black transition-all shadow-xl shadow-gray-200 active:scale-95">
+                                                class="btn-action-optimized h-12 w-12 flex items-center justify-center rounded-2xl bg-gray-900 text-white hover:bg-black shadow-soft active:scale-95">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <a href="{{ route('invoices.export-pdf', $invoice->id) }}" target="_blank"
-                                                class="h-12 w-12 flex items-center justify-center rounded-2xl bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-xl shadow-rose-200 active:scale-95">
+                                                class="btn-action-optimized h-12 w-12 flex items-center justify-center rounded-2xl bg-rose-600 text-white hover:bg-rose-700 shadow-soft active:scale-95">
                                                 <i class="fas fa-file-pdf"></i>
                                             </a>
                                             <a href="{{ route('invoices.edit', ['invoice' => $invoice->id] + request()->query()) }}"
-                                                class="h-12 w-12 flex items-center justify-center rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 active:scale-95">
+                                                class="btn-action-optimized h-12 w-12 flex items-center justify-center rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-soft active:scale-95">
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             @if (isset($showTrashed) && $showTrashed)
                                                 <button type="button" onclick="restoreInvoice({{ $invoice->id }})"
-                                                    class="h-12 w-12 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all shadow-sm active:scale-95"
+                                                    class="btn-action-optimized h-12 w-12 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 shadow-soft active:scale-95"
                                                     title="Restore Invoice">
                                                     <i class="fas fa-trash-restore"></i>
                                                 </button>
                                             @else
                                                 <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
-                                                    class="h-12 w-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm active:scale-95">
+                                                    class="btn-action-optimized h-12 w-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-rose-600 hover:border-rose-100 shadow-soft active:scale-95">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
                                             @endif
@@ -511,222 +492,16 @@
                                 </tr>
                                 <!-- Desktop Details Row -->
                                 <tr id="details-{{ $invoice->id }}" class="hidden bg-gray-50/50">
-                                    <td colspan="7" class="p-8">
-                                        <div
-                                            class="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">
-                                            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 border-b border-gray-50">
-                                                <div class="col-span-2">
-                                                    <div class="flex justify-between items-center mb-4">
-                                                        <h4
-                                                            class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                                                            Rincian Item Invoice</h4>
-                                                        <button type="button"
-                                                            onclick="bulkDeleteItems({{ $invoice->id }})"
-                                                            id="bulk-delete-items-{{ $invoice->id }}"
-                                                            class="hidden text-[10px] font-black text-rose-600 uppercase tracking-widest hover:text-rose-700 transition-all flex items-center gap-1">
-                                                            <i class="fas fa-trash-alt"></i> Hapus Terpilih
-                                                        </button>
-                                                    </div>
-                                                    <div class="overflow-hidden rounded-2xl border border-gray-50">
-                                                        <table class="min-w-full divide-y divide-gray-50"
-                                                            id="table-items-{{ $invoice->id }}">
-                                                            <thead class="bg-gray-50/30">
-                                                                <tr>
-                                                                    <th
-                                                                        class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                        No
-                                                                    </th>
-                                                                    <th class="px-4 py-3 text-left w-10">
-                                                                        <input type="checkbox"
-                                                                            onchange="toggleSelectAllItems({{ $invoice->id }}, this)"
-                                                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                                                    </th>
-                                                                    <th
-                                                                        class="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                        Produk</th>
-                                                                    <th
-                                                                        class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                        Qty</th>
-                                                                    <th
-                                                                        class="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                        Harga</th>
-                                                                    <th
-                                                                        class="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                        Total</th>
-                                                                    <th
-                                                                        class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                        Aksi</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody class="divide-y divide-gray-50">
-                                                                @foreach ($invoice->items as $item)
-                                                                    <tr class="hover:bg-gray-50/50 transition-colors group"
-                                                                        id="item-row-{{ $item->id }}">
-                                                                        <td>{{ $loop->iteration }}</td>
-                                                                        <td class="px-4 py-3">
-                                                                            <input type="checkbox" name="item_ids[]"
-                                                                                value="{{ $item->id }}"
-                                                                                onchange="updateBulkItemButton({{ $invoice->id }})"
-                                                                                class="item-checkbox-{{ $invoice->id }} rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                                                        </td>
-                                                                        <td class="px-4 py-3">
-                                                                            <div class="view-mode-{{ $item->id }}">
-                                                                                <div
-                                                                                    class="text-xs font-bold text-gray-900">
-                                                                                    {{ $item->product_name }}</div>
-                                                                                @if ($item->description)
-                                                                                    <div
-                                                                                        class="text-[10px] text-gray-400 italic mt-1">
-                                                                                        {{ $item->description }}</div>
-                                                                                @endif
-                                                                            </div>
-                                                                            <div
-                                                                                class="edit-mode-{{ $item->id }} hidden">
-                                                                                <select id="product-{{ $item->id }}"
-                                                                                    class="product-select-js text-xs font-bold text-gray-900 border-gray-200 rounded-lg w-full focus:ring-indigo-500 focus:border-indigo-500">
-                                                                                    @foreach ($products as $p)
-                                                                                        <option
-                                                                                            value="{{ $p->id }}"
-                                                                                            {{ $item->product_id == $p->id ? 'selected' : '' }}>
-                                                                                            {{ $p->name }}</option>
-                                                                                    @endforeach
-                                                                                </select>
-                                                                            </div>
-                                                                        </td>
-                                                                        <td
-                                                                            class="px-4 py-3 text-center text-xs font-bold text-gray-600">
-                                                                            <div class="view-mode-{{ $item->id }}">
-                                                                                {{ rtrim(rtrim(number_format($item->quantity, 2, ',', '.'), '0'), ',') }}
-                                                                                {{ $item->unit }}
-                                                                            </div>
-                                                                            <div
-                                                                                class="edit-mode-{{ $item->id }} hidden flex items-center justify-center gap-1">
-                                                                                <input type="number"
-                                                                                    id="qty-{{ $item->id }}"
-                                                                                    value="{{ $item->quantity }}"
-                                                                                    step="0.01"
-                                                                                    class="w-20 text-xs font-bold text-center border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                                                                                <span
-                                                                                    class="text-[10px] text-gray-400">{{ $item->unit }}</span>
-                                                                            </div>
-                                                                        </td>
-                                                                        <td
-                                                                            class="px-4 py-3 text-right text-xs font-bold text-gray-600">
-                                                                            <div class="view-mode-{{ $item->id }}">
-                                                                                Rp
-                                                                                {{ number_format($item->price, 0, ',', '.') }}
-                                                                            </div>
-                                                                            <div
-                                                                                class="edit-mode-{{ $item->id }} hidden">
-                                                                                <input type="number"
-                                                                                    id="price-{{ $item->id }}"
-                                                                                    value="{{ $item->price }}"
-                                                                                    class="w-24 text-xs font-bold text-right border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
-                                                                            </div>
-                                                                        </td>
-                                                                        <td
-                                                                            class="px-4 py-3 text-right text-xs font-black text-indigo-600 italic">
-                                                                            <span id="total-{{ $item->id }}">Rp
-                                                                                {{ number_format($item->total, 0, ',', '.') }}</span>
-                                                                        </td>
-                                                                        <td class="px-4 py-3 text-center">
-                                                                            <div
-                                                                                class="view-mode-{{ $item->id }} flex justify-center gap-2">
-                                                                                <button type="button"
-                                                                                    onclick="toggleEditItem({{ $item->id }}, true)"
-                                                                                    class="text-gray-400 hover:text-indigo-600 transition-colors p-1"
-                                                                                    title="Edit Item">
-                                                                                    <i class="fas fa-edit"></i>
-                                                                                </button>
-                                                                                <button type="button"
-                                                                                    onclick="deleteItem({{ $item->id }}, {{ $invoice->id }})"
-                                                                                    class="text-gray-400 hover:text-rose-600 transition-colors p-1"
-                                                                                    title="Hapus Item">
-                                                                                    <i class="fas fa-trash-alt"></i>
-                                                                                </button>
-                                                                            </div>
-                                                                            <div
-                                                                                class="edit-mode-{{ $item->id }} hidden flex justify-center gap-2">
-                                                                                <button type="button"
-                                                                                    onclick="saveQuickEdit({{ $item->id }}, {{ $invoice->id }})"
-                                                                                    class="bg-indigo-600 text-white h-7 w-7 rounded-lg hover:bg-indigo-700 transition-all shadow-sm flex items-center justify-center"
-                                                                                    title="Simpan">
-                                                                                    <i
-                                                                                        class="fas fa-check text-[10px]"></i>
-                                                                                </button>
-                                                                                <button type="button"
-                                                                                    onclick="toggleEditItem({{ $item->id }}, false)"
-                                                                                    class="bg-gray-100 text-gray-500 h-7 w-7 rounded-lg hover:bg-gray-200 transition-all shadow-sm flex items-center justify-center"
-                                                                                    title="Batal">
-                                                                                    <i
-                                                                                        class="fas fa-times text-[10px]"></i>
-                                                                                </button>
-                                                                            </div>
-                                                                        </td>
-                                                                    </tr>
-                                                                @endforeach
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                                <div class="space-y-6">
-                                                    <div>
-                                                        <h4
-                                                            class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
-                                                            Ringkasan Biaya</h4>
-                                                        <div class="bg-indigo-50/50 rounded-2xl p-6 space-y-3">
-                                                            <div
-                                                                class="flex justify-between items-center text-xs font-bold text-gray-500">
-                                                                <span>Subtotal</span>
-                                                                @php
-                                                                    $subtotal = $invoice->items->sum('total');
-                                                                @endphp
-                                                                <span>Rp {{ number_format($subtotal, 0, ',', '.') }}</span>
-                                                            </div>
-                                                            <div
-                                                                class="flex justify-between items-center text-xs font-bold text-rose-500">
-                                                                <span>Potongan (Diskon)</span>
-                                                                <span>- Rp
-                                                                    {{ number_format($invoice->discount, 0, ',', '.') }}</span>
-                                                            </div>
-                                                            <div
-                                                                class="pt-3 border-t border-indigo-100 flex justify-between items-center">
-                                                                <span
-                                                                    class="text-xs font-black text-gray-900 uppercase">Total
-                                                                    Tagihan</span>
-                                                                <span class="text-xl font-black text-indigo-600 italic">Rp
-                                                                    {{ number_format($invoice->total_amount, 0, ',', '.') }}</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <h4
-                                                            class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
-                                                            Shortcut</h4>
-                                                        <div class="grid grid-cols-2 gap-2">
-                                                            <a href="{{ route('invoices.export-pdf', $invoice->id) }}"
-                                                                target="_blank"
-                                                                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all shadow-sm">
-                                                                <i class="fas fa-print"></i> PDF
-                                                            </a>
-                                                            <a href="{{ route('invoices.edit', $invoice->id) }}"
-                                                                class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm">
-                                                                <i class="fas fa-edit"></i> Edit
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="px-8 py-4 bg-gray-50/50 flex justify-between items-center">
+                                    <td colspan="7" class="p-0">
+                                        <div id="items-container-{{ $invoice->id }}"
+                                            class="p-8 min-h-[200px] transition-all duration-300">
+                                            <div class="flex flex-col items-center justify-center py-12 gap-4">
                                                 <div
-                                                    class="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                    <i class="fas fa-info-circle text-indigo-400"></i>
-                                                    Klik kembali untuk menutup rincian
+                                                    class="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin">
                                                 </div>
-                                                <a href="{{ route('invoices.show', $invoice->id) }}"
-                                                    class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline flex items-center gap-1">
-                                                    Detail Penuh <i class="fas fa-arrow-right"></i>
-                                                </a>
+                                                <span
+                                                    class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Memuat
+                                                    rincian invoice...</span>
                                             </div>
                                         </div>
                                     </td>
@@ -790,7 +565,7 @@
 
                 @forelse($invoices as $invoice)
                     <div
-                        class="invoice-card-mobile bg-white rounded-[2.5rem] p-6 shadow-xl border border-gray-100 relative group overflow-hidden transition-all active:scale-[0.98]">
+                        class="invoice-card-mobile bg-white rounded-[2.5rem] p-6 shadow-soft hover:shadow-heavy-hover border border-gray-100 relative group overflow-hidden transition-all active:scale-[0.98]">
                         <!-- Selection Checkbox -->
                         <div class="absolute top-6 right-6 z-10">
                             <input type="checkbox" name="invoice_ids[]" value="{{ $invoice->id }}"
@@ -842,116 +617,46 @@
 
                         <div class="grid grid-cols-5 gap-2">
                             <button type="button" onclick="toggleDetails('details-mobile-{{ $invoice->id }}')"
-                                class="h-12 flex items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all shadow-sm active:scale-95">
+                                class="btn-action-optimized h-12 flex items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 shadow-soft active:scale-95">
                                 <i class="fas fa-list-ul"></i>
                             </button>
                             <a href="{{ route('invoices.show', $invoice->id) }}"
-                                class="h-12 flex items-center justify-center rounded-2xl bg-gray-900 text-white hover:bg-black transition-all shadow-lg active:scale-95">
+                                class="btn-action-optimized h-12 flex items-center justify-center rounded-2xl bg-gray-900 text-white hover:bg-black shadow-soft active:scale-95">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a href="{{ route('invoices.export-pdf', $invoice->id) }}" target="_blank"
-                                class="h-12 flex items-center justify-center rounded-2xl bg-rose-600 text-white hover:bg-rose-700 transition-all shadow-lg active:scale-95">
+                                class="btn-action-optimized h-12 flex items-center justify-center rounded-2xl bg-rose-600 text-white hover:bg-rose-700 shadow-soft active:scale-95">
                                 <i class="fas fa-file-pdf"></i>
                             </a>
                             <a href="{{ route('invoices.edit', ['invoice' => $invoice->id] + request()->query()) }}"
-                                class="h-12 flex items-center justify-center rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 transition-all shadow-lg active:scale-95">
+                                class="btn-action-optimized h-12 flex items-center justify-center rounded-2xl bg-indigo-600 text-white hover:bg-indigo-700 shadow-soft active:scale-95">
                                 <i class="fas fa-edit"></i>
                             </a>
                             @if (isset($showTrashed) && $showTrashed)
                                 <button type="button" onclick="restoreInvoice({{ $invoice->id }})"
-                                    class="h-12 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 transition-all shadow-sm active:scale-95"
+                                    class="btn-action-optimized h-12 flex items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 shadow-soft active:scale-95"
                                     title="Restore Invoice">
                                     <i class="fas fa-trash-restore"></i>
                                 </button>
                             @else
                                 <button type="button" onclick="deleteInvoice({{ $invoice->id }})"
-                                    class="h-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-rose-600 hover:border-rose-100 transition-all shadow-sm active:scale-95">
+                                    class="btn-action-optimized h-12 flex items-center justify-center rounded-2xl bg-white border border-gray-100 text-gray-400 hover:text-rose-600 hover:border-rose-100 shadow-soft active:scale-95">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
                             @endif
                         </div>
 
                         <!-- Mobile Details Section -->
-                        <div id="details-mobile-{{ $invoice->id }}"
-                            class="hidden mt-6 pt-6 border-t border-gray-100 space-y-4">
-                            <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Rincian Item</h4>
-                            <div class="space-y-3">
-                                @foreach ($invoice->items as $item)
-                                    <div class="bg-gray-50 rounded-2xl p-4 relative"
-                                        id="item-row-mobile-{{ $item->id }}">
-                                        <div
-                                            class="flex justify-between items-start gap-3 view-mode-{{ $item->id }}">
-                                            <div class="flex-1">
-                                                <p class="text-sm font-black text-gray-900">{{ $item->product_name }}</p>
-                                                @if ($item->description)
-                                                    <p class="text-[10px] text-gray-500 mt-1">{{ $item->description }}
-                                                    </p>
-                                                @endif
-                                                <div class="flex gap-2 mt-2">
-                                                    <button type="button"
-                                                        onclick="toggleEditItem({{ $item->id }}, true)"
-                                                        class="text-indigo-600 text-[10px] font-black uppercase">Edit</button>
-                                                    <button type="button"
-                                                        onclick="deleteItem({{ $item->id }}, {{ $invoice->id }})"
-                                                        class="text-rose-600 text-[10px] font-black uppercase">Hapus</button>
-                                                </div>
-                                            </div>
-                                            <div class="text-right">
-                                                <p class="text-sm font-black text-indigo-600">Rp
-                                                    {{ number_format($item->total, 0, ',', '.') }}</p>
-                                                <p class="text-[10px] font-bold text-gray-400">
-                                                    {{ rtrim(rtrim(number_format($item->quantity, 2, ',', '.'), '0'), ',') }}
-                                                    {{ $item->unit }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="edit-mode-{{ $item->id }} hidden space-y-3">
-                                            <div>
-                                                <label class="text-[8px] font-black text-gray-400 uppercase">Produk</label>
-                                                <select id="product-mobile-{{ $item->id }}"
-                                                    class="product-select-js w-full text-xs font-bold border-gray-200 rounded-lg">
-                                                    @foreach ($products as $p)
-                                                        <option value="{{ $p->id }}"
-                                                            {{ $item->product_id == $p->id ? 'selected' : '' }}>
-                                                            {{ $p->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                            <div class="grid grid-cols-2 gap-2">
-                                                <div>
-                                                    <label
-                                                        class="text-[8px] font-black text-gray-400 uppercase">Qty</label>
-                                                    <input type="number" id="qty-mobile-{{ $item->id }}"
-                                                        value="{{ $item->quantity }}" step="0.01"
-                                                        class="w-full text-xs font-bold border-gray-200 rounded-lg">
-                                                </div>
-                                                <div>
-                                                    <label
-                                                        class="text-[8px] font-black text-gray-400 uppercase">Harga</label>
-                                                    <input type="number" id="price-mobile-{{ $item->id }}"
-                                                        value="{{ $item->price }}"
-                                                        class="w-full text-xs font-bold border-gray-200 rounded-lg text-right">
-                                                </div>
-                                            </div>
-                                            <div class="flex gap-2 pt-2">
-                                                <button type="button"
-                                                    onclick="saveQuickEdit({{ $item->id }}, {{ $invoice->id }}, true)"
-                                                    class="flex-1 bg-indigo-600 text-white text-[10px] font-black py-2 rounded-lg">SIMPAN</button>
-                                                <button type="button"
-                                                    onclick="toggleEditItem({{ $item->id }}, false)"
-                                                    class="flex-1 bg-gray-100 text-gray-500 text-[10px] font-black py-2 rounded-lg">BATAL</button>
-                                            </div>
-                                        </div>
+                        <div id="details-mobile-{{ $invoice->id }}" class="hidden mt-6 pt-6 border-t border-gray-100">
+                            <div id="items-container-mobile-{{ $invoice->id }}" class="min-h-[150px]">
+                                <div class="flex flex-col items-center justify-center py-8 gap-3">
+                                    <div
+                                        class="w-8 h-8 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin">
                                     </div>
-                                @endforeach
-                            </div>
-                            @if ($invoice->discount > 0)
-                                <div class="flex justify-between items-center px-4 py-3 bg-rose-50 rounded-2xl">
-                                    <span
-                                        class="text-[10px] font-black text-rose-700 uppercase tracking-widest">Diskon</span>
-                                    <span class="text-sm font-black text-rose-700">- Rp
-                                        {{ number_format($invoice->discount, 0, ',', '.') }}</span>
+                                    <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Loading
+                                        Items...</span>
                                 </div>
-                            @endif
+                            </div>
                         </div>
                     </div>
                 @empty
@@ -1361,9 +1066,14 @@
             }
 
             window.toggleDetails = function(id) {
+                const isMobile = id.includes('mobile');
+                const invoiceId = id.replace(isMobile ? 'details-mobile-' : 'details-', '');
                 const row = document.getElementById(id);
                 const icon = document.getElementById('icon-' + id);
                 const chevron = document.getElementById('chevron-' + id);
+                const containerId = isMobile ? `items-container-mobile-${invoiceId}` :
+                    `items-container-${invoiceId}`;
+                const container = document.getElementById(containerId);
 
                 if (row.classList.contains('hidden')) {
                     row.classList.remove('hidden');
@@ -1373,11 +1083,174 @@
                     setTimeout(() => {
                         row.style.opacity = '1';
                     }, 10);
+
+                    // Fetch items if not already loaded (check if still showing loader)
+                    if (container && container.querySelector('.animate-spin')) {
+                        fetchInvoiceItems(invoiceId, containerId, isMobile);
+                    }
                 } else {
                     row.classList.add('hidden');
                     if (icon) icon.classList.replace('fa-folder-open', 'fa-file-invoice');
                     if (chevron) chevron.style.transform = 'rotate(0deg)';
                 }
+            }
+
+            function fetchInvoiceItems(invoiceId, containerId, isMobile) {
+                fetch(`/invoices/${invoiceId}/items`)
+                    .then(response => response.json())
+                    .then(data => {
+                        const container = document.getElementById(containerId);
+                        if (!container) return;
+
+                        if (isMobile) {
+                            renderMobileItems(invoiceId, container, data);
+                        } else {
+                            renderDesktopItems(invoiceId, container, data);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error fetching items:', err);
+                        const container = document.getElementById(containerId);
+                        if (container) {
+                            container.innerHTML =
+                                `<div class="p-8 text-center text-rose-500 font-bold">Gagal memuat data. Silakan coba lagi.</div>`;
+                        }
+                    });
+            }
+
+            function formatNumber(num) {
+                return new Intl.NumberFormat('id-ID').format(num);
+            }
+
+            function renderDesktopItems(invoiceId, container, data) {
+                let itemsHtml = `
+                    <div class="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 border-b border-gray-50">
+                            <div class="col-span-2">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Rincian Item Invoice</h4>
+                                    <button type="button" onclick="bulkDeleteItems(${invoiceId})" id="bulk-delete-items-${invoiceId}" class="hidden text-[10px] font-black text-rose-600 uppercase tracking-widest hover:text-rose-700 transition-all flex items-center gap-1">
+                                        <i class="fas fa-trash-alt"></i> Hapus Terpilih
+                                    </button>
+                                </div>
+                                <div class="overflow-hidden rounded-2xl border border-gray-50">
+                                    <table class="min-w-full divide-y divide-gray-50">
+                                        <thead class="bg-gray-50/30">
+                                            <tr>
+                                                <th class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">No</th>
+                                                <th class="px-4 py-3 text-left w-10">
+                                                    <input type="checkbox" onchange="toggleSelectAllItems(${invoiceId}, this)" class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                </th>
+                                                <th class="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Produk</th>
+                                                <th class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Qty</th>
+                                                <th class="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Harga</th>
+                                                <th class="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</th>
+                                                <th class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-50">`;
+
+                data.items.forEach((item, index) => {
+                    itemsHtml += `
+                        <tr class="hover:bg-gray-50/50 transition-colors group" id="item-row-${item.id}">
+                            <td class="text-center text-xs text-gray-400">${index + 1}</td>
+                            <td class="px-4 py-3">
+                                <input type="checkbox" name="item_ids[]" value="${item.id}" onchange="updateBulkItemButton(${invoiceId})" class="item-checkbox-${invoiceId} rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="text-xs font-bold text-gray-900">${item.product_name}</div>
+                                ${item.description ? `<div class="text-[10px] text-gray-400 italic mt-1">${item.description}</div>` : ''}
+                            </td>
+                            <td class="px-4 py-3 text-center text-xs font-bold text-gray-600">
+                                ${item.quantity} ${item.unit}
+                            </td>
+                            <td class="px-4 py-3 text-right text-xs font-bold text-gray-600">
+                                Rp ${formatNumber(item.price)}
+                            </td>
+                            <td class="px-4 py-3 text-right text-xs font-black text-indigo-600 italic">
+                                Rp ${formatNumber(item.total)}
+                            </td>
+                            <td class="px-4 py-3 text-center">
+                                <button type="button" onclick="deleteItem(${item.id}, ${invoiceId})" class="text-gray-400 hover:text-rose-600 transition-colors p-1"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>`;
+                });
+
+                itemsHtml += `
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="space-y-6">
+                                <div>
+                                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Ringkasan Biaya</h4>
+                                    <div class="bg-indigo-50/50 rounded-2xl p-6 space-y-3">
+                                        <div class="flex justify-between items-center text-xs font-bold text-gray-500">
+                                            <span>Subtotal</span>
+                                            <span>Rp ${formatNumber(data.subtotal)}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-xs font-bold text-rose-500">
+                                            <span>Potongan (Diskon)</span>
+                                            <span>- Rp ${formatNumber(data.discount)}</span>
+                                        </div>
+                                        <div class="pt-3 border-t border-indigo-100 flex justify-between items-center">
+                                            <span class="text-xs font-black text-gray-900 uppercase">Total Tagihan</span>
+                                            <span class="text-xl font-black text-indigo-600 italic">Rp ${formatNumber(data.total)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Shortcut</h4>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <a href="/invoices/${invoiceId}/export-pdf" target="_blank" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-rose-50 text-rose-700 text-[10px] font-black uppercase tracking-widest hover:bg-rose-100 transition-all shadow-sm"><i class="fas fa-print"></i> PDF</a>
+                                        <a href="/invoices/${invoiceId}/edit" class="flex items-center justify-center gap-2 py-3 px-4 rounded-xl bg-indigo-50 text-indigo-700 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-100 transition-all shadow-sm"><i class="fas fa-edit"></i> Edit</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="px-8 py-4 bg-gray-50/50 flex justify-between items-center">
+                            <div class="flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest"><i class="fas fa-info-circle text-indigo-400"></i> Klik kembali untuk menutup rincian</div>
+                            <a href="/invoices/${invoiceId}" class="text-[10px] font-black text-indigo-600 uppercase tracking-widest hover:underline flex items-center gap-1">Detail Penuh <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>`;
+
+                container.innerHTML = itemsHtml;
+            }
+
+            function renderMobileItems(invoiceId, container, data) {
+                let itemsHtml =
+                    `<h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">Rincian Item</h4><div class="space-y-3">`;
+
+                data.items.forEach(item => {
+                    itemsHtml += `
+                        <div class="bg-gray-50 rounded-2xl p-4 relative" id="item-row-mobile-${item.id}">
+                            <div class="flex justify-between items-start gap-3">
+                                <div class="flex-1">
+                                    <p class="text-sm font-black text-gray-900">${item.product_name}</p>
+                                    ${item.description ? `<p class="text-[10px] text-gray-500 mt-1">${item.description}</p>` : ''}
+                                    <div class="flex gap-2 mt-2">
+                                        <button type="button" onclick="deleteItem(${item.id}, ${invoiceId})" class="text-rose-600 text-[10px] font-black uppercase">Hapus</button>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-black text-indigo-600">Rp ${formatNumber(item.total)}</p>
+                                    <p class="text-[10px] font-bold text-gray-400">${item.quantity} ${item.unit}</p>
+                                </div>
+                            </div>
+                        </div>`;
+                });
+
+                itemsHtml += `</div>`;
+
+                if (data.discount > 0) {
+                    itemsHtml += `
+                        <div class="flex justify-between items-center px-4 py-3 bg-rose-50 rounded-2xl mt-4">
+                            <span class="text-[10px] font-black text-rose-700 uppercase tracking-widest">Diskon</span>
+                            <span class="text-sm font-black text-rose-700">- Rp ${formatNumber(data.discount)}</span>
+                        </div>`;
+                }
+
+                container.innerHTML = itemsHtml;
             }
 
             // Initialize Swiper for Stats on Mobile

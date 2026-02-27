@@ -60,12 +60,12 @@ class InvoiceController extends Controller
 
         $query->orderBy($sortField, $sortOrder);
 
-        // Pagination
+        // Pagination - Items are lazy loaded via AJAX for performance
         $perPage = $request->get('per_page', 10);
         if ($perPage === 'all') {
-            $invoices = $query->with('items')->get();
+            $invoices = $query->get();
         } else {
-            $invoices = $query->with('items')->paginate(is_numeric($perPage) ? $perPage : 10)->withQueryString();
+            $invoices = $query->paginate(is_numeric($perPage) ? $perPage : 10)->withQueryString();
         }
 
         $customers = \App\Models\Customer::orderBy('name')->pluck('name');
@@ -75,18 +75,35 @@ class InvoiceController extends Controller
         // Total on current page
         $totalAmountPage = $invoices->sum('total_amount');
 
-        // Stats for Dashboard Feel
+        // Stats for Dashboard Feel - Optimized queries
+        $globalStats = Invoice::selectRaw('count(*) as total_count, sum(total_amount) as total_amount')->first();
+        
         $stats = [
-            'total_count' => Invoice::count(),
-            'total_amount' => Invoice::sum('total_amount'),
+            'total_count' => $globalStats->total_count ?? 0,
+            'total_amount' => $globalStats->total_amount ?? 0,
             'today_count' => Invoice::whereDate('created_at', today())->count(),
             'total_amount_filtered' => $totalAmountFiltered,
             'total_amount_page' => $totalAmountPage,
         ];
 
-        $products = Product::orderBy('name')->get();
+        // Products are moved to separate AJAX or loaded only when needed for editing
+        // $products = Product::orderBy('name')->get();
 
-        return view('invoices.index', compact('invoices', 'customers', 'stats', 'isRifal', 'showTrashed', 'products'));
+        return view('invoices.index', compact('invoices', 'customers', 'stats', 'isRifal', 'showTrashed'));
+    }
+
+    /**
+     * Fetch items for an invoice via AJAX
+     */
+    public function getItems(Invoice $invoice)
+    {
+        $items = $invoice->items()->with('product')->get();
+        return response()->json([
+            'items' => $items,
+            'subtotal' => $items->sum('total'),
+            'discount' => $invoice->discount,
+            'total' => $invoice->total_amount
+        ]);
     }
 
     /**
