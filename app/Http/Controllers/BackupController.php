@@ -431,6 +431,7 @@ class BackupController extends Controller
 
                     $model = new $fullModelPath;
                     $table = $model->getTable();
+                    $primaryKey = $model->getKeyName() ?: 'id';
                     
                     // Get actual table columns to avoid "Unknown column" errors during upsert
                     $tableColumns = DB::getSchemaBuilder()->getColumnListing($table);
@@ -463,16 +464,12 @@ class BackupController extends Controller
                         }
                     }
 
-                    // Columns to update (all except 'id')
-                    $updateColumns = array_diff($tableColumns, ['id']);
-                    
-                    // CRITICAL: Only update columns that were actually present in the source data
-                    // This is what prevents local passwords from being lost if they are missing in the sync package
-                    $updateColumns = array_intersect($updateColumns, $incomingKeys);
+                    // Columns to update (all keys present in incoming data except primary key)
+                    $updateColumns = array_diff($incomingKeys, [$primaryKey]);
                     
                     // Chunk the upsert to avoid "too many placeholders" or memory issues
                     foreach (array_chunk($filteredRecords, 100) as $chunk) {
-                        DB::table($table)->upsert($chunk, ['id'], array_values($updateColumns));
+                        DB::table($table)->upsert($chunk, [$primaryKey], array_values($updateColumns));
                     }
                     
                     $count = count($records);
@@ -528,8 +525,10 @@ class BackupController extends Controller
             try {
                 $models = [
                     'User', 'Category', 'Product', 'Customer', 'Invoice', 'InvoiceItem', 
-                    'Expense', 'Attendance', 'Salary', 'Supplier', 'SupplierNota',
-                    'DeliveryOrder', 'DeliveryOrderItem', 'StockHistory', 'Document'
+                    'Expense', 'Attendance', 'AttendanceSetting', 'Salary', 'Supplier', 'SupplierNota',
+                    'DeliveryOrder', 'DeliveryOrderItem', 'StockHistory', 'Document',
+                    'RiceDelivery', 'RiceDeliveryItem', 'DediInvoice', 'DediInvoiceItem',
+                    'KitchenIncentive', 'KitchenIncentiveItem', 'VehicleRentalInvoice', 'VehicleRentalItem'
                 ];
                 
                 $data = [];

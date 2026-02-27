@@ -110,6 +110,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('invoices/send-whapi', [InvoiceController::class, 'sendToWhapi'])->name('invoices.send-whapi');
     Route::post('invoices/bulk-delete', [InvoiceController::class, 'bulkDestroy'])->name('invoices.bulk-delete');
     Route::post('invoices/{id}/restore', [InvoiceController::class, 'restore'])->name('invoices.restore');
+    Route::patch('invoices/items/{item}', [InvoiceController::class, 'updateItem'])->name('invoices.update-item');
+    Route::delete('invoices/items/{item}', [InvoiceController::class, 'destroyItem'])->name('invoices.destroy-item');
+    Route::post('invoices/items/bulk-delete', [InvoiceController::class, 'bulkDestroyItems'])->name('invoices.bulk-destroy-items');
 
     Route::get('invoices/calendar', [\App\Http\Controllers\InvoiceCalendarController::class, 'index'])->name('invoices.calendar');
     Route::get('invoices/calendar/events', [\App\Http\Controllers\InvoiceCalendarController::class, 'events'])->name('invoices.calendar.events');

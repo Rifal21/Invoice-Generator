@@ -480,16 +480,31 @@
                                             class="bg-white rounded-[2.5rem] shadow-xl border border-gray-100 overflow-hidden">
                                             <div class="grid grid-cols-1 md:grid-cols-3 gap-8 p-8 border-b border-gray-50">
                                                 <div class="col-span-2">
-                                                    <h4
-                                                        class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
-                                                        Rincian Item Invoice</h4>
+                                                    <div class="flex justify-between items-center mb-4">
+                                                        <h4
+                                                            class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+                                                            Rincian Item Invoice</h4>
+                                                        <button type="button"
+                                                            onclick="bulkDeleteItems({{ $invoice->id }})"
+                                                            id="bulk-delete-items-{{ $invoice->id }}"
+                                                            class="hidden text-[10px] font-black text-rose-600 uppercase tracking-widest hover:text-rose-700 transition-all flex items-center gap-1">
+                                                            <i class="fas fa-trash-alt"></i> Hapus Terpilih
+                                                        </button>
+                                                    </div>
                                                     <div class="overflow-hidden rounded-2xl border border-gray-50">
-                                                        <table class="min-w-full divide-y divide-gray-50">
+                                                        <table class="min-w-full divide-y divide-gray-50"
+                                                            id="table-items-{{ $invoice->id }}">
                                                             <thead class="bg-gray-50/30">
                                                                 <tr>
                                                                     <th
-                                                                        class="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                                                        No</th>
+                                                                        class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                        No
+                                                                    </th>
+                                                                    <th class="px-4 py-3 text-left w-10">
+                                                                        <input type="checkbox"
+                                                                            onchange="toggleSelectAllItems({{ $invoice->id }}, this)"
+                                                                            class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                                                    </th>
                                                                     <th
                                                                         class="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                                                         Produk</th>
@@ -502,38 +517,115 @@
                                                                     <th
                                                                         class="px-4 py-3 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                                                         Total</th>
+                                                                    <th
+                                                                        class="px-4 py-3 text-center text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                                                        Aksi</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody class="divide-y divide-gray-50">
                                                                 @foreach ($invoice->items as $item)
-                                                                    <tr class="hover:bg-gray-50/50 transition-colors">
-                                                                        <td
-                                                                            class="px-4 py-3 text-start text-xs font-bold text-gray-600">
-                                                                            {{ $loop->iteration }}
+                                                                    <tr class="hover:bg-gray-50/50 transition-colors group"
+                                                                        id="item-row-{{ $item->id }}">
+                                                                        <td>{{ $loop->iteration }}</td>
+                                                                        <td class="px-4 py-3">
+                                                                            <input type="checkbox" name="item_ids[]"
+                                                                                value="{{ $item->id }}"
+                                                                                onchange="updateBulkItemButton({{ $invoice->id }})"
+                                                                                class="item-checkbox-{{ $invoice->id }} rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
                                                                         </td>
                                                                         <td class="px-4 py-3">
-                                                                            <div class="text-xs font-bold text-gray-900">
-                                                                                {{ $item->product_name }}</div>
-                                                                            @if ($item->description)
+                                                                            <div class="view-mode-{{ $item->id }}">
                                                                                 <div
-                                                                                    class="text-[10px] text-gray-400 italic mt-1">
-                                                                                    {{ $item->description }}</div>
-                                                                            @endif
+                                                                                    class="text-xs font-bold text-gray-900">
+                                                                                    {{ $item->product_name }}</div>
+                                                                                @if ($item->description)
+                                                                                    <div
+                                                                                        class="text-[10px] text-gray-400 italic mt-1">
+                                                                                        {{ $item->description }}</div>
+                                                                                @endif
+                                                                            </div>
+                                                                            <div
+                                                                                class="edit-mode-{{ $item->id }} hidden">
+                                                                                <select id="product-{{ $item->id }}"
+                                                                                    class="text-xs font-bold text-gray-900 border-gray-200 rounded-lg w-full focus:ring-indigo-500 focus:border-indigo-500">
+                                                                                    @foreach ($products as $p)
+                                                                                        <option
+                                                                                            value="{{ $p->id }}"
+                                                                                            {{ $item->product_id == $p->id ? 'selected' : '' }}>
+                                                                                            {{ $p->name }}</option>
+                                                                                    @endforeach
+                                                                                </select>
+                                                                            </div>
                                                                         </td>
                                                                         <td
                                                                             class="px-4 py-3 text-center text-xs font-bold text-gray-600">
-                                                                            {{ rtrim(rtrim(number_format($item->quantity, 2, ',', '.'), '0'), ',') }}
-                                                                            {{ $item->unit }}
+                                                                            <div class="view-mode-{{ $item->id }}">
+                                                                                {{ rtrim(rtrim(number_format($item->quantity, 2, ',', '.'), '0'), ',') }}
+                                                                                {{ $item->unit }}
+                                                                            </div>
+                                                                            <div
+                                                                                class="edit-mode-{{ $item->id }} hidden flex items-center justify-center gap-1">
+                                                                                <input type="number"
+                                                                                    id="qty-{{ $item->id }}"
+                                                                                    value="{{ $item->quantity }}"
+                                                                                    step="0.01"
+                                                                                    class="w-20 text-xs font-bold text-center border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                                                                <span
+                                                                                    class="text-[10px] text-gray-400">{{ $item->unit }}</span>
+                                                                            </div>
                                                                         </td>
                                                                         <td
                                                                             class="px-4 py-3 text-right text-xs font-bold text-gray-600">
-                                                                            Rp
-                                                                            {{ number_format($item->price, 0, ',', '.') }}
+                                                                            <div class="view-mode-{{ $item->id }}">
+                                                                                Rp
+                                                                                {{ number_format($item->price, 0, ',', '.') }}
+                                                                            </div>
+                                                                            <div
+                                                                                class="edit-mode-{{ $item->id }} hidden">
+                                                                                <input type="number"
+                                                                                    id="price-{{ $item->id }}"
+                                                                                    value="{{ $item->price }}"
+                                                                                    class="w-24 text-xs font-bold text-right border-gray-200 rounded-lg focus:ring-indigo-500 focus:border-indigo-500">
+                                                                            </div>
                                                                         </td>
                                                                         <td
                                                                             class="px-4 py-3 text-right text-xs font-black text-indigo-600 italic">
-                                                                            Rp
-                                                                            {{ number_format($item->total, 0, ',', '.') }}
+                                                                            <span id="total-{{ $item->id }}">Rp
+                                                                                {{ number_format($item->total, 0, ',', '.') }}</span>
+                                                                        </td>
+                                                                        <td class="px-4 py-3 text-center">
+                                                                            <div
+                                                                                class="view-mode-{{ $item->id }} flex justify-center gap-2">
+                                                                                <button type="button"
+                                                                                    onclick="toggleEditItem({{ $item->id }}, true)"
+                                                                                    class="text-gray-400 hover:text-indigo-600 transition-colors p-1"
+                                                                                    title="Edit Item">
+                                                                                    <i class="fas fa-edit"></i>
+                                                                                </button>
+                                                                                <button type="button"
+                                                                                    onclick="deleteItem({{ $item->id }}, {{ $invoice->id }})"
+                                                                                    class="text-gray-400 hover:text-rose-600 transition-colors p-1"
+                                                                                    title="Hapus Item">
+                                                                                    <i class="fas fa-trash-alt"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                            <div
+                                                                                class="edit-mode-{{ $item->id }} hidden flex justify-center gap-2">
+                                                                                <button type="button"
+                                                                                    onclick="saveQuickEdit({{ $item->id }}, {{ $invoice->id }})"
+                                                                                    class="bg-indigo-600 text-white h-7 w-7 rounded-lg hover:bg-indigo-700 transition-all shadow-sm flex items-center justify-center"
+                                                                                    title="Simpan">
+                                                                                    <i
+                                                                                        class="fas fa-check text-[10px]"></i>
+                                                                                </button>
+                                                                                <button type="button"
+                                                                                    onclick="toggleEditItem({{ $item->id }}, false)"
+                                                                                    class="bg-gray-100 text-gray-500 h-7 w-7 rounded-lg hover:bg-gray-200 transition-all shadow-sm flex items-center justify-center"
+                                                                                    title="Batal">
+                                                                                    <i
+                                                                                        class="fas fa-times text-[10px]"></i>
+                                                                                </button>
+                                                                            </div>
                                                                         </td>
                                                                     </tr>
                                                                 @endforeach
@@ -749,13 +841,24 @@
                             <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Rincian Item</h4>
                             <div class="space-y-3">
                                 @foreach ($invoice->items as $item)
-                                    <div class="bg-gray-50 rounded-2xl p-4">
-                                        <div class="flex justify-between items-start gap-3">
+                                    <div class="bg-gray-50 rounded-2xl p-4 relative"
+                                        id="item-row-mobile-{{ $item->id }}">
+                                        <div
+                                            class="flex justify-between items-start gap-3 view-mode-{{ $item->id }}">
                                             <div class="flex-1">
                                                 <p class="text-sm font-black text-gray-900">{{ $item->product_name }}</p>
                                                 @if ($item->description)
-                                                    <p class="text-[10px] text-gray-500 mt-1">{{ $item->description }}</p>
+                                                    <p class="text-[10px] text-gray-500 mt-1">{{ $item->description }}
+                                                    </p>
                                                 @endif
+                                                <div class="flex gap-2 mt-2">
+                                                    <button type="button"
+                                                        onclick="toggleEditItem({{ $item->id }}, true)"
+                                                        class="text-indigo-600 text-[10px] font-black uppercase">Edit</button>
+                                                    <button type="button"
+                                                        onclick="deleteItem({{ $item->id }}, {{ $invoice->id }})"
+                                                        class="text-rose-600 text-[10px] font-black uppercase">Hapus</button>
+                                                </div>
                                             </div>
                                             <div class="text-right">
                                                 <p class="text-sm font-black text-indigo-600">Rp
@@ -763,6 +866,43 @@
                                                 <p class="text-[10px] font-bold text-gray-400">
                                                     {{ rtrim(rtrim(number_format($item->quantity, 2, ',', '.'), '0'), ',') }}
                                                     {{ $item->unit }}</p>
+                                            </div>
+                                        </div>
+                                        <div class="edit-mode-{{ $item->id }} hidden space-y-3">
+                                            <div>
+                                                <label class="text-[8px] font-black text-gray-400 uppercase">Produk</label>
+                                                <select id="product-mobile-{{ $item->id }}"
+                                                    class="w-full text-xs font-bold border-gray-200 rounded-lg">
+                                                    @foreach ($products as $p)
+                                                        <option value="{{ $p->id }}"
+                                                            {{ $item->product_id == $p->id ? 'selected' : '' }}>
+                                                            {{ $p->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <div>
+                                                    <label
+                                                        class="text-[8px] font-black text-gray-400 uppercase">Qty</label>
+                                                    <input type="number" id="qty-mobile-{{ $item->id }}"
+                                                        value="{{ $item->quantity }}" step="0.01"
+                                                        class="w-full text-xs font-bold border-gray-200 rounded-lg">
+                                                </div>
+                                                <div>
+                                                    <label
+                                                        class="text-[8px] font-black text-gray-400 uppercase">Harga</label>
+                                                    <input type="number" id="price-mobile-{{ $item->id }}"
+                                                        value="{{ $item->price }}"
+                                                        class="w-full text-xs font-bold border-gray-200 rounded-lg text-right">
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-2 pt-2">
+                                                <button type="button"
+                                                    onclick="saveQuickEdit({{ $item->id }}, {{ $invoice->id }}, true)"
+                                                    class="flex-1 bg-indigo-600 text-white text-[10px] font-black py-2 rounded-lg">SIMPAN</button>
+                                                <button type="button"
+                                                    onclick="toggleEditItem({{ $item->id }}, false)"
+                                                    class="flex-1 bg-gray-100 text-gray-500 text-[10px] font-black py-2 rounded-lg">BATAL</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1223,6 +1363,188 @@
                     observeParents: true,
                 });
             });
+            window.toggleEditItem = function(id, isEdit) {
+                const viewElements = document.querySelectorAll('.view-mode-' + id);
+                const editElements = document.querySelectorAll('.edit-mode-' + id);
+
+                if (isEdit) {
+                    viewElements.forEach(el => el.classList.add('hidden'));
+                    editElements.forEach(el => el.classList.remove('hidden'));
+                } else {
+                    viewElements.forEach(el => el.classList.remove('hidden'));
+                    editElements.forEach(el => el.classList.add('hidden'));
+                }
+            }
+
+            window.saveQuickEdit = function(itemId, invoiceId, isMobile = false) {
+                const suffix = isMobile ? '-mobile' : '';
+                const productId = document.getElementById('product' + suffix + '-' + itemId).value;
+                const quantity = document.getElementById('qty' + suffix + '-' + itemId).value;
+                const price = document.getElementById('price' + suffix + '-' + itemId).value;
+
+                Swal.fire({
+                    title: 'Simpan Perubahan?',
+                    text: 'Data item akan diperbarui.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#4f46e5',
+                    confirmButtonText: 'Ya, Simpan',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-[2rem]',
+                        container: 'backdrop-blur-sm'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Menyimpan...',
+                            allowOutsideClick: false,
+                            didOpen: () => Swal.showLoading()
+                        });
+
+                        fetch(`/invoices/items/${itemId}`, {
+                                method: 'PATCH',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({
+                                    product_id: productId,
+                                    quantity: quantity,
+                                    price: price
+                                })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Berhasil!',
+                                        text: data.message,
+                                        icon: 'success',
+                                        timer: 1500,
+                                        showConfirmButton: false,
+                                        customClass: {
+                                            popup: 'rounded-[2rem]'
+                                        }
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    Swal.fire('Error', 'Gagal memperbarui item.', 'error');
+                                }
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                Swal.fire('Error', 'Terjadi kesalahan sistem.', 'error');
+                            });
+                    }
+                });
+            }
+
+            window.deleteItem = function(itemId, invoiceId) {
+                Swal.fire({
+                    title: 'Hapus Item?',
+                    text: 'Item ini akan dihapus dari invoice.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, Hapus',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-[2rem]',
+                        container: 'backdrop-blur-sm'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/invoices/items/${itemId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: 'Dihapus!',
+                                        text: 'Item berhasil dihapus.',
+                                        icon: 'success',
+                                        timer: 1000,
+                                        showConfirmButton: false,
+                                        customClass: {
+                                            popup: 'rounded-[2rem]'
+                                        }
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                }
+                            });
+                    }
+                });
+            }
+
+            window.toggleSelectAllItems = function(invoiceId, checkbox) {
+                const itemCheckboxes = document.querySelectorAll('.item-checkbox-' + invoiceId);
+                itemCheckboxes.forEach(cb => cb.checked = checkbox.checked);
+                updateBulkItemButton(invoiceId);
+            }
+
+            window.updateBulkItemButton = function(invoiceId) {
+                const checkedCount = document.querySelectorAll('.item-checkbox-' + invoiceId + ':checked').length;
+                const btn = document.getElementById('bulk-delete-items-' + invoiceId);
+                if (btn) {
+                    if (checkedCount > 0) {
+                        btn.classList.remove('hidden');
+                        btn.innerHTML = `<i class="fas fa-trash-alt"></i> Hapus (${checkedCount})`;
+                    } else {
+                        btn.classList.add('hidden');
+                    }
+                }
+            }
+
+            window.bulkDeleteItems = function(invoiceId) {
+                const checkedCheckboxes = document.querySelectorAll('.item-checkbox-' + invoiceId + ':checked');
+                const itemIds = Array.from(checkedCheckboxes).map(cb => cb.value);
+
+                Swal.fire({
+                    title: 'Hapus Item Terpilih?',
+                    text: `Ada ${itemIds.length} item yang akan dihapus dari invoice ini.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    confirmButtonText: 'Ya, Hapus Semua',
+                    cancelButtonText: 'Batal',
+                    customClass: {
+                        popup: 'rounded-[2rem]',
+                        container: 'backdrop-blur-sm'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.action = '{{ route('invoices.bulk-destroy-items') }}';
+
+                        const csrfInput = document.createElement('input');
+                        csrfInput.type = 'hidden';
+                        csrfInput.name = '_token';
+                        csrfInput.value = '{{ csrf_token() }}';
+                        form.appendChild(csrfInput);
+
+                        itemIds.forEach(id => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = 'item_ids[]';
+                            input.value = id;
+                            form.appendChild(input);
+                        });
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+            }
         })();
     </script>
 @endsection

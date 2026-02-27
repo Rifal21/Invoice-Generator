@@ -84,7 +84,9 @@ class InvoiceController extends Controller
             'total_amount_page' => $totalAmountPage,
         ];
 
-        return view('invoices.index', compact('invoices', 'customers', 'stats', 'isRifal', 'showTrashed'));
+        $products = Product::orderBy('name')->get();
+
+        return view('invoices.index', compact('invoices', 'customers', 'stats', 'isRifal', 'showTrashed', 'products'));
     }
 
     /**
@@ -822,5 +824,89 @@ class InvoiceController extends Controller
         }
 
         return back()->with($errorCount > 0 ? 'warning' : 'success', "Whapi: {$successCount} terkirim, {$errorCount} gagal.");
+    }
+    public function updateItem(Request $request, InvoiceItem $item)
+    {
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'quantity' => 'required|numeric|min:0.01',
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        $product = Product::findOrFail($request->product_id);
+        
+        $item->update([
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'quantity' => $request->quantity,
+            'price' => $request->price,
+            'total' => $request->quantity * $request->price,
+        ]);
+
+        // Recalculate invoice total
+        $invoice = $item->invoice;
+        $newSubtotal = $invoice->items()->sum('total');
+        $invoice->update([
+            'total_amount' => $newSubtotal - $invoice->discount
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item berhasil diupdate.',
+                'item_total' => number_format($item->total, 0, ',', '.'),
+                'invoice_total' => number_format($invoice->total_amount, 0, ',', '.'),
+                'invoice_subtotal' => number_format($newSubtotal, 0, ',', '.')
+            ]);
+        }
+
+        return back()->with('success', 'Item berhasil diupdate.');
+    }
+
+    public function destroyItem(InvoiceItem $item)
+    {
+        $invoice = $item->invoice;
+        $item->delete();
+
+        // Recalculate invoice total
+        $newSubtotal = $invoice->items()->sum('total');
+        $invoice->update([
+            'total_amount' => $newSubtotal - $invoice->discount
+        ]);
+
+        if (request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Item berhasil dihapus.',
+                'invoice_total' => number_format($invoice->total_amount, 0, ',', '.'),
+                'invoice_subtotal' => number_format($newSubtotal, 0, ',', '.')
+            ]);
+        }
+
+        return back()->with('success', 'Item berhasil dihapus.');
+    }
+
+    public function bulkDestroyItems(Request $request)
+    {
+        $request->validate([
+            'item_ids' => 'required|array',
+            'item_ids.*' => 'exists:invoice_items,id'
+        ]);
+
+        $items = InvoiceItem::whereIn('id', $request->item_ids)->get();
+        if ($items->isEmpty()) {
+            return back()->with('error', 'Tidak ada item yang dipilih.');
+        }
+
+        $invoice = $items->first()->invoice;
+        InvoiceItem::whereIn('id', $request->item_ids)->delete();
+
+        // Recalculate invoice total
+        $newSubtotal = $invoice->items()->sum('total');
+        $invoice->update([
+            'total_amount' => $newSubtotal - $invoice->discount
+        ]);
+
+        return back()->with('success', count($request->item_ids) . ' item berhasil dihapus.');
     }
 }
