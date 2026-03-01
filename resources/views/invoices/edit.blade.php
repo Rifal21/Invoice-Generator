@@ -39,7 +39,7 @@
 
             <div
                 class="bg-white/80 backdrop-blur-xl shadow-[0_40px_100px_rgba(0,0,0,0.05)] rounded-[2rem] md:rounded-[3rem] border border-white/20">
-                <form action="{{ route('invoices.update', $invoice) }}" method="POST"
+                <form id="edit-invoice-form" action="{{ route('invoices.update', $invoice) }}" method="POST"
                     class="p-4 sm:p-12 space-y-8 md:space-y-12">
                     @csrf
                     @method('PUT')
@@ -323,9 +323,9 @@
     </style>
 
     <script>
-        let itemIndex = 0;
-        const products = @json($products);
-        const existingItems = @json(old('items', $invoice->items));
+        var itemIndex = 0;
+        var products = @json($products);
+        var existingItems = @json(old('items', $invoice->items));
 
         // Format number to Indonesian Currency without decimals
         function formatCurrency(num) {
@@ -589,7 +589,14 @@
             itemIndex = cards.length;
         }
 
-        $(document).on('turbo:load', function() {
+        $(document).off('turbo:load.invoice_edit').on('turbo:load.invoice_edit', function() {
+            if ($('#edit-invoice-form').length === 0) return;
+
+            // Re-initialize itemIndex for this page load
+            itemIndex = 0;
+            const itemsContainer = document.getElementById('items-container');
+            if (itemsContainer) itemsContainer.innerHTML = '';
+
             // Initialize SortableJS
             const container = document.getElementById('items-container');
             new Sortable(container, {
@@ -602,7 +609,7 @@
                 }
             });
 
-            if (existingItems.length > 0) {
+            if (existingItems && existingItems.length > 0) {
                 existingItems.forEach(item => {
                     addItem(item);
                 });

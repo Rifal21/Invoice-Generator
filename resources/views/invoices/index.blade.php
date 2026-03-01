@@ -8,30 +8,33 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    /* Performance Optimizations */
-    .invoice-row-desktop, .invoice-card-mobile {
-    content-visibility: auto;
-    contain-intrinsic-size: 1px 100px; /* Default height estimation */
-    }
+    <style>
+        /* Performance Optimizations */
+        .invoice-row-desktop,
+        .invoice-card-mobile {
+            content-visibility: auto;
+            contain-intrinsic-size: 1px 100px;
+            /* Default height estimation */
+        }
 
-    .invoice-row-desktop {
-    transition: background-color 0.2s ease-in-out;
-    }
+        .invoice-row-desktop {
+            transition: background-color 0.2s ease-in-out;
+        }
 
-    /* Optimize transition-all to be more specific and efficient */
-    .btn-action-optimized {
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, box-shadow 0.2s ease;
-    will-change: transform;
-    }
+        /* Optimize transition-all to be more specific and efficient */
+        .btn-action-optimized {
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, box-shadow 0.2s ease;
+            will-change: transform;
+        }
 
-    /* Simplified shadows for better scroll performance on low-end devices */
-    .shadow-soft {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-    }
+        /* Simplified shadows for better scroll performance on low-end devices */
+        .shadow-soft {
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+        }
 
-    .shadow-heavy-hover:hover {
-    box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-    }
+        .shadow-heavy-hover:hover {
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
     </style>
 @endpush
 

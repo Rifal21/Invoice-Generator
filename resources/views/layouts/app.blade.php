@@ -18,7 +18,6 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/collapse@3.x.x/dist/cdn.min.js"></script>
     <!-- Turbo Drive & Alpine Adapter -->
     <script src="https://unpkg.com/@hotwired/turbo@7.3.0/dist/turbo.es2017-umd.js"></script>
-    <script src="https://unpkg.com/alpine-turbo-drive-adapter@2.0.0/dist/alpine-turbo-drive-adapter.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
     <!-- jQuery -->

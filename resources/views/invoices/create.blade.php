@@ -46,7 +46,8 @@
 
             <div
                 class="bg-white/80 backdrop-blur-xl shadow-[0_40px_100px_rgba(0,0,0,0.05)] rounded-[2rem] md:rounded-[3rem] border border-white/20">
-                <form action="{{ route('invoices.store') }}" method="POST" class="p-4 sm:p-12 space-y-8 md:space-y-12">
+                <form id="create-invoice-form" action="{{ route('invoices.store') }}" method="POST"
+                    class="p-4 sm:p-12 space-y-8 md:space-y-12">
                     @csrf
 
                     <!-- Invoice Details Section -->
@@ -274,9 +275,9 @@
     </style>
 
     <script>
-        let itemIndex = 0;
-        const products = @json($products);
-        const oldItems = @json(old('items', []));
+        var itemIndex = 0;
+        var products = @json($products);
+        var oldItems = @json(old('items', []));
 
         // Format number to Indonesian Currency without decimals
         function formatCurrency(num) {
@@ -289,6 +290,7 @@
 
         function addItem(existingItem = null, shouldFocus = false) {
             const container = document.getElementById('items-container');
+            if (!container) return;
             const itemDiv = document.createElement('div');
             itemDiv.className =
                 "item-card bg-white p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.5rem] border border-gray-100 shadow-sm hover:shadow-[0_20px_40px_rgba(0,0,0,0.03)] hover:border-indigo-200 transition-all duration-300 relative group mb-4 md:mb-6";
@@ -806,7 +808,9 @@
             }
 
             // Clear existing items
-            document.getElementById('items-container').innerHTML = '';
+            if (document.getElementById('items-container')) {
+                document.getElementById('items-container').innerHTML = '';
+            }
             itemIndex = 0;
 
             if (data.items && data.items.length > 0) {
@@ -896,12 +900,19 @@
 
                 card.setAttribute('data-index', index);
             });
-            // Update the global itemIndex to the next available one
-            itemIndex = cards.length;
+            // Update the global window.itemIndex to the next available one
+            window.itemIndex = cards.length;
         }
 
 
-        $(document).on('turbo:load', function() {
+        $(document).off('turbo:load.invoice_create').on('turbo:load.invoice_create', function() {
+            if ($('#create-invoice-form').length === 0) return;
+
+            // Re-initialize itemIndex for this page load
+            itemIndex = 0;
+            const itemsContainer = document.getElementById('items-container');
+            if (itemsContainer) itemsContainer.innerHTML = '';
+
             // Initialize SortableJS
             const container = document.getElementById('items-container');
             new Sortable(container, {
@@ -914,7 +925,7 @@
                 }
             });
 
-            if (oldItems.length > 0) {
+            if (oldItems && oldItems.length > 0) {
                 oldItems.forEach(item => {
                     addItem(item);
                 });
