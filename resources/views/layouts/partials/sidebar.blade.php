@@ -32,8 +32,10 @@
     <div class="flex grow flex-col gap-y-5 overflow-y-auto bg-gray-900 px-6 pb-4 transition-all duration-300">
         <div class="flex h-16 shrink-0 items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="{{ asset('images/kopinvoice.png') }}" class="h-8 w-8 object-contain" alt="Logo">
-                <h1 x-show="!sidebarCollapsed" class="text-xl font-bold text-white tracking-tight uppercase">KOPERASI JR
+                <img src="{{ isset($site_settings['brand_logo']) ? (Storage::disk('public')->exists($site_settings['brand_logo']) ? asset('storage/' . $site_settings['brand_logo']) : asset($site_settings['brand_logo'])) : asset('images/kopinvoice.png') }}"
+                    class="h-8 w-8 object-contain" alt="Logo">
+                <h1 x-show="!sidebarCollapsed" class="text-xl font-bold text-white tracking-tight uppercase">
+                    {{ $site_settings['brand_name'] ?? 'KOPERASI JR' }}
                 </h1>
             </div>
             <button @click="sidebarCollapsed = !sidebarCollapsed"

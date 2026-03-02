@@ -12,6 +12,8 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class InvoiceController extends Controller
 {
@@ -22,7 +24,7 @@ class InvoiceController extends Controller
     {
         $query = Invoice::query();
 
-        $isRifal = auth()->check() && auth()->user()->name === 'Rifal Kurniawan';
+        $isRifal = Auth::check() && Auth::user()->name === 'Rifal Kurniawan';
         $showTrashed = $request->get('status') === 'trashed';
 
         if ($isRifal && $showTrashed) {
@@ -155,68 +157,74 @@ class InvoiceController extends Controller
         $is_custom = !in_array($request->tipe, ['BSH', 'KR', 'OPR', 'KRBSBM', 'LMN']);
 
         $invoice_number = 'INV-' . Carbon::parse($request->date)->format('Ymd') . '-' . str_pad(Invoice::max('id') + 1, 3, '0', STR_PAD_LEFT) . '-' . $tipeCode;
-        $invoice = Invoice::create([
-            'invoice_number' => $invoice_number,
-            'date' => $request->date,
-            'customer_name' => $request->customer_name,
-            'discount' => $request->input('discount', 0),
-            'total_amount' => 0, // Will calculate below
-            'is_custom' => $is_custom,
-        ]);
-
-        $totalAmount = 0;
-
-        foreach ($request->items as $item) {
-            $productId = $item['product_id'];
-            $product = null;
-
-            if (is_numeric($productId)) {
-                $product = Product::find($productId);
-            }
-
-            if (!$product) {
-                // Create new product
-                $category = \App\Models\Category::firstOrCreate(['name' => 'Lain-lain']);
-                $product = Product::create([
-                    'category_id' => $category->id,
-                    'name' => $productId, // The name was passed as product_id (from Select2 tags)
-                    'price' => $item['price'],
-                    'purchase_price' => $item['purchase_price'] ?? 0,
-                    'unit' => $item['unit'],
-                ]);
-            }
-
-            $total = $item['price'] * $item['quantity'];
-            $totalAmount += $total;
-
-            InvoiceItem::create([
-                'invoice_id' => $invoice->id,
-                'product_id' => $product->id,
-                'product_name' => $product->name,
-                'quantity' => $item['quantity'],
-                'unit' => $item['unit'],
-                'price' => $item['price'],
-                'purchase_price' => $item['purchase_price'] ?? 0,
-                'total' => $total,
-                'description' => $item['description'] ?? null,
+        
+        DB::beginTransaction();
+        try {
+            $invoice = Invoice::create([
+                'invoice_number' => $invoice_number,
+                'date' => $request->date,
+                'customer_name' => $request->customer_name,
+                'discount' => $request->input('discount', 0),
+                'total_amount' => 0, // Will calculate below
+                'is_custom' => $is_custom,
             ]);
 
-            // Sync master product price if not a custom invoice
-            if ($product && !$is_custom) {
-                $product->update([
+            $totalAmount = 0;
+            foreach ($request->items as $item) {
+                $productId = $item['product_id'];
+                $product = null;
+
+                if (is_numeric($productId)) {
+                    $product = Product::find($productId);
+                }
+
+                if (!$product) {
+                    $category = \App\Models\Category::firstOrCreate(['name' => 'Lain-lain']);
+                    $product = Product::create([
+                        'category_id' => $category->id,
+                        'name' => $productId,
+                        'price' => $item['price'],
+                        'purchase_price' => $item['purchase_price'] ?? 0,
+                        'unit' => $item['unit'],
+                    ]);
+                }
+
+                $total = $item['price'] * $item['quantity'];
+                $totalAmount += $total;
+
+                InvoiceItem::create([
+                    'invoice_id' => $invoice->id,
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'quantity' => $item['quantity'],
+                    'unit' => $item['unit'],
                     'price' => $item['price'],
-                    'purchase_price' => $item['purchase_price'] ?? $product->purchase_price,
+                    'purchase_price' => $item['purchase_price'] ?? 0,
+                    'total' => $total,
+                    'description' => $item['description'] ?? null,
                 ]);
+
+                if ($product && !$is_custom) {
+                    $product->update([
+                        'price' => $item['price'],
+                        'purchase_price' => $item['purchase_price'] ?? $product->purchase_price,
+                    ]);
+                }
             }
+
+            $discount = $request->input('discount', 0);
+            $totalAmount -= $discount;
+
+            $invoice->update([
+                'total_amount' => $totalAmount,
+                'discount' => $discount
+            ]);
+
+            \Illuminate\Support\Facades\DB::commit();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            return back()->withInput()->with('error', 'Gagal memproses invoice: ' . $e->getMessage());
         }
-
-        $discount = $request->input('discount', 0);
-        $totalAmount -= $discount;
-
-        $invoice->update([
-            'total_amount' => $totalAmount,
-            'discount' => $discount
-        ]);
 
         $filters = $request->input('filters', []);
         return redirect()->route('invoices.index', $filters)->with('success', 'Invoice created successfully.');
@@ -354,7 +362,7 @@ class InvoiceController extends Controller
 
     public function restore($id)
     {
-        if (auth()->check() && auth()->user()->name === 'Rifal Kurniawan') {
+        if (Auth::check() && Auth::user()->name === 'Rifal Kurniawan') {
             $invoice = Invoice::onlyTrashed()->findOrFail($id);
             $invoice->restore();
             return back()->with('success', 'Invoice berhasil direstore.');

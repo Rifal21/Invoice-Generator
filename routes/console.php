@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('recap:daily')->dailyAt('23:00');
+Schedule::command('app:deduct-balance')->everyMinute();

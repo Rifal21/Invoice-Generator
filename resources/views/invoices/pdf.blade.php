@@ -20,7 +20,7 @@
         }
 
         .header {
-            background-color: #203764;
+            background-color: {{ $site_settings['primary_color'] ?? '#203764' }};
             color: white;
             padding: 20px 40px;
             height: 100px;
@@ -140,7 +140,7 @@
         }
 
         .items-table th {
-            background-color: #203764;
+            background-color: {{ $site_settings['primary_color'] ?? '#203764' }};
             color: white;
             padding: 8px;
             text-align: center;
@@ -194,7 +194,7 @@
         }
 
         .totals-table .label {
-            background-color: #203764;
+            background-color: {{ $site_settings['primary_color'] ?? '#203764' }};
             color: white;
             text-align: left;
         }
@@ -205,7 +205,7 @@
         }
 
         .totals-table tr:last-child .value {
-            background-color: #203764;
+            background-color: {{ $site_settings['primary_color'] ?? '#203764' }};
             color: white;
             font-weight: bold;
         }
@@ -235,7 +235,7 @@
 
         .footer-bar {
             height: 20px;
-            background-color: #203764;
+            background-color: {{ $site_settings['primary_color'] ?? '#203764' }};
             width: 100%;
         }
 
@@ -255,16 +255,27 @@
             <table class="header-table">
                 <tr>
                     <td style="width: 100px;">
+                        <!-- Company Logo -->
                         <div class="logo-placeholder">
-                            <img src="{{ public_path('images/kopinvoice.png') }}" alt="Logo">
+                            @php
+                                $logo_path = $site_settings['brand_logo'] ?? 'images/kopinvoice.png';
+                                $full_logo_path = public_path('storage/' . $logo_path);
+                                if (!file_exists($full_logo_path)) {
+                                    $full_logo_path = public_path($logo_path);
+                                }
+                            @endphp
+                            <img src="{{ $full_logo_path }}" alt="Logo">
                         </div>
                     </td>
                     <td>
                         <div class="company-info">
-                            <div class="company-name">KOPERASI KONSUMEN JEMBAR RAHAYU SEJAHTERA</div>
-                            <div>JL. Moch. Bagowi Kp. Bojong RT003 / RW002</div>
-                            <div>Telepon : +6281546527513</div>
-                            <div>Email : koperasikonsumenjembarrahayu@gmail.com</div>
+                            <div class="company-name">
+                                {{ $site_settings['brand_name'] ?? 'KOPERASI KONSUMEN JEMBAR RAHAYU SEJAHTERA' }}</div>
+                            <div>{{ $site_settings['company_address'] ?? 'JL. Moch. Bagowi Kp. Bojong RT003 / RW002' }}
+                            </div>
+                            <div>Telepon : {{ $site_settings['company_phone'] ?? '+6281546527513' }}</div>
+                            <div>Email :
+                                {{ $site_settings['company_email'] ?? 'koperasikonsumenjembarrahayu@gmail.com' }}</div>
                         </div>
                     </td>
                     <td style="width: 250px; vertical-align: top;">
@@ -339,9 +350,8 @@
             <div class="totals-section">
                 <div class="bank-info">
                     <div style="text-align: center; margin-bottom: 5px;">Transfer ke No. Rek :</div>
-                    <div style="text-align: center; font-weight: bold;">8155688615 BNI a/n KOPERASI JEMBAR
-                        RAHAYU
-                        SEJAHTERA
+                    <div style="text-align: center; font-weight: bold;">
+                        {{ $site_settings['bank_info'] ?? '8155688615 BNI a/n KOPERASI JEMBAR RAHAYU SEJAHTERA' }}
                     </div>
 
                     <div class="thank-you">
@@ -383,12 +393,13 @@
                 <div class="signature-box">
                     <div>Hormat Kami,</div>
                     <div class="signature-image">
-                        <img src="{{ public_path('images/ttd.png') }}" alt="Signature">
+                        <img src="{{ isset($site_settings['signature_image']) ? public_path('storage/' . $site_settings['signature_image']) : public_path('images/ttd.png') }}"
+                            alt="Signature">
                     </div>
-                    <div style="border-bottom: 1px solid #000; display: inline-block; width: 100%;">Rizki Ichsan
-                        Al-Fath
+                    <div style="border-bottom: 1px solid #000; display: inline-block; width: 100%;">
+                        {{ $site_settings['signature_name'] ?? 'Rizki Ichsan Al-Fath' }}
                     </div>
-                    <div>Ketua Pengurus</div>
+                    <div>{{ $site_settings['signature_title'] ?? 'Ketua Pengurus' }}</div>
                 </div>
             </div>
         </div>

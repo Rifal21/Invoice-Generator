@@ -28,6 +28,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ActivityLogController;
 use App\Http\Controllers\DediInvoiceController;
 use App\Http\Controllers\KitchenIncentiveController;
+use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\BillingController;
 
 
 // Auth Routes
@@ -136,8 +138,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Notification Routes
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
-    // Notification Routes
-    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::post('notifications/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
 
     // Dedi Invoice Routes
@@ -177,7 +177,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('rice-order-recap/export-pdf', [RiceOrderRecapController::class, 'exportPdf'])->name('rice-order-recap.export-pdf');
 
 
-
     // Admin, Ketua & Admin Absensi
     Route::middleware(['role:super_admin,ketua,admin_absensi'])->group(function () {
         Route::get('attendance', [AttendanceController::class, 'publicScan'])->name('attendance.public');
@@ -206,12 +205,27 @@ Route::middleware(['auth'])->group(function () {
         Route::get('finance/summary', [FinancialReportController::class, 'index'])->name('finance.summary');
         Route::get('finance/export-pdf', [FinancialReportController::class, 'exportPdf'])->name('finance.export-pdf');
         Route::resource('expenses', ExpenseController::class);
+
+        // Site Settings
+        Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+        Route::post('settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::post('settings/sidebar/add', [SettingsController::class, 'addSidebarItem'])->name('settings.sidebar.add');
+        Route::delete('settings/sidebar/{item}', [SettingsController::class, 'deleteSidebarItem'])->name('settings.sidebar.delete');
+        Route::post('settings/sidebar/sort', [SettingsController::class, 'sortSidebar'])->name('settings.sidebar.sort');
+        Route::post('settings/sidebar/{item}/toggle', [SettingsController::class, 'toggleSidebarItem'])->name('settings.sidebar.toggle');
     });
 
     // Admin Only
     Route::middleware(['role:super_admin,ketua'])->group(function () {
         Route::resource('users', UserController::class);
     });
+
+    // Billing Routes
+    Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
+    Route::get('billing/manage', [BillingController::class, 'manage'])->name('billing.manage');
+    Route::post('billing/topup', [BillingController::class, 'topup'])->name('billing.topup');
+    Route::post('billing/rate', [BillingController::class, 'updateRate'])->name('billing.updateRate');
+    Route::post('billing/status', [BillingController::class, 'updateStatus'])->name('billing.updateStatus');
 });
 
 
