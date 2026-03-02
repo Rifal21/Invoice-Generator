@@ -96,4 +96,17 @@ class SettingsController extends Controller
         }
         return response()->json(['success' => true]);
     }
+
+    public function updateSidebarItem(Request $request, SidebarItem $item)
+    {
+        $data = $request->validate([
+            'label' => 'required|string|max:255',
+            'icon' => 'nullable|string|max:255',
+            'route' => 'nullable|string|max:255',
+        ]);
+
+        $item->update($data);
+
+        return redirect()->back()->with('success', 'Menu berhasil diperbarui');
+    }
 }

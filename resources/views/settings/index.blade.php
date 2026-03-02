@@ -5,16 +5,77 @@
 @section('content')
     <div class="max-w-7xl mx-auto" x-data="{
         tab: 'general',
-        brand_name: '{{ $settings['brand_name'] ?? 'KOPERASI KONSUMEN JEMBAR RAHAYU SEJAHTERA' }}',
-        company_address: '{{ $settings['company_address'] ?? 'JL. Moch. Bagowi Kp. Bojong RT003 / RW002' }}',
-        company_phone: '{{ $settings['company_phone'] ?? '+6281546527513' }}',
-        company_email: '{{ $settings['company_email'] ?? 'koperasikonsumenjembarrahayu@gmail.com' }}',
-        bank_info: '{{ $settings['bank_info'] ?? '8155688615 BNI a/n KOPERASI JEMBAR RAHAYU SEJAHTERA' }}',
-        signature_name: '{{ $settings['signature_name'] ?? 'Rizki Ichsan Al-Fath' }}',
-        signature_title: '{{ $settings['signature_title'] ?? 'Ketua Pengurus' }}',
-        primary_color: '{{ $settings['primary_color'] ?? '#203764' }}',
-        logo_preview: '{{ isset($settings['brand_logo']) ? (Storage::disk('public')->exists($settings['brand_logo']) ? asset('storage/' . $settings['brand_logo']) : asset($settings['brand_logo'])) : asset('images/kopinvoice.png') }}',
-        sig_preview: '{{ isset($settings['signature_image']) ? (Storage::disk('public')->exists($settings['signature_image']) ? asset('storage/' . $settings['signature_image']) : asset($settings['signature_image'])) : asset('images/ttd.png') }}',
+        brand_name: @js($settings['brand_name'] ?? 'KOPERASI KONSUMEN JEMBAR RAHAYU SEJAHTERA'),
+        company_address: @js($settings['company_address'] ?? 'JL. Moch. Bagowi Kp. Bojong RT003 / RW002'),
+        company_phone: @js($settings['company_phone'] ?? '+6281546527513'),
+        company_email: @js($settings['company_email'] ?? 'koperasikonsumenjembarrahayu@gmail.com'),
+        bank_info: @js($settings['bank_info'] ?? '8155688615 BNI a/n KOPERASI JEMBAR RAHAYU SEJAHTERA'),
+        signature_name: @js($settings['signature_name'] ?? 'Rizki Ichsan Al-Fath'),
+        signature_title: @js($settings['signature_title'] ?? 'Ketua Pengurus'),
+        primary_color: @js($settings['primary_color'] ?? '#203764'),
+        logo_preview: @js(isset($settings['brand_logo']) ? (Storage::disk('public')->exists($settings['brand_logo']) ? asset('storage/' . $settings['brand_logo']) : asset($settings['brand_logo'])) : asset('images/kopinvoice.png')),
+        sig_preview: @js(isset($settings['signature_image']) ? (Storage::disk('public')->exists($settings['signature_image']) ? asset('storage/' . $settings['signature_image']) : asset($settings['signature_image'])) : asset('images/ttd.png')),
+    
+        // Sidebar State
+        isEditing: false,
+        showIconPicker: false,
+        iconSearch: '',
+        pickerTarget: 'add', // 'add' or 'edit'
+        editItem: { id: null, label: '', icon: 'fas fa-star', route: '', action: '' },
+        newItem: { icon: 'fas fa-star' },
+    
+        icons: [
+            'fas fa-house', 'fas fa-dashboard', 'fas fa-gauge', 'fas fa-user', 'fas fa-users', 'fas fa-user-tie', 'fas fa-user-gear',
+            'fas fa-gear', 'fas fa-sliders', 'fas fa-list', 'fas fa-bars', 'fas fa-layer-group', 'fas fa-th-large',
+            'fas fa-file-invoice', 'fas fa-file-invoice-dollar', 'fas fa-money-bill-wave', 'fas fa-credit-card', 'fas fa-wallet', 'fas fa-calculator',
+            'fas fa-chart-line', 'fas fa-chart-pie', 'fas fa-chart-bar', 'fas fa-chart-area', 'fas fa-receipt', 'fas fa-coins',
+            'fas fa-cart-shopping', 'fas fa-basket-shopping', 'fas fa-bag-shopping', 'fas fa-store', 'fas fa-shop', 'fas fa-tag', 'fas fa-tags',
+            'fas fa-box', 'fas fa-boxes-stacked', 'fas fa-box-open', 'fas fa-warehouse', 'fas fa-truck', 'fas fa-truck-fast', 'fas fa-dolly',
+            'fas fa-envelope', 'fas fa-message', 'fas fa-comments', 'fas fa-bell', 'fas fa-phone', 'fas fa-broadcast-tower', 'fas fa-rss',
+            'fas fa-shield-halved', 'fas fa-lock', 'fas fa-key', 'fas fa-database', 'fas fa-cloud-arrow-up', 'fas fa-cloud-arrow-down', 'fas fa-print', 'fas fa-barcode', 'fas fa-qrcode',
+            'fas fa-calendar-days', 'fas fa-clock', 'fas fa-check-double', 'fas fa-star', 'fas fa-thumbs-up', 'fas fa-heart', 'fas fa-flag',
+            'fas fa-plus', 'fas fa-trash', 'fas fa-trash-can', 'fas fa-pen', 'fas fa-pen-to-square', 'fas fa-eye', 'fas fa-eye-slash', 'fas fa-download', 'fas fa-upload', 'fas fa-share-nodes',
+            'fas fa-circle-info', 'fas fa-circle-question', 'fas fa-circle-exclamation', 'fas fa-circle-check', 'fas fa-circle-xmark',
+            'fas fa-arrow-right', 'fas fa-arrow-left', 'fas fa-chevron-right', 'fas fa-chevron-left', 'fas fa-up-down', 'fas fa-arrows-up-down',
+            'fas fa-utensils', 'fas fa-kitchen-set', 'fas fa-bowl-food', 'fas fa-car', 'fas fa-van-shuttle', 'fas fa-motorcycle', 'fas fa-gas-pump',
+            'fas fa-briefcase', 'fas fa-building', 'fas fa-image', 'fas fa-images', 'fas fa-video', 'fas fa-music', 'fas fa-headphones', 'fas fa-microchip', 'fas fa-keyboard'
+        ],
+    
+        get filteredIcons() {
+            if (!this.iconSearch) return this.icons;
+            return this.icons.filter(i => i.toLowerCase().includes(this.iconSearch.toLowerCase()));
+        },
+    
+        openEdit(item) {
+            this.editItem = {
+                id: item.id,
+                label: item.label,
+                icon: item.icon || 'fas fa-star',
+                route: item.route,
+                action: `/settings/sidebar/${item.id}`
+            };
+            this.isEditing = true;
+            this.showIconPicker = false;
+            // Scroll to form if on mobile
+            if (window.innerWidth < 1024) {
+                window.scrollTo({ top: document.querySelector('#sidebar-edit-card').offsetTop - 100, behavior: 'smooth' });
+            }
+        },
+    
+        openIconPicker(target) {
+            this.pickerTarget = target;
+            this.showIconPicker = true;
+            this.iconSearch = '';
+        },
+    
+        selectIcon(icon) {
+            if (this.pickerTarget === 'add') {
+                this.newItem.icon = icon;
+            } else {
+                this.editItem.icon = icon;
+            }
+            this.showIconPicker = false;
+        },
     
         handleLogoUpload(e) {
             const file = e.target.files[0];
@@ -340,18 +401,6 @@
                                                         <td class="border border-black p-2 text-left">Rp 773.500</td>
                                                         <td class="border border-black p-2 text-right">Rp 773.500</td>
                                                     </tr>
-                                                    @for ($i = 0; $i < 6; $i++)
-                                                        <tr>
-                                                            <td
-                                                                class="border border-black p-2 text-center text-transparent">
-                                                                .</td>
-                                                            <td class="border border-black p-2"></td>
-                                                            <td class="border border-black p-2"></td>
-                                                            <td class="border border-black p-2"></td>
-                                                            <td class="border border-black p-2"></td>
-                                                            <td class="border border-black p-2"></td>
-                                                        </tr>
-                                                    @endfor
                                                 </tbody>
                                             </table>
 
@@ -373,11 +422,6 @@
                                                             </td>
                                                             <td class="p-2 border border-black text-right font-medium">
                                                                 Rp989.500</td>
-                                                        </tr>
-                                                        <tr class="text-[13px]">
-                                                            <td :style="`background-color: ${primary_color}`"
-                                                                class="text-white p-2 border border-black">Diskon</td>
-                                                            <td class="p-2 border border-black text-right">-</td>
                                                         </tr>
                                                         <tr class="text-[13px]">
                                                             <td :style="`background-color: ${primary_color}`"
@@ -436,14 +480,19 @@
                         <form action="{{ route('settings.sidebar.add') }}" method="POST" class="space-y-4">
                             @csrf
                             <div>
-                                <label class="text-[10px] font-bold text-indigo-600 uppercase">Label</label>
-                                <input type="text" name="label" required placeholder="Contoh: Laporan Baru"
-                                    class="w-full bg-white border border-indigo-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-indigo-600 uppercase">Icon (FontAwesome)</label>
-                                <input type="text" name="icon" placeholder="fas fa-star"
-                                    class="w-full bg-white border border-indigo-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                                <label class="text-[10px] font-bold text-indigo-600 uppercase">Icon</label>
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-white border border-indigo-200 flex items-center justify-center text-indigo-600 text-lg">
+                                        <i :class="newItem.icon"></i>
+                                    </div>
+                                    <button type="button" @click="openIconPicker('add')"
+                                        class="flex-1 bg-white border border-indigo-200 rounded-lg px-3 py-2 text-sm text-indigo-600 font-bold hover:bg-indigo-50 transition-colors text-left flex items-center justify-between">
+                                        <span>Pilih Icon</span>
+                                        <i class="fas fa-search text-xs opacity-50"></i>
+                                    </button>
+                                    <input type="hidden" name="icon" :value="newItem.icon">
+                                </div>
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold text-indigo-600 uppercase">Route</label>
@@ -464,6 +513,59 @@
                                 class="w-full bg-indigo-600 text-white font-bold py-2 rounded-lg text-sm shadow-md hover:bg-indigo-700 transition-colors">
                                 <i class="fas fa-plus mr-1"></i> Tambah Menu
                             </button>
+                        </form>
+                    </div>
+
+                    <!-- Edit Menu Card -->
+                    <div id="sidebar-edit-card" x-show="isEditing" x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 translate-y-4"
+                        x-transition:enter-end="opacity-100 translate-y-0"
+                        class="mt-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 shadow-sm ring-1 ring-amber-200/50">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-xs font-black text-amber-700 uppercase tracking-widest">Edit Menu</h4>
+                            <button @click="isEditing = false"
+                                class="text-amber-400 hover:text-amber-600 transition-colors">
+                                <i class="fas fa-times-circle"></i>
+                            </button>
+                        </div>
+                        <form :action="editItem.action" method="POST" class="space-y-4">
+                            @csrf
+                            @method('PATCH')
+                            <div>
+                                <label class="text-[10px] font-bold text-amber-600 uppercase">Label Menu</label>
+                                <input type="text" name="label" x-model="editItem.label" required
+                                    class="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none font-bold">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-amber-600 uppercase">Icon</label>
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="w-10 h-10 rounded-lg bg-white border border-amber-200 flex items-center justify-center text-amber-600 text-lg">
+                                        <i :class="editItem.icon"></i>
+                                    </div>
+                                    <button type="button" @click="openIconPicker('edit')"
+                                        class="flex-1 bg-white border border-amber-200 rounded-lg px-3 py-2 text-sm text-amber-700 font-bold hover:bg-amber-50 transition-colors text-left flex items-center justify-between">
+                                        <span>Pilih Icon</span>
+                                        <i class="fas fa-search text-xs opacity-50"></i>
+                                    </button>
+                                    <input type="hidden" name="icon" :value="editItem.icon">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-amber-600 uppercase">Route</label>
+                                <input type="text" name="route" x-model="editItem.route"
+                                    class="w-full bg-white border border-amber-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-amber-500 outline-none font-mono">
+                            </div>
+                            <div class="flex gap-2 pt-2">
+                                <button type="submit"
+                                    class="flex-1 bg-amber-600 text-white font-black py-2 rounded-lg text-sm shadow-md hover:bg-amber-700 transition-colors">
+                                    SIMPAN
+                                </button>
+                                <button type="button" @click="isEditing = false"
+                                    class="px-4 bg-white border border-amber-200 text-amber-700 font-bold py-2 rounded-lg text-sm hover:bg-amber-100 transition-colors">
+                                    BATAL
+                                </button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -487,6 +589,10 @@
                                                 {{ $item->route ?? 'Dropdown Group' }}</p>
                                         </div>
                                         <div class="flex items-center gap-3">
+                                            <button @click="openEdit(@js($item))"
+                                                class="p-2 text-gray-400 hover:text-indigo-500 transition-colors">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                             <button onclick="toggleVisibility({{ $item->id }})"
                                                 id="toggle-{{ $item->id }}"
                                                 class="px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all {{ $item->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">
@@ -512,10 +618,15 @@
                                     <!-- Children -->
                                     @if ($item->children->count() > 0)
                                         <div id="children-{{ $item->id }}"
-                                            class="bg-gray-50/50 pl-16 divide-y divide-gray-100 hidden">
+                                            class="bg-gray-50/50 pl-16 divide-y divide-gray-100 hidden sortable-children"
+                                            data-parent-id="{{ $item->id }}">
                                             @foreach ($item->children as $child)
-                                                <div
-                                                    class="p-3 flex items-center gap-4 hover:bg-gray-100 transition-colors">
+                                                <div class="sidebar-child-row p-3 flex items-center gap-4 hover:bg-gray-100 transition-colors"
+                                                    data-id="{{ $child->id }}">
+                                                    <div
+                                                        class="cursor-move text-gray-300 hover:text-gray-500 child-drag-handle">
+                                                        <i class="fas fa-grip-vertical text-xs"></i>
+                                                    </div>
                                                     <div
                                                         class="w-8 h-8 rounded-lg bg-white flex items-center justify-center text-gray-400 border border-gray-100">
                                                         <i class="{{ $child->icon }} text-xs"></i>
@@ -527,6 +638,10 @@
                                                             {{ $child->route }}</p>
                                                     </div>
                                                     <div class="flex items-center gap-2">
+                                                        <button @click="openEdit(@js($child))"
+                                                            class="p-1.5 text-gray-300 hover:text-indigo-500 transition-colors">
+                                                            <i class="fas fa-edit text-sm"></i>
+                                                        </button>
                                                         <button onclick="toggleVisibility({{ $child->id }})"
                                                             id="toggle-{{ $child->id }}"
                                                             class="px-2 py-1 rounded-md text-[9px] font-bold transition-all {{ $child->is_active ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500' }}">
@@ -553,6 +668,58 @@
                 </div>
             </div>
         </div>
+
+
+        <!-- Icon Picker Modal -->
+        <template x-if="showIconPicker">
+            <div class="fixed inset-0 z-[110] overflow-y-auto" @keydown.escape.window="showIconPicker = false">
+                <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+                    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm transition-opacity"
+                        @click="showIconPicker = false">
+                    </div>
+                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                    <div @click.stop
+                        class="inline-block align-bottom bg-white rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full border border-gray-100">
+                        <div class="bg-indigo-600 px-6 py-4 flex items-center justify-between">
+                            <h3 class="text-lg font-black text-white uppercase tracking-widest">Pilih Icon</h3>
+                            <button @click="showIconPicker = false"
+                                class="text-white/60 hover:text-white transition-colors">
+                                <i class="fas fa-times-circle text-xl"></i>
+                            </button>
+                        </div>
+                        <div class="p-6">
+                            <div class="relative mb-6">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" x-model="iconSearch"
+                                    placeholder="Cari icon (ex: user, home, chart...)"
+                                    class="w-full bg-gray-50 border border-gray-200 rounded-2xl pl-11 pr-4 py-3 text-sm focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 outline-none transition-all">
+                            </div>
+                            <div
+                                class="grid grid-cols-6 sm:grid-cols-8 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                                <template x-for="icon in filteredIcons" :key="icon">
+                                    <button type="button" @click="selectIcon(icon)"
+                                        :class="(pickerTarget === 'add' ? newItem.icon : editItem.icon) === icon ?
+                                            'bg-indigo-600 text-white shadow-indigo-200' :
+                                            'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-gray-900'"
+                                        class="aspect-square rounded-xl flex items-center justify-center transition-all group relative border border-transparent shadow-sm">
+                                        <i :class="icon" class="text-xl"></i>
+                                        <div class="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap z-10 pointer-events-none transition-opacity"
+                                            x-text="icon.replace('fas fa-', '')"></div>
+                                    </button>
+                                </template>
+                            </div>
+                            <div x-show="filteredIcons.length === 0" class="py-12 text-center">
+                                <div
+                                    class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-300">
+                                    <i class="fas fa-magnifying-glass text-2xl"></i>
+                                </div>
+                                <p class="text-gray-500 font-medium">Icon tidak ditemukan</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
 
     @push('scripts')
@@ -583,36 +750,79 @@
             function toggleChildren(id) {
                 const el = document.getElementById(`children-${id}`);
                 const chevron = document.getElementById(`chevron-${id}`);
-                el.classList.toggle('hidden');
-                chevron.classList.toggle('rotate-180');
+                if (el) el.classList.toggle('hidden');
+                if (chevron) chevron.classList.toggle('rotate-180');
             }
 
-            document.addEventListener('DOMContentLoaded', function() {
+            function initSortable() {
+                // Top level sortable
                 const el = document.getElementById('sidebar-items-list');
-                Sortable.create(el, {
-                    handle: '.drag-handle',
-                    animation: 150,
-                    onEnd: function() {
-                        const items = Array.from(el.querySelectorAll('.sidebar-row')).map(row => row.dataset
-                            .id);
-                        fetch('/settings/sidebar/sort', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                            },
-                            body: JSON.stringify({
-                                items
-                            })
-                        });
-                    }
+                if (el) {
+                    Sortable.create(el, {
+                        handle: '.drag-handle',
+                        animation: 150,
+                        onEnd: function() {
+                            const items = Array.from(el.querySelectorAll('.sidebar-row')).map(row => row.dataset
+                                .id);
+                            updateSortOrder(items);
+                        }
+                    });
+                }
+
+                // Children sortable
+                document.querySelectorAll('.sortable-children').forEach(childList => {
+                    Sortable.create(childList, {
+                        handle: '.child-drag-handle',
+                        animation: 150,
+                        onEnd: function() {
+                            const items = Array.from(childList.querySelectorAll('.sidebar-child-row')).map(
+                                row => row.dataset.id);
+                            updateSortOrder(items);
+                        }
+                    });
                 });
-            });
+            }
+
+            function updateSortOrder(items) {
+                fetch('/settings/sidebar/sort', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({
+                        items
+                    })
+                });
+            }
+
+            // Support both standard load and Turbo load
+            document.addEventListener('DOMContentLoaded', initSortable);
+            document.addEventListener('turbo:load', initSortable);
         </script>
         <style>
-            .sidebar-row.sortable-ghost {
+            .sidebar-row.sortable-ghost,
+            .sidebar-child-row.sortable-ghost {
                 opacity: 0.4;
                 background: #f3f4f6;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: #f1f1f1;
+                border-radius: 10px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #d1d5db;
+                border-radius: 10px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #9ca3af;
             }
         </style>
     @endpush

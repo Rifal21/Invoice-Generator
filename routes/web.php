@@ -31,12 +31,10 @@ use App\Http\Controllers\KitchenIncentiveController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\BillingController;
 
-
 // Auth Routes
 Route::get('login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('login', [AuthController::class, 'login'])->name('login.post');
 Route::post('logout', [AuthController::class, 'logout'])->name('logout');
-
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/', function () {
@@ -96,7 +94,7 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
     Route::post('products/bulk-delete', [ProductController::class, 'bulkDestroy'])->name('products.bulk-delete');
     Route::post('products/import', [ProductController::class, 'import'])->name('products.import');
-    Route::delete('products/{product}/image', [ProductController::class, 'deleteImage'])->name('products.delete-image'); // New Route
+    Route::delete('products/{product}/image', [ProductController::class, 'deleteImage'])->name('products.delete-image');
     Route::get('products/export', [ProductController::class, 'export'])->name('products.export');
     Route::resource('products', ProductController::class);
 
@@ -176,7 +174,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('rice-order-recap', [RiceOrderRecapController::class, 'index'])->name('rice-order-recap.index');
     Route::get('rice-order-recap/export-pdf', [RiceOrderRecapController::class, 'exportPdf'])->name('rice-order-recap.export-pdf');
 
-
     // Admin, Ketua & Admin Absensi
     Route::middleware(['role:super_admin,ketua,admin_absensi'])->group(function () {
         Route::get('attendance', [AttendanceController::class, 'publicScan'])->name('attendance.public');
@@ -213,9 +210,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('settings/sidebar/{item}', [SettingsController::class, 'deleteSidebarItem'])->name('settings.sidebar.delete');
         Route::post('settings/sidebar/sort', [SettingsController::class, 'sortSidebar'])->name('settings.sidebar.sort');
         Route::post('settings/sidebar/{item}/toggle', [SettingsController::class, 'toggleSidebarItem'])->name('settings.sidebar.toggle');
+        Route::patch('settings/sidebar/{item}', [SettingsController::class, 'updateSidebarItem'])->name('settings.sidebar.update');
     });
 
-    // Admin Only
     Route::middleware(['role:super_admin,ketua'])->group(function () {
         Route::resource('users', UserController::class);
     });
@@ -227,7 +224,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('billing/rate', [BillingController::class, 'updateRate'])->name('billing.updateRate');
     Route::post('billing/status', [BillingController::class, 'updateStatus'])->name('billing.updateStatus');
 });
-
 
 Route::get('/test-wa', function () {
     $apiUrl = 'https://waapi.fkstudio.my.id';
