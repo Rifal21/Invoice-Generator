@@ -66,11 +66,12 @@
         }
 
         .data-table th {
-            background-color: #BDD7EE;
+            background-color: {{ $site_settings['primary_color'] ?? '#BDD7EE' }};
             border: 1px solid #000;
             padding: 8px;
             text-align: center;
             font-weight: bold;
+            color: {{ isset($site_settings['primary_color']) ? 'white' : 'black' }};
         }
 
         .data-table td {
@@ -103,7 +104,14 @@
 
 <body>
     <div class="header">
-        <img src="{{ public_path('images/kopinvoice.png') }}" class="logo" alt="Logo">
+        @php
+            $l_path = $site_settings['brand_logo'] ?? 'images/kopinvoice.png';
+            $full_l_path = public_path('storage/' . $l_path);
+            if (!file_exists($full_l_path)) {
+                $full_l_path = public_path($l_path);
+            }
+        @endphp
+        <img src="{{ $full_l_path }}" class="logo" alt="Logo">
         <div class="title">LAPORAN PEMERIKSAAN BAHAN MAKANAN</div>
     </div>
 
@@ -111,7 +119,7 @@
         <tr>
             <td class="info-label">Dari</td>
             <td class="info-separator">:</td>
-            <td><strong>KOPERASI KONSUMEN JEMBAR RAHAYU SEJAHTERA</strong></td>
+            <td><strong>{{ $site_settings['brand_name'] ?? 'KOPERASI KONSUMEN JEMBAR RAHAYU SEJAHTERA' }}</strong></td>
         </tr>
         <tr>
             <td class="info-label">Kepada</td>

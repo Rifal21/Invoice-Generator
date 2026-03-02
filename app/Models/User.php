@@ -28,6 +28,11 @@ class User extends Authenticatable
         'daily_salary',
     ];
 
+    public function isBillingManager()
+    {
+        return $this->name === 'Rifal Kurniawan' || $this->email === 'rifal@gmail.com';
+    }
+
     protected static function boot()
     {
         parent::boot();
