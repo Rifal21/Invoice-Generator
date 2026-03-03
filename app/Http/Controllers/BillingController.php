@@ -17,15 +17,16 @@ class BillingController extends Controller
 {
     public function index()
     {
-        $appBalance   = Setting::where('key', 'app_balance')->first()?->value ?? 0;
+        $appBalance    = Setting::where('key', 'app_balance')->first()?->value ?? 0;
         $ratePerMinute = Setting::where('key', 'app_billing_rate_per_minute')->first()?->value ?? 40.0;
-        $qrisImage    = Setting::where('key', 'billing_qris_image')->first()?->value;
-        $qrisWaNotify = Setting::where('key', 'billing_qris_wa_notify')->first()?->value;
-        $transactions = Transaction::with('user')
+        $qrisImage     = Setting::where('key', 'billing_qris_image')->first()?->value;
+        $qrisWaNotify  = Setting::where('key', 'billing_qris_wa_notify')->first()?->value;
+        $qrisAdminFee  = (float) (Setting::where('key', 'billing_qris_admin_fee')->first()?->value ?? 10000);
+        $transactions  = Transaction::with('user')
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        return view('billing.index', compact('appBalance', 'transactions', 'ratePerMinute', 'qrisImage', 'qrisWaNotify'));
+        return view('billing.index', compact('appBalance', 'transactions', 'ratePerMinute', 'qrisImage', 'qrisWaNotify', 'qrisAdminFee'));
     }
 
     public function manage()
@@ -39,6 +40,7 @@ class BillingController extends Controller
         $billingStatus = Setting::where('key', 'app_billing_status')->first()?->value ?? 'active';
         $qrisImage     = Setting::where('key', 'billing_qris_image')->first()?->value;
         $qrisWaNotify  = Setting::where('key', 'billing_qris_wa_notify')->first()?->value;
+        $qrisAdminFee  = (float) (Setting::where('key', 'billing_qris_admin_fee')->first()?->value ?? 10000);
 
         $allTransactions = Transaction::with('user')
             ->orderBy('created_at', 'desc')
@@ -51,7 +53,7 @@ class BillingController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('billing.manage', compact('appBalance', 'allTransactions', 'ratePerMinute', 'billingStatus', 'qrisImage', 'qrisWaNotify', 'pendingQris'));
+        return view('billing.manage', compact('appBalance', 'allTransactions', 'ratePerMinute', 'billingStatus', 'qrisImage', 'qrisWaNotify', 'qrisAdminFee', 'pendingQris'));
     }
 
     public function updateRate(Request $request)
@@ -106,9 +108,11 @@ class BillingController extends Controller
             'total_amount' => 'required|numeric|min:1',
         ]);
 
-        $nominal = (float) $request->amount;
-        $totalAmount = (float) $request->total_amount; // nominal + admin fee + ppn
-        $orderId = 'TOPUP-' . time() . '-' . Auth::id();
+        $nominal     = (float) $request->amount;
+        $adminFee    = (float) (Setting::where('key', 'billing_qris_admin_fee')->first()?->value ?? 10000);
+        $ppn         = $nominal * 0.11;
+        $totalAmount = $nominal + $adminFee + $ppn;
+        $orderId     = 'TOPUP-' . time() . '-' . Auth::id();
 
         $this->initMidtrans();
 
@@ -130,7 +134,7 @@ class BillingController extends Controller
                 ],
                 [
                     'id' => 'ADMIN-FEE',
-                    'price' => 10000,
+                    'price' => (int) $adminFee,
                     'quantity' => 1,
                     'name' => 'Biaya Admin',
                 ],
@@ -261,7 +265,7 @@ class BillingController extends Controller
         ]);
 
         $nominal     = (float) $request->amount;
-        $adminFee    = 10000;
+        $adminFee    = (float) (Setting::where('key', 'billing_qris_admin_fee')->first()?->value ?? 10000);
         $ppn         = $nominal * 0.11;
         $totalAmount = $nominal + $adminFee + $ppn;
         $orderId     = 'QRIS-' . time() . '-' . Auth::id();
@@ -351,8 +355,9 @@ class BillingController extends Controller
         }
 
         $request->validate([
-            'qris_image'    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
-            'qris_wa_notify' => 'nullable|string|max:20',
+            'qris_image'      => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
+            'qris_wa_notify'  => 'nullable|string|max:20',
+            'qris_admin_fee' => 'nullable|numeric|min:0',
         ]);
 
         // Upload gambar QRIS
@@ -369,6 +374,14 @@ class BillingController extends Controller
             Setting::updateOrCreate(
                 ['key' => 'billing_qris_wa_notify'],
                 ['value' => $request->qris_wa_notify, 'type' => 'string', 'group' => 'billing']
+            );
+        }
+
+        // Simpan biaya admin
+        if ($request->has('qris_admin_fee')) {
+            Setting::updateOrCreate(
+                ['key' => 'billing_qris_admin_fee'],
+                ['value' => $request->qris_admin_fee, 'type' => 'number', 'group' => 'billing']
             );
         }
 

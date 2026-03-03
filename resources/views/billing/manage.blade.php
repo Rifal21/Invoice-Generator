@@ -61,7 +61,7 @@
                         <i class="fas fa-plus-circle text-indigo-600"></i> Topup Saldo
                     </h3>
 
-                    <form action="{{ route('billing.manualTopup') }}" method="POST" class="space-y- 6" id="topupForm">
+                    <form action="{{ route('billing.manualTopup') }}" method="POST" class="space-y-6" id="topupForm">
                         @csrf
                         <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 mb-6">
                             <p class="text-[10px] text-indigo-600 font-black uppercase tracking-widest mb-1">Target</p>
@@ -168,6 +168,19 @@
                                 class="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none font-bold">
                             <p class="text-[9px] text-gray-400 mt-1">Nomor ini akan menerima notifikasi WA saat user request
                                 topup QRIS</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                Biaya Admin QRIS
+                            </label>
+                            <div class="relative">
+                                <span
+                                    class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">Rp</span>
+                                <input type="number" name="qris_admin_fee" value="{{ $qrisAdminFee ?? 10000 }}"
+                                    class="w-full bg-gray-50 border border-gray-100 rounded-xl px-12 py-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none font-bold">
+                            </div>
+                            <p class="text-[9px] text-gray-400 mt-1">Biaya admin yang dikenakan ke user per transaksi</p>
                         </div>
 
                         <button type="submit"

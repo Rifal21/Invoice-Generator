@@ -87,7 +87,7 @@
                                     </div>
                                     <div class="flex justify-between text-[11px] font-medium text-gray-500">
                                         <span>Biaya Admin</span>
-                                        <span>Rp 10.000</span>
+                                        <span>Rp {{ number_format($qrisAdminFee, 0, ',', '.') }}</span>
                                     </div>
                                     <div class="flex justify-between text-[11px] font-medium text-gray-500">
                                         <span>PPN (11%)</span>
@@ -128,7 +128,8 @@
                             </div>
                             <div>
                                 <h3 class="font-black text-gray-900 text-sm uppercase">Topup via QRIS</h3>
-                                <p class="text-[10px] font-medium text-gray-500">Input nominal &rarr; QR muncul &rarr; transfer &rarr; admin konfirmasi</p>
+                                <p class="text-[10px] font-medium text-gray-500">Input nominal &rarr; QR muncul &rarr;
+                                    transfer &rarr; admin konfirmasi</p>
                             </div>
                         </div>
                     </div>
@@ -140,7 +141,8 @@
                                 Nominal Saldo yang Diinginkan
                             </label>
                             <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">Rp</span>
+                                <span
+                                    class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">Rp</span>
                                 <input type="number" id="qrisAmount" placeholder="50000" min="10000"
                                     oninput="calcQrisFee()"
                                     class="w-full bg-gray-50 border border-gray-100 rounded-xl px-12 py-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none font-bold">
@@ -149,20 +151,22 @@
                         </div>
 
                         {{-- Rincian Biaya --}}
-                        <div id="qrisFeeBreakdown" class="hidden space-y-2 p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                        <div id="qrisFeeBreakdown"
+                            class="hidden space-y-2 p-4 bg-purple-50 rounded-2xl border border-purple-100">
                             <div class="flex justify-between text-[11px] font-medium text-gray-500">
                                 <span>Saldo yang ditambahkan</span>
                                 <span id="qrisNominalDisplay" class="font-black text-gray-700">Rp 0</span>
                             </div>
                             <div class="flex justify-between text-[11px] font-medium text-gray-500">
                                 <span>Biaya Admin</span>
-                                <span>Rp 10.000</span>
+                                <span>Rp {{ number_format($qrisAdminFee, 0, ',', '.') }}</span>
                             </div>
                             <div class="flex justify-between text-[11px] font-medium text-gray-500">
                                 <span>PPN (11%)</span>
                                 <span id="qrisPpnDisplay">Rp 0</span>
                             </div>
-                            <div class="pt-2 border-t border-purple-200 flex justify-between text-xs font-black text-gray-900">
+                            <div
+                                class="pt-2 border-t border-purple-200 flex justify-between text-xs font-black text-gray-900">
                                 <span>Total yang Ditransfer</span>
                                 <span id="qrisTotalDisplay" class="text-purple-600">Rp 0</span>
                             </div>
@@ -177,7 +181,8 @@
                         <div class="p-3 bg-amber-50 border border-amber-100 rounded-xl">
                             <p class="text-[10px] text-amber-700 font-medium leading-relaxed">
                                 <i class="fas fa-info-circle mr-1"></i>
-                                QR code akan muncul setelah klik tombol. Scan &amp; transfer, lalu admin akan tambahkan saldo secara manual.
+                                QR code akan muncul setelah klik tombol. Scan &amp; transfer, lalu admin akan tambahkan
+                                saldo secara manual.
                             </p>
                         </div>
                     </div>
@@ -500,7 +505,7 @@
         const ppnDisplay = document.getElementById('ppnDisplay');
         const totalDisplay = document.getElementById('totalDisplay');
         const totalAmountField = document.getElementById('totalAmountField');
-        const adminFee = 10000;
+        const adminFee = {{ $qrisAdminFee }};
 
         if (topupInput) {
             topupInput.addEventListener('input', function() {
@@ -756,7 +761,7 @@
                 return;
             }
 
-            const adminFee = 10000;
+            const adminFee = {{ $qrisAdminFee }};
             const ppn = nominal * 0.11;
             const total = nominal + adminFee + ppn;
 
@@ -770,31 +775,34 @@
 
         async function submitQrisTopup() {
             const amountInput = document.getElementById('qrisAmount');
-            const btn         = document.getElementById('qrisBtn');
-            const btnText     = document.getElementById('qrisBtnText');
-            const amount      = parseFloat(amountInput?.value || 0);
+            const btn = document.getElementById('qrisBtn');
+            const btnText = document.getElementById('qrisBtnText');
+            const amount = parseFloat(amountInput?.value || 0);
 
             if (!amount || amount < 10000) {
                 Swal.fire('Perhatian', 'Nominal minimal Rp 10.000', 'warning');
                 return;
             }
 
-            const adminFee    = 10000;
-            const ppn         = amount * 0.11;
+            const adminFee = {{ $qrisAdminFee }};
+            const ppn = amount * 0.11;
             const totalAmount = amount + adminFee + ppn;
 
             btn.disabled = true;
             btnText.textContent = 'MEMPROSES...';
 
             try {
-                const response = await fetch('{{ route("billing.qrisTopup") }}', {
-                    method:  'POST',
+                const response = await fetch('{{ route('billing.qrisTopup') }}', {
+                    method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Content-Type': 'application/json',
-                        'Accept':       'application/json',
+                        'Accept': 'application/json',
                     },
-                    body: JSON.stringify({ amount, total_amount: totalAmount }),
+                    body: JSON.stringify({
+                        amount,
+                        total_amount: totalAmount
+                    }),
                 });
 
                 const data = await response.json();
@@ -808,9 +816,9 @@
 
                 // Tampilkan QR code dalam modal SweetAlert
                 const fmt = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
-                const qrHtml = data.qris_image_url
-                    ? `<img src="${data.qris_image_url}" style="width:200px;height:200px;object-fit:contain;border-radius:16px;border:1px solid #e5e7eb;margin:0 auto 12px;" />`
-                    : '';
+                const qrHtml = data.qris_image_url ?
+                    `<img src="${data.qris_image_url}" style="width:200px;height:200px;object-fit:contain;border-radius:16px;border:1px solid #e5e7eb;margin:0 auto 12px;" />` :
+                    '';
 
                 await Swal.fire({
                     title: 'Scan QR & Transfer',
@@ -824,7 +832,7 @@
                             </div>
                             <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
                                 <span style="color:#6b7280">Biaya Admin</span>
-                                <span>Rp 10.000</span>
+                                <span>Rp {{ number_format($qrisAdminFee, 0, ',', '.') }}</span>
                             </div>
                             <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
                                 <span style="color:#6b7280">PPN (11%)</span>
