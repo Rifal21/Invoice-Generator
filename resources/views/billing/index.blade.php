@@ -118,6 +118,71 @@
                 </div>
             </div>
 
+            {{-- Alternatif: Topup via QRIS Manual --}}
+            @if ($qrisImage)
+                <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div class="p-6 border-b border-gray-50 bg-gradient-to-r from-purple-50 to-indigo-50">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
+                                <i class="fas fa-qrcode text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-gray-900 text-sm uppercase">Topup via QRIS</h3>
+                                <p class="text-[10px] font-medium text-gray-500">Input nominal &rarr; QR muncul &rarr; transfer &rarr; admin konfirmasi</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-4">
+
+                        {{-- Nominal Input --}}
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                Nominal Saldo yang Diinginkan
+                            </label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">Rp</span>
+                                <input type="number" id="qrisAmount" placeholder="50000" min="10000"
+                                    oninput="calcQrisFee()"
+                                    class="w-full bg-gray-50 border border-gray-100 rounded-xl px-12 py-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none font-bold">
+                            </div>
+                            <p class="text-[9px] text-gray-400 mt-2 font-medium">Minimal topup: Rp 10.000</p>
+                        </div>
+
+                        {{-- Rincian Biaya --}}
+                        <div id="qrisFeeBreakdown" class="hidden space-y-2 p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                            <div class="flex justify-between text-[11px] font-medium text-gray-500">
+                                <span>Saldo yang ditambahkan</span>
+                                <span id="qrisNominalDisplay" class="font-black text-gray-700">Rp 0</span>
+                            </div>
+                            <div class="flex justify-between text-[11px] font-medium text-gray-500">
+                                <span>Biaya Admin</span>
+                                <span>Rp 10.000</span>
+                            </div>
+                            <div class="flex justify-between text-[11px] font-medium text-gray-500">
+                                <span>PPN (11%)</span>
+                                <span id="qrisPpnDisplay">Rp 0</span>
+                            </div>
+                            <div class="pt-2 border-t border-purple-200 flex justify-between text-xs font-black text-gray-900">
+                                <span>Total yang Ditransfer</span>
+                                <span id="qrisTotalDisplay" class="text-purple-600">Rp 0</span>
+                            </div>
+                        </div>
+
+                        <button id="qrisBtn" onclick="submitQrisTopup()"
+                            class="w-full bg-purple-600 text-white font-black py-3 rounded-xl hover:bg-purple-700 transition-all shadow-md flex justify-center items-center gap-2">
+                            <i class="fas fa-qrcode"></i>
+                            <span id="qrisBtnText">LIHAT QR &amp; LANJUT BAYAR</span>
+                        </button>
+
+                        <div class="p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                            <p class="text-[10px] text-amber-700 font-medium leading-relaxed">
+                                <i class="fas fa-info-circle mr-1"></i>
+                                QR code akan muncul setelah klik tombol. Scan &amp; transfer, lalu admin akan tambahkan saldo secara manual.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
         </div>
 
         <!-- Transaction History -->
@@ -136,11 +201,15 @@
                             <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Deskripsi
                             </th>
                             <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Jenis</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Metode</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Metode
+                            </th>
+                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Status
+                            </th>
+                            <th
+                                class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
                                 Jumlah</th>
-                            <th class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                            <th
+                                class="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
                                 Saldo Akhir</th>
                         </tr>
                     </thead>
@@ -673,6 +742,117 @@
                     spinner.classList.add('hidden');
                 }
             });
+        }
+
+        // ============================================
+        // QRIS Topup
+        // ============================================
+        function calcQrisFee() {
+            const nominal = parseFloat(document.getElementById('qrisAmount')?.value || 0);
+            const breakdown = document.getElementById('qrisFeeBreakdown');
+
+            if (!nominal || nominal < 1) {
+                breakdown?.classList.add('hidden');
+                return;
+            }
+
+            const adminFee = 10000;
+            const ppn = nominal * 0.11;
+            const total = nominal + adminFee + ppn;
+
+            const fmt = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+            document.getElementById('qrisNominalDisplay').textContent = fmt(nominal);
+            document.getElementById('qrisPpnDisplay').textContent = fmt(ppn);
+            document.getElementById('qrisTotalDisplay').textContent = fmt(total);
+
+            breakdown?.classList.remove('hidden');
+        }
+
+        async function submitQrisTopup() {
+            const amountInput = document.getElementById('qrisAmount');
+            const btn         = document.getElementById('qrisBtn');
+            const btnText     = document.getElementById('qrisBtnText');
+            const amount      = parseFloat(amountInput?.value || 0);
+
+            if (!amount || amount < 10000) {
+                Swal.fire('Perhatian', 'Nominal minimal Rp 10.000', 'warning');
+                return;
+            }
+
+            const adminFee    = 10000;
+            const ppn         = amount * 0.11;
+            const totalAmount = amount + adminFee + ppn;
+
+            btn.disabled = true;
+            btnText.textContent = 'MEMPROSES...';
+
+            try {
+                const response = await fetch('{{ route("billing.qrisTopup") }}', {
+                    method:  'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept':       'application/json',
+                    },
+                    body: JSON.stringify({ amount, total_amount: totalAmount }),
+                });
+
+                const data = await response.json();
+                if (!data.success) {
+                    Swal.fire('Gagal', data.message || 'Terjadi kesalahan.', 'error');
+                    return;
+                }
+
+                // Inject baris pending ke tabel
+                injectPendingRow(data.transaction, data.order_id);
+
+                // Tampilkan QR code dalam modal SweetAlert
+                const fmt = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+                const qrHtml = data.qris_image_url
+                    ? `<img src="${data.qris_image_url}" style="width:200px;height:200px;object-fit:contain;border-radius:16px;border:1px solid #e5e7eb;margin:0 auto 12px;" />`
+                    : '';
+
+                await Swal.fire({
+                    title: 'Scan QR & Transfer',
+                    html: `
+                        ${qrHtml}
+                        <p style="font-size:12px;color:#6b7280;margin-bottom:12px">Scan menggunakan aplikasi e-wallet / mobile banking</p>
+                        <div style="background:#f5f3ff;border:1px solid #e9d5ff;border-radius:12px;padding:12px;text-align:left;font-size:12px;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                                <span style="color:#6b7280">Saldo ditambahkan</span>
+                                <b>${fmt(amount)}</b>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                                <span style="color:#6b7280">Biaya Admin</span>
+                                <span>Rp 10.000</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                <span style="color:#6b7280">PPN (11%)</span>
+                                <span>${fmt(ppn)}</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;border-top:1px solid #d8b4fe;padding-top:8px;">
+                                <b>Total Transfer</b>
+                                <b style="color:#7c3aed">${fmt(totalAmount)}</b>
+                            </div>
+                        </div>
+                        <p style="font-size:10px;color:#f59e0b;margin-top:10px">
+                            <i class="fas fa-info-circle"></i>
+                            Notifikasi WA sudah terkirim ke admin. Saldo akan diisi setelah pembayaran dikonfirmasi.
+                        </p>`,
+                    confirmButtonText: 'Selesai',
+                    confirmButtonColor: '#7c3aed',
+                    width: 380,
+                });
+
+                amountInput.value = '';
+                document.getElementById('qrisFeeBreakdown')?.classList.add('hidden');
+            } catch (err) {
+                console.error('[QRIS] Error:', err);
+                Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
+            } finally {
+                btn.disabled = false;
+                btnText.textContent = 'LIHAT QR & LANJUT BAYAR';
+            }
         }
     </script>
 @endpush

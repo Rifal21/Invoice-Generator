@@ -218,9 +218,13 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // Billing Routes
+    Route::get('billing/suspended', fn() => view('billing.suspended'))->name('billing.suspended');
     Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
     Route::get('billing/manage', [BillingController::class, 'manage'])->name('billing.manage');
     Route::post('billing/topup', [BillingController::class, 'topup'])->name('billing.topup');
+    Route::post('billing/qris-topup', [BillingController::class, 'qrisTopup'])->name('billing.qrisTopup');
+    Route::post('billing/qris-settings', [BillingController::class, 'updateQrisSettings'])->name('billing.updateQrisSettings');
+    Route::post('billing/confirm-qris/{transaction}', [BillingController::class, 'confirmQrisPayment'])->name('billing.confirmQris');
     Route::post('billing/manual-topup', [BillingController::class, 'manualTopup'])->name('billing.manualTopup');
     Route::post('billing/rate', [BillingController::class, 'updateRate'])->name('billing.updateRate');
     Route::post('billing/status', [BillingController::class, 'updateStatus'])->name('billing.updateStatus');

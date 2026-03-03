@@ -17,25 +17,37 @@ class AppBillingMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Only run for authenticated users and non-AJAX requests (to avoid overhead)
+        // Lewati: unauthenticated, AJAX/JSON (tidak perlu redirect HTML), dan API calls
         if (!Auth::check() || $request->ajax() || $request->wantsJson()) {
             return $next($request);
         }
 
-        // Check billing status
-        $status = Setting::where('key', 'app_billing_status')->first()?->value ?? 'active';
-        if ($status === 'disabled') {
+        // Selalu lewati route logout agar user bisa keluar kapanpun
+        if ($request->routeIs('logout')) {
             return $next($request);
         }
 
-        // Just check the balance. Deduction is handled in the background by a Scheduled Job.
+        // Lewati jika billing dinonaktifkan (FREE ACCESS mode)
+        $status = Setting::where('key', 'app_billing_status')->first()?->value ?? 'active';
+        if ($status !== 'active') {
+            return $next($request);
+        }
+
+        // Cek saldo
         $balance = (float) (Setting::where('key', 'app_balance')->first()?->value ?? 0);
 
-        // If balance is exhausted, notify or restrict
-        if ($balance <= 0 && !Auth::user()->isBillingManager()) {
-            // Rifal should always have access to top up, others are blocked
-            if (!$request->routeIs('billing.*') && !$request->routeIs('logout')) {
-                return response()->redirectToRoute('billing.index')->with('error', 'Saldo aplikasi telah habis. Silakan hubungi Administrator (Rifal Kurniawan) untuk melakukan Top Up agar aplikasi dapat digunakan kembali.');
+        if ($balance <= 0) {
+            // Billing Manager: boleh akses halaman billing untuk topup, tapi TIDAK bisa fitur lain
+            if (Auth::user()->isBillingManager()) {
+                if (!$request->routeIs('billing.*')) {
+                    return redirect()->route('billing.suspended');
+                }
+                return $next($request);
+            }
+
+            // User biasa: hanya boleh akses halaman suspended
+            if (!$request->routeIs('billing.suspended')) {
+                return redirect()->route('billing.suspended');
             }
         }
 

@@ -61,7 +61,7 @@
                         <i class="fas fa-plus-circle text-indigo-600"></i> Topup Saldo
                     </h3>
 
-                    <form action="{{ route('billing.manualTopup') }}" method="POST" class="space-y-6" id="topupForm">
+                    <form action="{{ route('billing.manualTopup') }}" method="POST" class="space-y- 6" id="topupForm">
                         @csrf
                         <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 mb-6">
                             <p class="text-[10px] text-indigo-600 font-black uppercase tracking-widest mb-1">Target</p>
@@ -129,6 +129,53 @@
                             TARIF</button>
                     </form>
                 </div>
+
+                {{-- QRIS Settings --}}
+                <div
+                    class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 overflow-hidden relative border-l-4 border-l-purple-500">
+                    <h3 class="text-lg font-black text-gray-900 mb-6 uppercase tracking-tight flex items-center gap-2">
+                        <i class="fas fa-qrcode text-purple-600"></i> Pengaturan QRIS
+                    </h3>
+
+                    <form action="{{ route('billing.updateQrisSettings') }}" method="POST" enctype="multipart/form-data"
+                        class="space-y-5">
+                        @csrf
+
+                        {{-- Preview gambar current --}}
+                        @if ($qrisImage)
+                            <div class="flex justify-center mb-2">
+                                <img src="{{ Storage::url($qrisImage) }}" alt="QRIS saat ini"
+                                    class="w-36 h-36 object-contain rounded-2xl border border-purple-100 shadow-sm">
+                            </div>
+                            <p class="text-center text-[10px] text-gray-400">Gambar QRIS saat ini</p>
+                        @endif
+
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                Upload Gambar QRIS Baru
+                            </label>
+                            <input type="file" name="qris_image" accept="image/*"
+                                class="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                            <p class="text-[9px] text-gray-400 mt-1">Format: JPG/PNG/WebP, max 2MB</p>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                                Nomor WA Notifikasi Admin
+                            </label>
+                            <input type="text" name="qris_wa_notify" value="{{ $qrisWaNotify ?? '' }}"
+                                placeholder="08xxxxxxxxxx"
+                                class="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-purple-500 outline-none font-bold">
+                            <p class="text-[9px] text-gray-400 mt-1">Nomor ini akan menerima notifikasi WA saat user request
+                                topup QRIS</p>
+                        </div>
+
+                        <button type="submit"
+                            class="w-full bg-purple-600 text-white font-black py-3 rounded-2xl hover:bg-purple-700 transition-all uppercase tracking-widest text-xs">
+                            SIMPAN PENGATURAN QRIS
+                        </button>
+                    </form>
+                </div>
             </div>
 
             <!-- Stats & Transactions -->
@@ -147,6 +194,64 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- Card: QRIS Pending Konfirmasi --}}
+                @if ($pendingQris->isNotEmpty())
+                    <div class="bg-white rounded-3xl shadow-sm border-2 border-amber-300 overflow-hidden">
+                        <div
+                            class="p-5 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-clock text-amber-500"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-black text-gray-900 text-sm uppercase">Konfirmasi Pembayaran QRIS</h3>
+                                    <p class="text-[10px] text-amber-600 font-medium">{{ $pendingQris->count() }}
+                                        permintaan menunggu konfirmasi</p>
+                                </div>
+                            </div>
+                            <span class="px-3 py-1 bg-amber-400 text-white text-[10px] font-black rounded-full uppercase">
+                                PERLU AKSI
+                            </span>
+                        </div>
+                        <div class="divide-y divide-gray-50">
+                            @foreach ($pendingQris as $qrTrx)
+                                <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span
+                                                class="text-xs font-black text-gray-900">{{ $qrTrx->user->name ?? '—' }}</span>
+                                            <span
+                                                class="px-2 py-0.5 bg-purple-50 text-purple-600 text-[9px] font-black rounded uppercase">QRIS</span>
+                                        </div>
+                                        <div class="text-sm font-black text-emerald-600">
+                                            +Rp {{ number_format($qrTrx->amount, 0, ',', '.') }}
+                                            <span class="text-[10px] font-normal text-gray-400 ml-1">saldo
+                                                ditambahkan</span>
+                                        </div>
+                                        <div class="text-[10px] text-gray-400 mt-1">
+                                            {{ $qrTrx->description }}
+                                        </div>
+                                        <div class="text-[10px] text-gray-400 mt-0.5">
+                                            <i class="fas fa-clock mr-1"></i>{{ $qrTrx->created_at->diffForHumans() }}
+                                            · {{ $qrTrx->created_at->format('d/m/Y H:i') }}
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 shrink-0">
+                                        <form action="{{ route('billing.confirmQris', $qrTrx->id) }}" method="POST"
+                                            onsubmit="return confirm('Konfirmasi pembayaran QRIS dari {{ addslashes($qrTrx->user->name ?? '') }} sebesar Rp {{ number_format($qrTrx->amount, 0, ',', '.') }}?')">
+                                            @csrf
+                                            <button type="submit"
+                                                class="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs rounded-xl transition-all shadow-sm">
+                                                <i class="fas fa-check"></i> Konfirmasi
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
 
                 <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                     <div class="p-6 border-b border-gray-50 bg-gray-50/50 flex items-center justify-between">
