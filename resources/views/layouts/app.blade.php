@@ -29,6 +29,10 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
 
+    <script type="text/javascript"
+        src="{{ config('services.midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}"
+        data-client-key="{{ config('services.midtrans.client_key') }}"></script>
+
     <style>
         .select2-container .select2-selection--single {
             height: 38px !important;
@@ -148,8 +152,11 @@
                                     class="relative p-2 rounded-full hover:bg-gray-100 transition-all duration-300 group"
                                     :class="{ 'bg-indigo-50 text-indigo-600': expanded, 'text-gray-400': !expanded }">
                                     <i class="fas fa-broadcast-tower text-xl transition-colors"
-                                        :class="{ 'text-indigo-600 animate-pulse': isPlaying, 'group-hover:text-indigo-500': !
-                                                isPlaying }"></i>
+                                        :class="{
+                                            'text-indigo-600 animate-pulse': isPlaying,
+                                            'group-hover:text-indigo-500': !
+                                                isPlaying
+                                        }"></i>
                                     <span class="absolute top-2 right-2 flex h-2.5 w-2.5" x-show="isPlaying">
                                         <span
                                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>

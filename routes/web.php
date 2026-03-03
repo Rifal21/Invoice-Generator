@@ -221,6 +221,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
     Route::get('billing/manage', [BillingController::class, 'manage'])->name('billing.manage');
     Route::post('billing/topup', [BillingController::class, 'topup'])->name('billing.topup');
+    Route::post('billing/manual-topup', [BillingController::class, 'manualTopup'])->name('billing.manualTopup');
     Route::post('billing/rate', [BillingController::class, 'updateRate'])->name('billing.updateRate');
     Route::post('billing/status', [BillingController::class, 'updateStatus'])->name('billing.updateStatus');
 });

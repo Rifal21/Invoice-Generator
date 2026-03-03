@@ -20,3 +20,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::post('/receive-sync', [\App\Http\Controllers\BackupController::class, 'receiveSync']);
 Route::post('/provide-sync', [\App\Http\Controllers\BackupController::class, 'provideSync']);
+
+Route::post('/midtrans/callback', [\App\Http\Controllers\Api\PaymentCallbackController::class, 'midtransCallback']);
+Route::get('/billing/check-status/{orderId}', [\App\Http\Controllers\Api\PaymentCallbackController::class, 'checkStatus']);

@@ -13,10 +13,14 @@ class Transaction extends Model
         'user_id',
         'type',
         'amount',
+        'status',
+        'payment_channel',
         'balance_before',
         'balance_after',
         'description',
         'reference_id',
+        'snap_token',
+        'payment_url',
     ];
 
     public function user()

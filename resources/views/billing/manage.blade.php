@@ -61,7 +61,7 @@
                         <i class="fas fa-plus-circle text-indigo-600"></i> Topup Saldo
                     </h3>
 
-                    <form action="{{ route('billing.topup') }}" method="POST" class="space-y-6" id="topupForm">
+                    <form action="{{ route('billing.manualTopup') }}" method="POST" class="space-y-6" id="topupForm">
                         @csrf
                         <div class="p-4 bg-indigo-50 rounded-2xl border border-indigo-100 mb-6">
                             <p class="text-[10px] text-indigo-600 font-black uppercase tracking-widest mb-1">Target</p>
@@ -95,9 +95,11 @@
                             </div>
                         </div>
 
-                        <button type="submit"
-                            class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 uppercase tracking-widest text-xs">ISI
-                            SALDO APLIKASI</button>
+                        <button type="submit" id="topupBtn"
+                            class="w-full bg-indigo-600 text-white font-black py-4 rounded-2xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 uppercase tracking-widest text-xs flex justify-center items-center gap-2">
+                            <span id="btnText">ISI SALDO APLIKASI</span>
+                            <i id="btnSpinner" class="fas fa-circle-notch fa-spin hidden"></i>
+                        </button>
                     </form>
                 </div>
 
@@ -219,6 +221,17 @@
             const total = amount + adminFee + ppn;
             ppnDisplay.textContent = 'Rp ' + ppn.toLocaleString('id-ID');
             totalDisplay.textContent = 'Rp ' + total.toLocaleString('id-ID');
+        });
+
+        const form = document.getElementById('topupForm');
+        const btn = document.getElementById('topupBtn');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('btnSpinner');
+
+        form.addEventListener('submit', function() {
+            btn.disabled = true;
+            btnText.innerText = 'MEMPROSES...';
+            spinner.classList.remove('hidden');
         });
     </script>
 @endsection
