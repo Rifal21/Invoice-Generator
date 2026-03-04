@@ -64,30 +64,30 @@
 
         <div :class="sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-72'" class="transition-all duration-300 ease-in-out">
             <div
-                class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-x-4 border-b border-gray-200 bg-white/80 backdrop-blur-md px-4 shadow-sm sm:gap-x-6 sm:px-6 lg:px-8">
+                class="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-x-2 sm:gap-x-6 border-b border-gray-200 bg-white/80 backdrop-blur-md px-4 shadow-sm lg:px-8">
                 <div class="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
                     <div class="flex flex-1 items-center gap-3">
                         <div class="flex items-center gap-2">
                             <img src="{{ isset($site_settings['brand_logo']) ? (Storage::disk('public')->exists($site_settings['brand_logo']) ? asset('storage/' . $site_settings['brand_logo']) : asset($site_settings['brand_logo'])) : asset('images/kopinvoice.png') }}"
                                 class="h-8 w-8 object-contain" alt="Logo">
                             <span
-                                class="text-sm font-black text-gray-900 uppercase tracking-widest">@yield('title', 'Dashboard')</span>
+                                class="text-sm font-black text-gray-900 uppercase tracking-widest truncate max-w-[100px] sm:max-w-none">@yield('title', 'Dashboard')</span>
                         </div>
                     </div>
 
-                    <div class="flex items-center gap-x-4 lg:gap-x-6">
+                    <div class="flex items-center gap-x-2 sm:gap-x-6">
                         <!-- GLOBAL APP BALANCE -->
                         @php $isBilled = ($site_settings['app_billing_status'] ?? 'active') === 'active'; @endphp
                         <a href="{{ route('billing.index') }}"
-                            class="hidden sm:flex items-center gap-2 px-3 py-1.5 {{ $isBilled ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50 border-gray-100' }} border rounded-full hover:opacity-80 transition-all group">
+                            class="flex items-center gap-1.5 sm:gap-2 px-2 py-1 sm:px-3 sm:py-1.5 {{ $isBilled ? 'bg-emerald-50 border-emerald-100' : 'bg-gray-50 border-gray-100' }} border rounded-full hover:opacity-80 transition-all group">
                             <i
-                                class="fas {{ $isBilled ? 'fa-wallet text-emerald-600' : 'fa-power-off text-gray-400' }} text-xs"></i>
+                                class="fas {{ $isBilled ? 'fa-wallet text-emerald-600' : 'fa-power-off text-gray-400' }} text-[10px] sm:text-xs"></i>
                             <div class="flex flex-col items-start leading-none">
                                 <span
-                                    class="text-[9px] font-black {{ $isBilled ? 'text-emerald-500' : 'text-gray-400' }} uppercase tracking-widest leading-none mb-0.5">
+                                    class="hidden sm:block text-[9px] font-black {{ $isBilled ? 'text-emerald-500' : 'text-gray-400' }} uppercase tracking-widest leading-none mb-0.5">
                                     {{ $isBilled ? 'Saldo Ops' : 'Billing Off' }}
                                 </span>
-                                <span class="text-xs font-bold text-gray-900" id="navbarBalance"
+                                <span class="text-[10px] sm:text-xs font-bold text-gray-900" id="navbarBalance"
                                     data-value="{{ $site_settings['app_balance'] ?? 0 }}"
                                     data-rate="{{ $site_settings['app_billing_rate_per_minute'] ?? 14 }}"
                                     data-status="{{ $site_settings['app_billing_status'] ?? 'active' }}">
