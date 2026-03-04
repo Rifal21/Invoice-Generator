@@ -22,7 +22,7 @@ class PaymentCallbackController extends Controller
         Config::$is3ds = config('services.midtrans.is_3ds');
 
         // Log raw payload untuk debugging
-        \Log::info('[Midtrans Callback] Raw payload:', $request->all());
+        Log::info('[Midtrans Callback] Raw payload:', $request->all());
 
         // Ambil data dari request body (JSON atau form)
         $payload = $request->all();
@@ -37,7 +37,7 @@ class PaymentCallbackController extends Controller
             $expectedSig = hash('sha512', $orderId . $statusCode . $grossAmount . $serverKey);
 
             if ($payload['signature_key'] !== $expectedSig) {
-                \Log::warning('[Midtrans Callback] Signature mismatch! Order: ' . $orderId);
+                Log::warning('[Midtrans Callback] Signature mismatch! Order: ' . $orderId);
                 return response()->json(['message' => 'Invalid signature'], 403);
             }
 
@@ -53,22 +53,22 @@ class PaymentCallbackController extends Controller
                 $orderId           = $notif->order_id;
                 $fraud             = $notif->fraud_status;
             } catch (\Exception $e) {
-                \Log::error('[Midtrans Callback] Notification error: ' . $e->getMessage());
+                Log::error('[Midtrans Callback] Notification error: ' . $e->getMessage());
                 return response()->json(['message' => 'Invalid notification'], 400);
             }
         }
 
-        \Log::info("[Midtrans Callback] Order: {$orderId}, Status: {$transactionStatus}, Type: {$type}");
+        Log::info("[Midtrans Callback] Order: {$orderId}, Status: {$transactionStatus}, Type: {$type}");
 
         $localTransaction = Transaction::where('reference_id', $orderId)->first();
 
         if (!$localTransaction) {
-            \Log::warning("[Midtrans Callback] Transaction not found: {$orderId}");
+            Log::warning("[Midtrans Callback] Transaction not found: {$orderId}");
             return response()->json(['message' => 'Transaction not found'], 404);
         }
 
         if ($localTransaction->status !== 'pending') {
-            \Log::info("[Midtrans Callback] Already processed: {$orderId} (status: {$localTransaction->status})");
+            Log::info("[Midtrans Callback] Already processed: {$orderId} (status: {$localTransaction->status})");
             return response()->json(['message' => 'Transaction already processed'], 200);
         }
 
@@ -100,11 +100,11 @@ class PaymentCallbackController extends Controller
             $localTransaction->update(['payment_channel' => $type]);
 
             DB::commit();
-            \Log::info("[Midtrans Callback] Success processed: {$orderId}");
+            Log::info("[Midtrans Callback] Success processed: {$orderId}");
             return response()->json(['message' => 'Success', 'status' => $transactionStatus, 'type' => $type], 200);
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error("[Midtrans Callback] Database error: " . $e->getMessage());
+            Log::error("[Midtrans Callback] Database error: " . $e->getMessage());
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }

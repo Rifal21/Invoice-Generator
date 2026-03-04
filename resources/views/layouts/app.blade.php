@@ -92,7 +92,7 @@
                                     data-rate="{{ $site_settings['app_billing_rate_per_minute'] ?? 14 }}"
                                     data-status="{{ $site_settings['app_billing_status'] ?? 'active' }}">
                                     @if ($isBilled)
-                                        Rp {{ number_format($site_settings['app_balance'] ?? 0, 0, ',', '.') }}
+                                        Rp {{ number_format(floor($site_settings['app_balance'] ?? 0), 0, ',', '.') }}
                                     @else
                                         FREE ACCESS
                                     @endif
@@ -260,16 +260,29 @@
             if (!display) return;
 
             const status = display.dataset.status || 'active';
-            if (status !== 'active') return;
-
             let currentBalance = parseFloat(display.dataset.value);
             const ratePerMinute = parseFloat(display.dataset.rate);
+            const ratePerSecond = ratePerMinute / 60;
 
-            setInterval(() => {
-                currentBalance -= ratePerMinute;
-                if (currentBalance < 0) currentBalance = 0;
-                display.textContent = 'Rp ' + Math.floor(currentBalance).toLocaleString('id-ID');
-            }, 60000);
+            if (status === 'active') {
+                if (window.navbarBalanceInterval) clearInterval(window.navbarBalanceInterval);
+                window.navbarBalanceInterval = setInterval(() => {
+                    currentBalance -= ratePerMinute;
+                    if (currentBalance < 0) currentBalance = 0;
+                    display.textContent = (currentBalance > 0 ? 'Rp ' + Math.floor(currentBalance)
+                        .toLocaleString('id-ID') : 'FREE ACCESS');
+                }, 60000);
+            }
+
+            // Listen for manual balance updates
+            window.addEventListener('balanceUpdated', (e) => {
+                if (e.detail && e.detail.balance !== undefined) {
+                    currentBalance = parseFloat(e.detail.balance);
+                    display.dataset.value = currentBalance;
+                    display.textContent = (currentBalance > 0 ? 'Rp ' + Math.floor(currentBalance)
+                        .toLocaleString('id-ID') : 'FREE ACCESS');
+                }
+            });
         })();
 
         // Notifications logic

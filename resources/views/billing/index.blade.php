@@ -18,9 +18,9 @@
                         <div class="text-emerald-100 text-sm font-bold uppercase tracking-widest mb-2">Saldo Aplikasi
                             (Global)</div>
                         <div class="flex items-baseline gap-2">
-                            <span class="text-sm font-bold text-emerald-200">Rp</span>
-                            <span class="text-5xl font-black" id="currentBalanceDisplay" data-value="{{ $appBalance }}"
-                                data-rate="{{ $ratePerMinute }}">{{ number_format($appBalance, 0, ',', '.') }}</span>
+                            @php $liveBalance = $site_settings['app_balance'] ?? 0; @endphp
+                            <span class="text-5xl font-black" id="currentBalanceDisplay" data-value="{{ $liveBalance }}"
+                                data-rate="{{ $ratePerMinute }}">{{ number_format(floor($liveBalance), 0, ',', '.') }}</span>
                         </div>
                         <div class="mt-8 pt-8 border-t border-white/10 flex items-center justify-between">
                             <div class="text-xs text-emerald-200 font-medium">System Status</div>
@@ -477,13 +477,31 @@
         (function() {
             const display = document.getElementById('currentBalanceDisplay');
             if (!display) return;
+
+            const navbarDisplay = document.getElementById('navbarBalance');
+            const status = navbarDisplay ? navbarDisplay.dataset.status : 'active';
+
             let currentBalance = parseFloat(display.dataset.value);
             const ratePerMinute = parseFloat(display.dataset.rate);
-            setInterval(() => {
-                currentBalance -= ratePerMinute;
-                if (currentBalance < 0) currentBalance = 0;
-                display.textContent = Math.floor(currentBalance).toLocaleString('id-ID');
-            }, 60000);
+            const ratePerSecond = ratePerMinute / 60;
+
+            if (status === 'active') {
+                if (window.billingBalanceInterval) clearInterval(window.billingBalanceInterval);
+                window.billingBalanceInterval = setInterval(() => {
+                    currentBalance -= ratePerMinute;
+                    if (currentBalance < 0) currentBalance = 0;
+                    display.textContent = Math.floor(currentBalance).toLocaleString('id-ID');
+                }, 60000);
+            }
+
+            // Listen for manual balance updates
+            window.addEventListener('balanceUpdated', (e) => {
+                if (e.detail && e.detail.balance !== undefined) {
+                    currentBalance = parseFloat(e.detail.balance);
+                    display.dataset.value = currentBalance;
+                    display.textContent = Math.floor(currentBalance).toLocaleString('id-ID');
+                }
+            });
         })();
 
         function copyToClipboard(text, bank) {
@@ -797,66 +815,44 @@
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({
                         amount,
                         total_amount: totalAmount
-                    }),
+                    })
                 });
 
                 const data = await response.json();
-                if (!data.success) {
-                    Swal.fire('Gagal', data.message || 'Terjadi kesalahan.', 'error');
-                    return;
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Scan QRIS untuk Bayar',
+                        html: `
+                            <div class="flex flex-col items-center">
+                                <p class="text-sm font-bold text-gray-700 mb-4 uppercase">Total: <span class="text-purple-600">Rp ${Math.round(totalAmount).toLocaleString('id-ID')}</span></p>
+                                <div class="p-4 bg-white border-4 border-purple-600 rounded-3xl shadow-xl mb-4">
+                                    <img src="{{ asset('storage/' . $qrisImage) }}" class="w-64 h-64 object-contain">
+                                </div>
+                                <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100 text-left">
+                                    <p class="text-[10px] text-amber-700 font-bold leading-relaxed">
+                                        1. Scan QR di atas dengan aplikasi bank/e-wallet Anda.<br>
+                                        2. Pastikan nominal transfer SAMA PERSIS.<br>
+                                        3. Saldo akan dikonfirmasi manual oleh admin.<br>
+                                        4. Simpan bukti transfer Anda.
+                                    </p>
+                                </div>
+                            </div>
+                        `,
+                        confirmButtonText: 'SAYA SUDAH BAYAR',
+                        confirmButtonColor: '#9333ea',
+                    }).then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Gagal generate QRIS', 'error');
                 }
-
-                // Inject baris pending ke tabel
-                injectPendingRow(data.transaction, data.order_id);
-
-                // Tampilkan QR code dalam modal SweetAlert
-                const fmt = (n) => 'Rp ' + Math.round(n).toLocaleString('id-ID');
-                const qrHtml = data.qris_image_url ?
-                    `<img src="${data.qris_image_url}" style="width:200px;height:200px;object-fit:contain;border-radius:16px;border:1px solid #e5e7eb;margin:0 auto 12px;" />` :
-                    '';
-
-                await Swal.fire({
-                    title: 'Scan QR & Transfer',
-                    html: `
-                        ${qrHtml}
-                        <p style="font-size:12px;color:#6b7280;margin-bottom:12px">Scan menggunakan aplikasi e-wallet / mobile banking</p>
-                        <div style="background:#f5f3ff;border:1px solid #e9d5ff;border-radius:12px;padding:12px;text-align:left;font-size:12px;">
-                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                                <span style="color:#6b7280">Saldo ditambahkan</span>
-                                <b>${fmt(amount)}</b>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
-                                <span style="color:#6b7280">Biaya Admin</span>
-                                <span>Rp {{ number_format($qrisAdminFee, 0, ',', '.') }}</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                                <span style="color:#6b7280">PPN (11%)</span>
-                                <span>${fmt(ppn)}</span>
-                            </div>
-                            <div style="display:flex;justify-content:space-between;border-top:1px solid #d8b4fe;padding-top:8px;">
-                                <b>Total Transfer</b>
-                                <b style="color:#7c3aed">${fmt(totalAmount)}</b>
-                            </div>
-                        </div>
-                        <p style="font-size:10px;color:#f59e0b;margin-top:10px">
-                            <i class="fas fa-info-circle"></i>
-                            Notifikasi WA sudah terkirim ke admin. Saldo akan diisi setelah pembayaran dikonfirmasi.
-                        </p>`,
-                    confirmButtonText: 'Selesai',
-                    confirmButtonColor: '#7c3aed',
-                    width: 380,
-                });
-
-                amountInput.value = '';
-                document.getElementById('qrisFeeBreakdown')?.classList.add('hidden');
             } catch (err) {
-                console.error('[QRIS] Error:', err);
-                Swal.fire('Error', 'Terjadi kesalahan koneksi.', 'error');
+                Swal.fire('Error', 'Terjadi kesalahan sistem', 'error');
             } finally {
                 btn.disabled = false;
                 btnText.textContent = 'LIHAT QR & LANJUT BAYAR';
