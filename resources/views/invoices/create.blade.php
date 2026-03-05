@@ -501,36 +501,36 @@
 
         function showDragAndDropModal() {
             const dragHtml = `
-                <div class="w-full space-y-6">
-                    <div id="camera-section" class="hidden mb-6">
-                        <div class="relative bg-black rounded-[2rem] overflow-hidden aspect-video shadow-2xl border-4 border-white">
+                <div class="w-full space-y-4 md:space-y-6">
+                    <div id="camera-section" class="hidden">
+                        <div class="relative bg-black rounded-[1.5rem] md:rounded-[2.5rem] overflow-hidden aspect-[3/4] md:aspect-video shadow-2xl border-2 md:border-4 border-white">
                             <!-- Live Feed -->
-                            <video id="scan-video" class="w-full h-full object-cover" autoplay playsinline></video>
+                            <video id="scan-video" class="w-full h-full object-cover px-0" autoplay playsinline></video>
                             
                             <!-- Captured Preview -->
                             <img id="scan-preview-img" class="hidden w-full h-full object-cover">
 
                             <!-- Camera Controls -->
-                            <div id="camera-controls" class="absolute bottom-6 left-0 right-0 flex justify-center gap-6">
+                            <div id="camera-controls" class="absolute bottom-4 md:bottom-8 left-0 right-0 flex justify-center gap-4 md:gap-8">
                                 <button type="button" onclick="captureScanPhoto()"
-                                    class="bg-white rounded-full p-4 shadow-2xl hover:scale-110 active:scale-90 transition-transform border-4 border-gray-100">
-                                    <div class="w-6 h-6 rounded-full bg-red-600"></div>
+                                    class="bg-white rounded-full p-4 md:p-5 shadow-2xl hover:scale-110 active:scale-90 transition-transform border-4 border-gray-100">
+                                    <div class="w-6 h-6 md:w-8 md:h-8 rounded-full bg-red-600"></div>
                                 </button>
                                 <button type="button" onclick="toggleCamera(false)"
-                                    class="bg-gray-900/80 text-white rounded-2xl px-6 py-2 text-xs font-black uppercase tracking-widest backdrop-blur-md hover:bg-red-600 transition-colors">
+                                    class="bg-gray-900/80 text-white rounded-2xl px-6 py-2 text-[10px] md:text-xs font-black uppercase tracking-widest backdrop-blur-md hover:bg-red-600 transition-colors">
                                     Tutup
                                 </button>
                             </div>
 
                             <!-- Preview Controls -->
-                            <div id="preview-controls" class="hidden absolute bottom-6 left-0 right-0 flex justify-center gap-4 px-4">
+                            <div id="preview-controls" class="hidden absolute bottom-4 md:bottom-8 left-0 right-0 flex justify-center gap-3 md:gap-4 px-4">
                                 <button type="button" onclick="confirmCapturedPhoto()"
-                                    class="flex-1 bg-emerald-500 text-white rounded-2xl py-4 text-xs font-black uppercase tracking-widest shadow-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
-                                    <i class="fas fa-check-circle text-lg"></i> Gunakan Foto
+                                    class="flex-1 bg-emerald-500 text-white rounded-2xl py-3 md:py-4 text-[10px] md:text-xs font-black uppercase tracking-widest shadow-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
+                                    <i class="fas fa-check-circle text-base md:text-lg"></i> Gunakan
                                 </button>
                                 <button type="button" onclick="retakePhoto()"
-                                    class="flex-1 bg-white/20 text-white rounded-2xl py-4 text-xs font-black uppercase tracking-widest backdrop-blur-md border border-white/30 hover:bg-white/30 transition-all flex items-center justify-center gap-2">
-                                    <i class="fas fa-redo text-lg"></i> Foto Ulang
+                                    class="flex-1 bg-white/20 text-white rounded-2xl py-3 md:py-4 text-[10px] md:text-xs font-black uppercase tracking-widest backdrop-blur-md border border-white/30 hover:bg-white/30 transition-all flex items-center justify-center gap-2">
+                                    <i class="fas fa-redo text-base md:text-lg"></i> Ulang
                                 </button>
                             </div>
                         </div>
@@ -562,9 +562,10 @@
                 title: 'Upload Invoice/Pesanan',
                 html: dragHtml,
                 showConfirmButton: false,
-                width: '600px',
+                width: '800px',
                 customClass: {
-                    popup: 'rounded-[2.5rem] p-8'
+                    popup: 'rounded-[2rem] md:rounded-[3rem] p-4 md:p-8 overflow-hidden',
+                    title: 'text-xl md:text-2xl font-black py-4'
                 },
                 didOpen: () => {
                     const dropZone = document.getElementById('drop-zone');
@@ -625,10 +626,10 @@
                                 ideal: 'environment'
                             },
                             width: {
-                                ideal: 1280
+                                ideal: 1080
                             },
                             height: {
-                                ideal: 720
+                                ideal: 1920
                             }
                         }
                     };
