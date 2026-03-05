@@ -485,7 +485,7 @@
                 text: 'Pilih cara input data pesanan/invoice',
                 icon: 'info',
                 showCancelButton: true,
-                confirmButtonText: '📂 Upload File (PDF/Gambar)',
+                confirmButtonText: '📂 Upload / 📷 Kamera',
                 cancelButtonText: '📝 Input Teks Manual',
                 confirmButtonColor: '#4f46e5',
                 cancelButtonColor: '#0ea5e9',
@@ -501,18 +501,59 @@
 
         function showDragAndDropModal() {
             const dragHtml = `
-                <div class="w-full">
-                    <div id="drop-zone" class="border-4 border-dashed border-indigo-200 rounded-[2rem] p-10 text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all duration-300 relative group">
-                        <input type="file" id="modal-scan-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="application/pdf,image/png,image/jpeg,image/jpg">
-                        
-                        <div class="pointer-events-none transform group-hover:scale-105 transition-transform duration-300">
-                            <div class="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-6 text-indigo-600">
-                                <i class="fas fa-cloud-upload-alt text-4xl"></i>
+                <div class="w-full space-y-6">
+                    <div id="camera-section" class="hidden mb-6">
+                        <div class="relative bg-black rounded-[2rem] overflow-hidden aspect-video shadow-2xl border-4 border-white">
+                            <!-- Live Feed -->
+                            <video id="scan-video" class="w-full h-full object-cover" autoplay playsinline></video>
+                            
+                            <!-- Captured Preview -->
+                            <img id="scan-preview-img" class="hidden w-full h-full object-cover">
+
+                            <!-- Camera Controls -->
+                            <div id="camera-controls" class="absolute bottom-6 left-0 right-0 flex justify-center gap-6">
+                                <button type="button" onclick="captureScanPhoto()"
+                                    class="bg-white rounded-full p-4 shadow-2xl hover:scale-110 active:scale-90 transition-transform border-4 border-gray-100">
+                                    <div class="w-6 h-6 rounded-full bg-red-600"></div>
+                                </button>
+                                <button type="button" onclick="toggleCamera(false)"
+                                    class="bg-gray-900/80 text-white rounded-2xl px-6 py-2 text-xs font-black uppercase tracking-widest backdrop-blur-md hover:bg-red-600 transition-colors">
+                                    Tutup
+                                </button>
                             </div>
-                            <h4 class="text-xl font-black text-gray-900 mb-2">Drag & Drop File Disini</h4>
-                            <p class="text-gray-500 font-medium">atau klik untuk memilih file</p>
-                            <p class="text-xs text-indigo-400 font-bold mt-4 uppercase tracking-widest">Format: PDF, JPG, PNG</p>
+
+                            <!-- Preview Controls -->
+                            <div id="preview-controls" class="hidden absolute bottom-6 left-0 right-0 flex justify-center gap-4 px-4">
+                                <button type="button" onclick="confirmCapturedPhoto()"
+                                    class="flex-1 bg-emerald-500 text-white rounded-2xl py-4 text-xs font-black uppercase tracking-widest shadow-xl hover:bg-emerald-600 transition-all flex items-center justify-center gap-2">
+                                    <i class="fas fa-check-circle text-lg"></i> Gunakan Foto
+                                </button>
+                                <button type="button" onclick="retakePhoto()"
+                                    class="flex-1 bg-white/20 text-white rounded-2xl py-4 text-xs font-black uppercase tracking-widest backdrop-blur-md border border-white/30 hover:bg-white/30 transition-all flex items-center justify-center gap-2">
+                                    <i class="fas fa-redo text-lg"></i> Foto Ulang
+                                </button>
+                            </div>
                         </div>
+                    </div>
+
+                    <div id="upload-section" class="space-y-4">
+                        <div id="drop-zone" class="border-4 border-dashed border-indigo-200 rounded-[2rem] p-10 text-center cursor-pointer hover:bg-indigo-50/50 hover:border-indigo-400 transition-all duration-300 relative group">
+                            <input type="file" id="modal-scan-input" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="application/pdf,image/png,image/jpeg,image/jpg">
+                            
+                            <div class="pointer-events-none transform group-hover:scale-105 transition-transform duration-300">
+                                <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
+                                    <i class="fas fa-cloud-upload-alt text-3xl"></i>
+                                </div>
+                                <h4 class="text-lg font-black text-gray-900 mb-1">Drag & Drop / Klik</h4>
+                                <p class="text-gray-500 text-sm font-medium">Upload File PDF / Gambar</p>
+                            </div>
+                        </div>
+
+                        <button type="button" onclick="toggleCamera(true)" 
+                            class="w-full py-5 bg-emerald-50 border-2 border-emerald-100 rounded-[2rem] flex items-center justify-center gap-3 text-emerald-700 font-black uppercase tracking-widest hover:bg-emerald-100 transition-all group">
+                            <i class="fas fa-camera text-xl group-hover:rotate-12 transition-transform"></i>
+                            Ambil Foto Langsung
+                        </button>
                     </div>
                 </div>
             `;
@@ -566,8 +607,113 @@
             });
         }
 
+        let scanStream = null;
+
+        async function toggleCamera(show) {
+            const cameraSection = document.getElementById('camera-section');
+            const uploadSection = document.getElementById('upload-section');
+            const video = document.getElementById('scan-video');
+
+            if (show) {
+                try {
+                    cameraSection.classList.remove('hidden');
+                    uploadSection.classList.add('hidden');
+
+                    const constraints = {
+                        video: {
+                            facingMode: {
+                                ideal: 'environment'
+                            },
+                            width: {
+                                ideal: 1280
+                            },
+                            height: {
+                                ideal: 720
+                            }
+                        }
+                    };
+
+                    scanStream = await navigator.mediaDevices.getUserMedia(constraints);
+                    video.srcObject = scanStream;
+                    video.setAttribute('muted', '');
+                    video.play();
+                } catch (err) {
+                    console.error('Camera error:', err);
+                    Swal.fire('Error', 'Gagal mengakses kamera belakang. Pastikan izin kamera diberikan.', 'error');
+                    toggleCamera(false);
+                }
+            } else {
+                if (scanStream) {
+                    scanStream.getTracks().forEach(track => track.stop());
+                    scanStream = null;
+                }
+                if (video) video.srcObject = null;
+                if (cameraSection) cameraSection.classList.add('hidden');
+                if (uploadSection) uploadSection.classList.remove('hidden');
+            }
+        }
+
+        let currentCapturedBlob = null;
+
+        async function captureScanPhoto() {
+            const video = document.getElementById('scan-video');
+            const previewImg = document.getElementById('scan-preview-img');
+            const cameraControls = document.getElementById('camera-controls');
+            const previewControls = document.getElementById('preview-controls');
+
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0);
+
+            canvas.toBlob((blob) => {
+                currentCapturedBlob = blob;
+                const url = URL.createObjectURL(blob);
+
+                // Show preview, hide video
+                previewImg.src = url;
+                previewImg.classList.remove('hidden');
+                video.classList.add('hidden');
+
+                // Switch controls
+                cameraControls.classList.add('hidden');
+                previewControls.classList.remove('hidden');
+            }, 'image/jpeg', 0.9);
+        }
+
+        function retakePhoto() {
+            const video = document.getElementById('scan-video');
+            const previewImg = document.getElementById('scan-preview-img');
+            const cameraControls = document.getElementById('camera-controls');
+            const previewControls = document.getElementById('preview-controls');
+
+            // Hide preview, show video
+            previewImg.classList.add('hidden');
+            previewImg.src = '';
+            video.classList.remove('hidden');
+
+            // Switch controls back
+            cameraControls.classList.remove('hidden');
+            previewControls.classList.add('hidden');
+
+            currentCapturedBlob = null;
+        }
+
+        function confirmCapturedPhoto() {
+            if (!currentCapturedBlob) return;
+
+            const file = new File([currentCapturedBlob], 'invoice_capture.jpg', {
+                type: 'image/jpeg'
+            });
+
+            toggleCamera(false);
+            handleFile(file);
+            currentCapturedBlob = null;
+        }
+
         async function handleFile(file) {
-            Swal.close(); // Close the drag & drop modal
+            Swal.close(); // Close the modal
+            if (scanStream) toggleCamera(false);
 
             const formData = new FormData();
             formData.append('file', file);

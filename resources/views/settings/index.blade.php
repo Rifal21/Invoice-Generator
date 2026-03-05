@@ -480,6 +480,11 @@
                         <form action="{{ route('settings.sidebar.add') }}" method="POST" class="space-y-4">
                             @csrf
                             <div>
+                                <label class="text-[10px] font-bold text-indigo-600 uppercase">Label Menu</label>
+                                <input type="text" name="label" placeholder="Contoh: Laporan Baru" required
+                                    class="w-full bg-white border border-indigo-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                            </div>
+                            <div>
                                 <label class="text-[10px] font-bold text-indigo-600 uppercase">Icon</label>
                                 <div class="flex items-center gap-2">
                                     <div

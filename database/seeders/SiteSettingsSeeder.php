@@ -30,9 +30,10 @@ class SiteSettingsSeeder extends Seeder
             ['label' => 'Barcode Saya', 'icon' => 'fas fa-qrcode text-emerald-400', 'route' => 'users.my-barcode', 'order' => 2],
             ['label' => 'AI Insights Analyst', 'icon' => 'fas fa-brain text-pink-400', 'route' => 'ai.index', 'order' => 3],
             ['label' => 'Dokumen Legalitas', 'icon' => 'fas fa-folder-open text-yellow-500', 'route' => 'documents.index', 'order' => 4],
+            ['label' => 'Laporan Pemeriksaan', 'icon' => 'fas fa-clipboard-check text-cyan-400', 'route' => 'examination-reports.index', 'order' => 5],
             
             // Master Data Dropdown
-            ['label' => 'Master Data', 'icon' => 'fas fa-database', 'route' => null, 'order' => 5, 'children' => [
+            ['label' => 'Master Data', 'icon' => 'fas fa-database', 'route' => null, 'order' => 6, 'children' => [
                 ['label' => 'Kategori Produk', 'icon' => 'fas fa-tags', 'route' => 'categories.index'],
                 ['label' => 'Pelanggan', 'icon' => 'fas fa-users', 'route' => 'customers.index'],
                 ['label' => 'Supplier', 'icon' => 'fas fa-truck', 'route' => 'suppliers.index'],
@@ -41,7 +42,7 @@ class SiteSettingsSeeder extends Seeder
             ]],
             
             // Operasional Dropdown
-            ['label' => 'Operasional', 'icon' => 'fas fa-cash-register', 'route' => null, 'order' => 6, 'children' => [
+            ['label' => 'Operasional', 'icon' => 'fas fa-cash-register', 'route' => null, 'order' => 7, 'children' => [
                 ['label' => 'Nota Pengiriman Beras', 'icon' => 'fas fa-shipping-fast', 'route' => 'rice-deliveries.index'],
                 ['label' => 'Surat Jalan', 'icon' => 'fas fa-truck', 'route' => 'delivery-orders.index'],
                 ['label' => 'Invoice Generator', 'icon' => 'fas fa-file-invoice', 'route' => 'invoices.index'],
@@ -55,12 +56,12 @@ class SiteSettingsSeeder extends Seeder
             ]],
             
             // Inventori Dropdown
-            ['label' => 'Gudang & Stok', 'icon' => 'fas fa-warehouse', 'route' => null, 'order' => 7, 'children' => [
+            ['label' => 'Gudang & Stok', 'icon' => 'fas fa-warehouse', 'route' => null, 'order' => 8, 'children' => [
                 ['label' => 'Gudang Utama', 'icon' => 'fas fa-cubes', 'route' => 'inventory.index'],
             ]],
             
             // Analisa Keuangan Dropdown
-            ['label' => 'Analisa Keuangan', 'icon' => 'fas fa-chart-pie', 'route' => null, 'order' => 8, 'children' => [
+            ['label' => 'Analisa Keuangan', 'icon' => 'fas fa-chart-pie', 'route' => null, 'order' => 9, 'children' => [
                 ['label' => 'Ringkasan Keuangan', 'icon' => 'fas fa-chart-line', 'route' => 'finance.summary'],
                 ['label' => 'Pengeluaran', 'icon' => 'fas fa-money-bill-wave', 'route' => 'expenses.index'],
                 ['label' => 'Detail Laba Rugi', 'icon' => 'fas fa-sack-dollar', 'route' => 'profit.index'],
@@ -68,7 +69,7 @@ class SiteSettingsSeeder extends Seeder
             ]],
             
             // Kepegawaian Dropdown
-            ['label' => 'Kepegawaian', 'icon' => 'fas fa-user-tie', 'route' => null, 'order' => 9, 'children' => [
+            ['label' => 'Kepegawaian', 'icon' => 'fas fa-user-tie', 'route' => null, 'order' => 10, 'children' => [
                 ['label' => 'Pegawai', 'icon' => 'fas fa-users', 'route' => 'users.index'],
                 ['label' => 'Gaji Pegawai', 'icon' => 'fas fa-wallet', 'route' => 'salaries.index'],
                 ['label' => 'Laporan Absensi', 'icon' => 'fas fa-clipboard-list', 'route' => 'attendance.report'],
@@ -77,10 +78,10 @@ class SiteSettingsSeeder extends Seeder
             ]],
             
             // Misc
-            ['label' => 'Log Aktivitas', 'icon' => 'fas fa-history text-amber-500', 'route' => 'activity-logs.index', 'order' => 10],
-            ['label' => 'Monitor Login', 'icon' => 'fas fa-desktop text-green-500', 'route' => 'monitor.index', 'order' => 11],
-            ['label' => 'Cloud Backup', 'icon' => 'fab fa-google-drive text-blue-500', 'route' => 'backup.index', 'order' => 12],
-            ['label' => 'Settings', 'icon' => 'fas fa-cog text-gray-400', 'route' => 'settings.index', 'order' => 13],
+            ['label' => 'Log Aktivitas', 'icon' => 'fas fa-history text-amber-500', 'route' => 'activity-logs.index', 'order' => 11],
+            ['label' => 'Monitor Login', 'icon' => 'fas fa-desktop text-green-500', 'route' => 'monitor.index', 'order' => 12],
+            ['label' => 'Cloud Backup', 'icon' => 'fab fa-google-drive text-blue-500', 'route' => 'backup.index', 'order' => 13],
+            ['label' => 'Settings', 'icon' => 'fas fa-cog text-gray-400', 'route' => 'settings.index', 'order' => 14],
         ];
 
         foreach ($sidebar as $item) {
