@@ -471,38 +471,6 @@
             console.log('[Billing] Saldo diperbarui → ' + formattedRp);
         }
 
-        // ============================================
-        // Visual balance simulation
-        // ============================================
-        (function() {
-            const display = document.getElementById('currentBalanceDisplay');
-            if (!display) return;
-
-            const navbarDisplay = document.getElementById('navbarBalance');
-            const status = navbarDisplay ? navbarDisplay.dataset.status : 'active';
-
-            let currentBalance = parseFloat(display.dataset.value);
-            const ratePerMinute = parseFloat(display.dataset.rate);
-            const ratePerSecond = ratePerMinute / 60;
-
-            if (status === 'active') {
-                if (window.billingBalanceInterval) clearInterval(window.billingBalanceInterval);
-                window.billingBalanceInterval = setInterval(() => {
-                    currentBalance -= ratePerMinute;
-                    if (currentBalance < 0) currentBalance = 0;
-                    display.textContent = Math.floor(currentBalance).toLocaleString('id-ID');
-                }, 60000);
-            }
-
-            // Listen for manual balance updates
-            window.addEventListener('balanceUpdated', (e) => {
-                if (e.detail && e.detail.balance !== undefined) {
-                    currentBalance = parseFloat(e.detail.balance);
-                    display.dataset.value = currentBalance;
-                    display.textContent = Math.floor(currentBalance).toLocaleString('id-ID');
-                }
-            });
-        })();
 
         function copyToClipboard(text, bank) {
             navigator.clipboard.writeText(text).then(() => {

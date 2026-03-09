@@ -253,34 +253,81 @@
     </script>
     @stack('scripts')
 
-    <script>
-        // Real-time Balance Simulation for Navigation Bar
+    <script data-turbo-eval="false">
+        // Global Balance Manager (Unified for Navbar and Billing Page)
         (function() {
-            const display = document.getElementById('navbarBalance');
-            if (!display) return;
+            let currentBalance = 0;
+            let navDisplay = null;
+            let pageDisplay = null;
 
-            const status = display.dataset.status || 'active';
-            let currentBalance = parseFloat(display.dataset.value);
-            const ratePerMinute = parseFloat(display.dataset.rate);
-            const ratePerSecond = ratePerMinute / 60;
+            function updateDisplays() {
+                navDisplay = document.getElementById('navbarBalance');
+                pageDisplay = document.getElementById('currentBalanceDisplay');
 
-            if (status === 'active') {
-                if (window.navbarBalanceInterval) clearInterval(window.navbarBalanceInterval);
-                window.navbarBalanceInterval = setInterval(() => {
-                    currentBalance -= ratePerMinute;
-                    if (currentBalance < 0) currentBalance = 0;
-                    display.textContent = (currentBalance > 0 ? 'Rp ' + Math.floor(currentBalance)
-                        .toLocaleString('id-ID') : 'FREE ACCESS');
-                }, 60000);
+                if (navDisplay) {
+                    const formatted = (currentBalance > 0 ? 'Rp ' + Math.floor(currentBalance).toLocaleString('id-ID') :
+                        'FREE ACCESS');
+                    if (navDisplay.textContent !== formatted) {
+                        navDisplay.textContent = formatted;
+                        navDisplay.dataset.value = currentBalance;
+                    }
+                }
+                if (pageDisplay) {
+                    const formatted = Math.floor(currentBalance).toLocaleString('id-ID');
+                    if (pageDisplay.textContent !== formatted) {
+                        pageDisplay.textContent = formatted;
+                        pageDisplay.dataset.value = currentBalance;
+                    }
+                }
             }
 
-            // Listen for manual balance updates
+            async function pollBalance() {
+                try {
+                    const response = await fetch('{{ route('billing.balance') }}');
+                    if (!response.ok) return;
+                    const data = await response.json();
+                    if (data.success) {
+                        currentBalance = data.balance;
+                        updateDisplays();
+                    }
+                } catch (e) {
+                    console.error('[Billing] Poll error:', e);
+                }
+            }
+
+            function initBalanceManager() {
+                navDisplay = document.getElementById('navbarBalance');
+                pageDisplay = document.getElementById('currentBalanceDisplay');
+
+                if (!navDisplay && !pageDisplay) return;
+
+                const source = navDisplay || pageDisplay;
+                const status = (source.dataset.status || 'active').toLowerCase();
+                currentBalance = parseFloat(source.dataset.value || 0);
+
+                if (status === 'active') {
+                    if (!window.globalBalanceInterval) {
+                        window.globalBalanceInterval = setInterval(pollBalance, 60000);
+                    }
+                    pollBalance();
+                } else {
+                    if (window.globalBalanceInterval) {
+                        clearInterval(window.globalBalanceInterval);
+                        window.globalBalanceInterval = null;
+                    }
+                    updateDisplays();
+                }
+            }
+
+            // Initialize on Load and Turbo Navigation
+            window.addEventListener('turbo:load', initBalanceManager);
+            document.addEventListener('DOMContentLoaded', initBalanceManager);
+
+            // Listen for manual balance updates (e.g. after topup)
             window.addEventListener('balanceUpdated', (e) => {
                 if (e.detail && e.detail.balance !== undefined) {
                     currentBalance = parseFloat(e.detail.balance);
-                    display.dataset.value = currentBalance;
-                    display.textContent = (currentBalance > 0 ? 'Rp ' + Math.floor(currentBalance)
-                        .toLocaleString('id-ID') : 'FREE ACCESS');
+                    updateDisplays();
                 }
             });
         })();

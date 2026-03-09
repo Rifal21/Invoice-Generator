@@ -10,8 +10,10 @@ Artisan::command('inspire', function () {
 use Illuminate\Support\Facades\Schedule;
 use App\Jobs\ExpirePendingTopups;
 
+use App\Jobs\DeductBalanceJob;
+
 Schedule::command('recap:daily')->dailyAt('23:00');
-Schedule::command('app:deduct-balance')->everyMinute();
+Schedule::job(new DeductBalanceJob)->everyMinute();
 
 // Tandai topup pending > 1 jam sebagai expired
 Schedule::job(new ExpirePendingTopups)->everyFiveMinutes();

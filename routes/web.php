@@ -232,6 +232,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('billing/manual-topup', [BillingController::class, 'manualTopup'])->name('billing.manualTopup');
     Route::post('billing/rate', [BillingController::class, 'updateRate'])->name('billing.updateRate');
     Route::post('billing/status', [BillingController::class, 'updateStatus'])->name('billing.updateStatus');
+    Route::get('billing/balance', [BillingController::class, 'getBalance'])->name('billing.balance');
 });
 
 Route::get('/test-wa', function () {

@@ -142,6 +142,12 @@ class PaymentCallbackController extends Controller
             'payment_channel'  => $paymentType,
             'description'      => $transaction->description . " | Dikonfirmasi via {$channelLabel}.",
         ]);
+
+        // Reset billing timestamp
+        Setting::updateOrCreate(
+            ['key' => 'app_billing_last_updated_at'],
+            ['value' => now()->toDateTimeString(), 'type' => 'datetime', 'group' => 'billing']
+        );
     }
 
     public function checkStatus(string $orderId)

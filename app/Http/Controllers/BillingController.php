@@ -249,6 +249,12 @@ class BillingController extends Controller
                 'balance_after' => $balanceAfter,
                 'description' => $desc,
             ]);
+
+            // Reset billing timestamp
+            Setting::updateOrCreate(
+                ['key' => 'app_billing_last_updated_at'],
+                ['value' => now()->toDateTimeString(), 'type' => 'datetime', 'group' => 'billing']
+            );
         });
 
         return redirect()->back()->with('success', "Berhasil top up manual Rp " . number_format($topupAmount, 0, ',', '.') . " ke saldo aplikasi.");
@@ -419,9 +425,32 @@ class BillingController extends Controller
                 'balance_before' => $balanceBefore,
                 'balance_after'  => $balanceAfter,
             ]);
+
+            // Reset billing timestamp
+            Setting::updateOrCreate(
+                ['key' => 'app_billing_last_updated_at'],
+                ['value' => now()->toDateTimeString(), 'type' => 'datetime', 'group' => 'billing']
+            );
         });
 
         return redirect()->back()->with('success',
             'Pembayaran QRIS dikonfirmasi. Saldo +Rp ' . number_format($transaction->amount, 0, ',', '.') . ' berhasil ditambahkan.');
+    }
+
+    public function getBalance()
+    {
+        $settings = Setting::whereIn('key', [
+            'app_balance', 
+            'app_billing_rate_per_minute', 
+            'app_billing_status'
+        ])->pluck('value', 'key');
+
+        return response()->json([
+            'success' => true,
+            'balance' => (float) ($settings['app_balance'] ?? 0),
+            'rate' => (float) ($settings['app_billing_rate_per_minute'] ?? 0),
+            'status' => $settings['app_billing_status'] ?? 'active',
+            'formatted_balance' => 'Rp ' . number_format(floor($settings['app_balance'] ?? 0), 0, ',', '.')
+        ]);
     }
 }
