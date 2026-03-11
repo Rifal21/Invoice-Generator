@@ -12,8 +12,12 @@ use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
+use App\Jobs\GenerateBulkInvoiceZipJob;
+use ZipArchive;
 
 class InvoiceController extends Controller
 {
@@ -463,6 +467,59 @@ class InvoiceController extends Controller
 
         $pdf = Pdf::loadView('invoices.bulk-pdf', compact('groupedItems', 'invoices'));
         return $pdf->download('Laporan_Pemeriksaan_Bahan_Makanan_' . $invoices->first()->customer_name . '_' . $invoices->first()->created_at->format('d F Y') . '.pdf');
+    }
+
+    public function bulkDownloadZip(Request $request)
+    {
+        $invoiceIds = $request->invoice_ids ?? [];
+        $exportId = (string) Str::uuid();
+        
+        $filters = [
+            'filter_type' => $request->filter_type,
+            'month' => $request->month,
+            'year' => $request->year,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'customer_name' => $request->customer_name,
+        ];
+
+        Cache::put("zip_export_{$exportId}_status", 'pending', 3600);
+        Cache::put("zip_export_{$exportId}_progress", 0, 3600);
+
+        GenerateBulkInvoiceZipJob::dispatch($invoiceIds, $exportId, $filters);
+
+        return response()->json([
+            'success' => true,
+            'export_id' => $exportId,
+            'message' => 'Proses export dimulai di latar belakang.'
+        ]);
+    }
+
+    public function checkZipProgress($id)
+    {
+        return response()->json([
+            'status' => Cache::get("zip_export_{$id}_status", 'not_found'),
+            'progress' => Cache::get("zip_export_{$id}_progress", 0),
+            'error' => Cache::get("zip_export_{$id}_error"),
+        ]);
+    }
+
+    public function downloadZipFile($id)
+    {
+        $status = Cache::get("zip_export_{$id}_status");
+        $filename = Cache::get("zip_export_{$id}_filename");
+        
+        if ($status !== 'completed' || !$filename) {
+            return abort(404, 'File belum siap atau tidak ditemukan.');
+        }
+
+        $path = storage_path('app/public/temp_zips/' . $filename);
+        
+        if (!file_exists($path)) {
+            return abort(404, 'File fisik tidak ditemukan.');
+        }
+
+        return response()->download($path)->deleteFileAfterSend(true);
     }
 
     public function exportExcel(Invoice $invoice)

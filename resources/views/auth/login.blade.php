@@ -101,7 +101,7 @@
             </div>
 
             <p class="mt-8 text-center text-xs text-gray-400 font-bold uppercase tracking-widest">
-                &copy; {{ date('Y') }} KOPERASI JR. ALL RIGHTS RESERVED.
+                &copy; {{ date('Y') }} FKStudio IT Solution. ALL RIGHTS RESERVED.
             </p>
         </div>
     </div>

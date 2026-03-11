@@ -107,6 +107,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('invoices/{invoice}/export-excel', [InvoiceController::class, 'exportExcel'])->name('invoices.export-excel');
     Route::post('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf'])->name('invoices.bulk-export-pdf');
     Route::get('invoices/bulk-export-pdf', [InvoiceController::class, 'bulkExportPdf']);
+    Route::post('invoices/bulk-download-zip', [InvoiceController::class, 'bulkDownloadZip'])->name('invoices.bulk-download-zip');
+    Route::get('invoices/check-zip-progress/{id}', [InvoiceController::class, 'checkZipProgress'])->name('invoices.check-zip-progress');
+    Route::get('invoices/download-zip/{id}', [InvoiceController::class, 'downloadZipFile'])->name('invoices.download-zip');
     Route::post('invoices/print-multi-pdf', [InvoiceController::class, 'printMultiPdf'])->name('invoices.print-multi-pdf');
     Route::post('invoices/send-telegram', [InvoiceController::class, 'sendToTelegram'])->name('invoices.send-telegram');
     Route::post('invoices/send-customer', [InvoiceController::class, 'sendToCustomer'])->name('invoices.send-customer');
