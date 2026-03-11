@@ -233,6 +233,10 @@
 
                 <!-- Bulk Actions Toolbar -->
                 <div class="mt-8 pt-6 border-t border-gray-50 flex flex-wrap gap-3">
+                    <button type="button" onclick="openZipModal()" id="bulk-zip-btn"
+                        class="inline-flex items-center px-6 py-3 rounded-2xl bg-amber-50 text-amber-700 text-xs font-black uppercase tracking-widest hover:bg-amber-100 transition-all border border-amber-100 shadow-sm">
+                        <i class="fas fa-file-archive mr-2 text-sm"></i> Download ZIP
+                    </button>
                     <button type="button" onclick="submitBulkExport()" id="bulk-export-btn" disabled
                         class="inline-flex items-center px-6 py-3 rounded-2xl bg-rose-50 text-rose-700 text-xs font-black uppercase tracking-widest hover:bg-rose-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all border border-rose-100 shadow-sm">
                         <i class="fas fa-file-pdf mr-2 text-sm"></i> Laporan
@@ -746,6 +750,7 @@
             var whatsappBtnText = document.getElementById('whatsapp-btn-text');
             var whapiBtnText = document.getElementById('whapi-btn-text');
             var bulkDeleteBtn = document.getElementById('bulk-delete-btn');
+            var bulkZipBtn = document.getElementById('bulk-zip-btn');
             var bulkForm = document.getElementById('bulk-export-form');
 
             function updateExportButton() {
@@ -767,6 +772,7 @@
                     telegramCustomerBtnText.innerText = `Telegram Personal (${checkedCount})`;
                     whatsappBtnText.innerText = `WhatsApp WAHA (${checkedCount})`;
                     whapiBtnText.innerText = `Whapi Cloud (${checkedCount})`;
+                    bulkZipBtn.innerHTML = `<i class="fas fa-file-archive mr-2"></i> ZIP (${checkedCount})`;
                 } else {
                     bulkExportBtn.innerHTML = `<i class="fas fa-file-pdf mr-2"></i> Laporan`;
                     multiPrintBtn.innerHTML = `<i class="fas fa-print mr-2"></i> Cetak Massal`;
@@ -776,6 +782,7 @@
                     telegramCustomerBtnText.innerText = `Telegram Personal`;
                     whatsappBtnText.innerText = `WhatsApp WAHA`;
                     whapiBtnText.innerText = `Whapi Cloud`;
+                    bulkZipBtn.innerHTML = `<i class="fas fa-file-archive mr-2"></i> Download ZIP`;
                 }
             }
 
@@ -1470,6 +1477,332 @@
                     }
                 });
             }
+            window.openZipModal = function() {
+                const checkedCheckboxes = document.querySelectorAll(
+                    '.invoice-checkbox:checked, .invoice-checkbox-mobile:checked');
+                const zipIdsContainer = document.getElementById('zip-ids-container');
+                const selectedInfo = document.getElementById('zip-selected-invoices-info');
+                const selectedCount = document.getElementById('selected-count-zip');
+
+                zipIdsContainer.innerHTML = '';
+                if (checkedCheckboxes.length > 0) {
+                    checkedCheckboxes.forEach(cb => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = 'invoice_ids[]';
+                        input.value = cb.value;
+                        zipIdsContainer.appendChild(input);
+                    });
+                    selectedInfo.classList.remove('hidden');
+                    selectedCount.innerText = checkedCheckboxes.length;
+                } else {
+                    selectedInfo.classList.add('hidden');
+                }
+
+                window.dispatchEvent(new CustomEvent('zip-modal-open'));
+            }
         })();
     </script>
+
+    <!-- ZIP Download Modal -->
+    <div x-data="{
+        zipModalOpen: false,
+        filterType: 'month',
+        loading: false,
+        exportId: null,
+        progress: 0,
+        status: 'idle',
+        errorMessage: '',
+    
+        resetModal() {
+            this.loading = false;
+            this.exportId = null;
+            this.progress = 0;
+            this.status = 'idle';
+            this.errorMessage = '';
+        },
+    
+        async submitZipForm() {
+            this.loading = true;
+            this.status = 'starting';
+            this.progress = 0;
+            this.errorMessage = '';
+    
+            const form = document.getElementById('zip-download-form');
+            const formData = new FormData(form);
+    
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+    
+                const data = await response.json();
+    
+                if (data.success) {
+                    this.exportId = data.export_id;
+                    this.status = 'processing';
+                    this.pollProgress();
+                } else {
+                    this.status = 'error';
+                    this.errorMessage = data.message || 'Gagal memulai proses export.';
+                    this.loading = false;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                this.status = 'error';
+                this.errorMessage = 'Terjadi kesalahan sistem.';
+                this.loading = false;
+            }
+        },
+    
+        async pollProgress() {
+            if (this.status !== 'processing' && this.status !== 'pending') return;
+    
+            try {
+                const response = await fetch(`/invoices/check-zip-progress/${this.exportId}`);
+                const data = await response.json();
+    
+                this.status = data.status;
+                this.progress = data.progress;
+    
+                if (this.status === 'completed') {
+                    this.loading = false;
+                    // Optional: auto download
+                    // this.downloadResult();
+                } else if (this.status === 'failed') {
+                    this.loading = false;
+                    this.errorMessage = data.error || 'Gagal memproses file.';
+                } else {
+                    // Poll again after 2 seconds
+                    setTimeout(() => this.pollProgress(), 2000);
+                }
+            } catch (error) {
+                console.error('Polling error:', error);
+                setTimeout(() => this.pollProgress(), 5000);
+            }
+        },
+    
+        downloadResult() {
+            window.location.href = `/invoices/download-zip/${this.exportId}`;
+            // Optional: reset after some time
+            setTimeout(() => this.resetModal(), 5000);
+        }
+    }" @zip-modal-open.window="zipModalOpen = true; resetModal()" x-show="zipModalOpen"
+        class="fixed inset-0 z-[100] overflow-y-auto" style="display: none;" x-cloak>
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity"
+            @click="if(!loading) zipModalOpen = false"></div>
+
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div class="relative w-full max-w-lg transform overflow-hidden rounded-[3rem] bg-white p-8 shadow-2xl transition-all border border-gray-100"
+                x-show="zipModalOpen" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100">
+
+                <!-- Modal Header -->
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h3 class="text-2xl font-black text-gray-900 tracking-tight">Bulk Download ZIP</h3>
+                        <p class="text-sm text-gray-500 font-medium">Download invoice dalam folder ZIP yang teratur.</p>
+                    </div>
+                    <button @click="zipModalOpen = false" x-show="!loading"
+                        class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
+                </div>
+
+                <!-- Form Section (Hidden when processing/completed) -->
+                <div x-show="status === 'idle' || status === 'error'">
+                    <form action="{{ route('invoices.bulk-download-zip') }}" method="POST" id="zip-download-form"
+                        @submit.prevent="submitZipForm()">
+                        @csrf
+                        <div id="zip-selected-invoices-info"
+                            class="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 hidden">
+                            <div class="flex items-center gap-3 text-amber-700">
+                                <i class="fas fa-check-circle"></i>
+                                <span class="text-xs font-black uppercase tracking-widest">Mendownload <span
+                                        id="selected-count-zip">0</span> invoice terpilih</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <!-- Filter Type Toggle -->
+                            <div>
+                                <label
+                                    class="block text-xs font-black text-gray-400 uppercase tracking-widest mb-3 ml-2">Pilih
+                                    Metode Filter</label>
+                                <div class="grid grid-cols-3 gap-2 p-1.5 bg-gray-100 rounded-2xl">
+                                    <button type="button" @click="filterType = 'month'"
+                                        :class="filterType === 'month' ? 'bg-white shadow-sm text-indigo-600' :
+                                            'text-gray-500'"
+                                        class="py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">Bulanan</button>
+                                    <button type="button" @click="filterType = 'week'"
+                                        :class="filterType === 'week' ? 'bg-white shadow-sm text-indigo-600' :
+                                            'text-gray-500'"
+                                        class="py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">Mingguan</button>
+                                    <button type="button" @click="filterType = 'custom'"
+                                        :class="filterType === 'custom' ? 'bg-white shadow-sm text-indigo-600' :
+                                            'text-gray-500'"
+                                        class="py-2.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all">Custom</button>
+                                </div>
+                                <input type="hidden" name="filter_type" :value="filterType">
+                            </div>
+
+                            <!-- Filter Options -->
+                            <div x-show="filterType === 'month'" x-transition:enter="transition-all duration-300"
+                                class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Bulan</label>
+                                    <select name="month"
+                                        class="w-full rounded-2xl border-gray-100 bg-gray-50 py-3 px-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all border">
+                                        @foreach (['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $index => $name)
+                                            <option value="{{ $index + 1 }}"
+                                                {{ date('n') == $index + 1 ? 'selected' : '' }}>{{ $name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tahun</label>
+                                    <select name="year"
+                                        class="w-full rounded-2xl border-gray-100 bg-gray-50 py-3 px-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all border">
+                                        @for ($y = date('Y'); $y >= date('Y') - 5; $y--)
+                                            <option value="{{ $y }}">{{ $y }}</option>
+                                        @endfor
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div x-show="filterType === 'week' || filterType === 'custom'"
+                                x-transition:enter="transition-all duration-300" class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tanggal
+                                        Mulai</label>
+                                    <input type="date" name="start_date"
+                                        class="w-full rounded-2xl border-gray-100 bg-gray-50 py-3 px-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all border">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Tanggal
+                                        Akhir</label>
+                                    <input type="date" name="end_date"
+                                        class="w-full rounded-2xl border-gray-100 bg-gray-50 py-3 px-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all border">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Filter
+                                    Pelanggan (Opsional)</label>
+                                <select name="customer_name"
+                                    class="w-full rounded-2xl border-gray-100 bg-gray-50 py-3 px-4 text-sm font-bold focus:ring-4 focus:ring-indigo-500/10 transition-all border">
+                                    <option value="">Semua Pelanggan</option>
+                                    @foreach ($customers as $customer)
+                                        <option value="{{ $customer }}">{{ $customer }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Hidden inputs for selected IDs -->
+                            <div id="zip-ids-container"></div>
+                        </div>
+
+                        <div class="mt-8" x-show="status === 'error'">
+                            <p class="text-sm text-red-600 font-bold bg-red-50 p-4 rounded-2xl border border-red-100">
+                                <i class="fas fa-exclamation-triangle mr-2"></i> <span x-text="errorMessage"></span>
+                            </p>
+                        </div>
+
+                        <div class="mt-10">
+                            <button type="submit"
+                                class="w-full flex items-center justify-center gap-3 py-4 rounded-[1.5rem] bg-gray-900 text-white text-sm font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95">
+                                <i class="fas fa-file-archive"></i> Siapkan File ZIP
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Progress Section (Shown when starting/processing/completed) -->
+                <div x-show="status !== 'idle' && status !== 'error'" class="py-12 text-center">
+
+                    <!-- Icon Animation -->
+                    <div class="mb-8 flex justify-center">
+                        <template x-if="status === 'starting' || status === 'processing' || status === 'pending'">
+                            <div class="relative">
+                                <div
+                                    class="w-24 h-24 rounded-full border-4 border-indigo-100 flex items-center justify-center">
+                                    <i class="fas fa-file-pdf text-indigo-500 text-4xl animate-bounce"></i>
+                                </div>
+                                <div
+                                    class="absolute inset-0 w-24 h-24 rounded-full border-t-4 border-indigo-600 animate-spin">
+                                </div>
+                            </div>
+                        </template>
+                        <template x-if="status === 'completed'">
+                            <div
+                                class="w-24 h-24 rounded-full bg-emerald-50 border-4 border-emerald-100 flex items-center justify-center">
+                                <i class="fas fa-check text-emerald-500 text-4xl"></i>
+                            </div>
+                        </template>
+                        <template x-if="status === 'failed'">
+                            <div
+                                class="w-24 h-24 rounded-full bg-red-50 border-4 border-red-100 flex items-center justify-center">
+                                <i class="fas fa-times text-red-500 text-4xl"></i>
+                            </div>
+                        </template>
+                    </div>
+
+                    <h4 class="text-xl font-black text-gray-900 mb-2">
+                        <span x-show="status === 'starting' || status === 'pending'">Menghubungi Server...</span>
+                        <span x-show="status === 'processing'">Sedang Memproses PDF</span>
+                        <span x-show="status === 'completed'">Siap Didownload!</span>
+                        <span x-show="status === 'failed'">Gagal Memproses</span>
+                    </h4>
+
+                    <p class="text-sm text-gray-500 mb-8" x-show="status === 'processing'">
+                        Mohon tunggu, kami sedang menyiapkan invoice Anda.
+                    </p>
+
+                    <!-- Progress Bar -->
+                    <div x-show="status === 'processing'" class="mb-8">
+                        <div class="flex justify-between items-center mb-2 px-1">
+                            <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest">Progress</span>
+                            <span class="text-xs font-black text-gray-900" x-text="progress + '%'"></span>
+                        </div>
+                        <div
+                            class="w-full bg-gray-100 h-4 rounded-full overflow-hidden border border-gray-50 shadow-inner">
+                            <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 h-full transition-all duration-500"
+                                :style="'width: ' + progress + '%'"></div>
+                        </div>
+                    </div>
+
+                    <div x-show="status === 'failed'" class="mb-8 p-4 bg-red-50 rounded-2xl border border-red-100">
+                        <p class="text-xs text-red-600 font-bold" x-text="errorMessage"></p>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-col gap-3">
+                        <button type="button" x-show="status === 'completed'" @click="downloadResult()"
+                            class="w-full flex items-center justify-center gap-3 py-4 rounded-[1.5rem] bg-emerald-600 text-white text-sm font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-xl shadow-emerald-200/50 active:scale-95">
+                            <i class="fas fa-download"></i> Download Hasil ZIP
+                        </button>
+
+                        <button type="button" x-show="status === 'failed' || status === 'completed'"
+                            @click="resetModal()"
+                            class="w-full py-4 rounded-[1.5rem] bg-gray-100 text-gray-600 text-sm font-black uppercase tracking-widest hover:bg-gray-200 transition-all active:scale-95">
+                            Kembali
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 @endsection
