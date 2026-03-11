@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use ZipArchive;
@@ -72,7 +73,7 @@ class GenerateBulkInvoiceZipJob implements ShouldQueue
             }
 
             $zip = new ZipArchive();
-            $zipName = 'Invoice_Koperasi_JR_' . now()->format('d F Y') . '_' . substr($this->exportId, 0, 8) . '.zip';
+            $zipName = $this->generateZipFileName();
             
             $tempDir = storage_path('app/public/temp_zips');
             if (!file_exists($tempDir)) {
@@ -111,6 +112,9 @@ class GenerateBulkInvoiceZipJob implements ShouldQueue
             $zip->close();
             Log::info("GenerateBulkInvoiceZipJob completed ({$this->exportId}). Zip saved to: " . $zipPath);
 
+            // Send to Telegram
+            $this->sendToTelegram($zipPath, $zipName, $total);
+
             if (!file_exists($zipPath)) {
                 throw new \Exception("File ZIP hilang setelah proses selesai.");
             }
@@ -124,5 +128,72 @@ class GenerateBulkInvoiceZipJob implements ShouldQueue
             Cache::put("zip_export_{$this->exportId}_status", 'failed', 3600);
             Cache::put("zip_export_{$this->exportId}_error", $e->getMessage(), 3600);
         }
+    }
+
+    /**
+     * Send the generated ZIP file to Telegram.
+     */
+    private function sendToTelegram(string $zipPath, string $zipName, int $totalCount): void
+    {
+        try {
+            $token = env('TELEGRAM_BOT_TOKEN');
+            $chatId = env('TELEGRAM_CHAT_ID');
+
+            if (!$token || !$chatId) {
+                Log::warning("Telegram token or Chat ID not found for Bulk ZIP export.");
+                return;
+            }
+
+            $caption = "📦 *PENGUNDUHAN MASSAL ZIP SELESAI*\n\n" .
+                "📄 *Nama File:* `{$zipName}`\n" .
+                "📑 *Jumlah Invoice:* {$totalCount}\n" .
+                "⏰ *Waktu:* " . now()->format('d M Y H:i:s') . "\n\n" .
+                "File ZIP telah berhasil dibuat dan siap diunduh oleh admin.";
+
+            Http::attach('document', file_get_contents($zipPath), $zipName)
+                ->post("https://api.telegram.org/bot{$token}/sendDocument", [
+                    'chat_id' => $chatId,
+                    'caption' => $caption,
+                    'parse_mode' => 'Markdown',
+                ]);
+            
+            Log::info("Bulk ZIP file sent to Telegram successfully ({$this->exportId})");
+        } catch (\Exception $e) {
+            Log::error("Failed to send Bulk ZIP to Telegram: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Generate a descriptive ZIP filename based on filters.
+     */
+    private function generateZipFileName(): string
+    {
+        $prefix = 'Invoices_Koperasi_JR';
+        $customer = !empty($this->filters['customer_name']) ? '_' . str_replace([' ', '/', '\\'], '_', $this->filters['customer_name']) : '';
+        
+        $details = '';
+        if (!empty($this->invoiceIds)) {
+            $details = '_Terpilih_' . now()->format('d-m-Y_His');
+        } else {
+            $type = $this->filters['filter_type'] ?? 'bulk';
+            if ($type === 'month') {
+                $months = [
+                    1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni',
+                    7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+                ];
+                $monthName = $months[(int)$this->filters['month']] ?? 'Bulan';
+                $details = '_Bulanan_' . $monthName . '_' . $this->filters['year'];
+            } elseif ($type === 'week' || $type === 'custom') {
+                $start = Carbon::parse($this->filters['start_date'])->format('d-m-Y');
+                $end = Carbon::parse($this->filters['end_date'])->format('d-m-Y');
+                $label = ($type === 'week') ? 'Mingguan' : 'Custom';
+                $details = '_' . $label . '_' . $start . '_sd_' . $end;
+            } else {
+                $details = '_' . now()->format('d-m-Y_His');
+            }
+        }
+
+        // Add a small part of exportId to ensure uniqueness if the same filter used twice in same second
+        return $prefix . $customer . $details . '_' . substr($this->exportId, 0, 5) . '.zip';
     }
 }
